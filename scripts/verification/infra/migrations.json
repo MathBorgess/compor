@@ -202,6 +202,10 @@
     {
       "name": "20261123000050_carousel_semantic_diagrams.sql",
       "sha256": "50cb87219b9ef23c6a145e3921bbf9574062c1b1bdebbebb19ae0c5d88f5537d"
+    },
+    {
+      "name": "20261123000051_carousel_readability_matrix.sql",
+      "sha256": "ffd4ed29559a28c4a3cb4da3302edf2281bf471f032b030623ff0475267dfa5f"
     }
   ]
 }

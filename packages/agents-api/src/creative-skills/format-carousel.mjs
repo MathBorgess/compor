@@ -5,15 +5,18 @@ export const CAROUSEL_OPENING_GUIDANCE = [
   'Antes de fechar o plano, leia as duas lâminas isoladas. Confira se a promessa está visível no recorte da capa e diga qual decisão ou informação o público só consegue obter na segunda lâmina. Se ambas responderem à mesma pergunta com o mesmo exemplo, reformule uma delas.',
 ].join(' ');
 
+export const CAROUSEL_NATIVE_READABILITY_GUIDANCE = 'Em uma série de quatro ou mais notas que ensina tamanho, contraste e hierarquia tipográfica de um anúncio, use uma única demonstração no miolo com layout native_serial e diagram {"type":"readability_matrix"}. O quadro compara a mesma oferta didática antes e depois de cada ajuste com os exemplos fixos “Oferta” e “Detalhes”. Escreva no alt o que muda nas três linhas. Deixe a instrução curta junto ao quadro e preserve a cadência tipográfica das outras notas. Para uma série de três lâminas, preserve a contagem e use notas tipográficas.';
+
 export const POST_CAROUSEL_SKILL = Object.freeze({
   id: 'carrossel-narrativo.v1',
-  version: '4.2.3',
+  version: '4.2.4',
   format: 'carousel',
   chat: [
     'Skill carrossel-narrativo.v1 (Carrossel 4:5 · 3 a 10 lâminas · Instagram):',
     '1. Planeje o conjunto antes de gerar pixels: escolha o arquétipo mais adequado (Narrativo Problema→Mecanismo→Prova, Value-Stack numerado, Contraste Antes/Depois, Framework Acionável ou Quebra de Consenso) e grave o plano estruturado com compor_definir_plano_laminas (incluindo visualInvariants compartilhados e cada lâmina com role, headline, body e visualCue).',
     'Use composição por arquétipos quando compor_contexto indicar carouselCompositionAvailable=true e a leitura se beneficiar de tipografia controlada, diagramas ou arte limpa disponível. No plano de Carrossel, escolha compositionMode=editorial_art para ritmo visual e arte com função de prova, modelo ou metáfora; use native_serial para notas ou sequência tipográfica. Preencha composition (layout e alt com uma frase por lâmina), incluindo apenas os slots que a ideia exige. Se houver cores de marca no briefing, use compositionTokens em #RRGGBB. Use os diagramas governados para mostrar a diferença concreta; troque de arquétipo ou replaneje se a ideia depender de um slot indisponível.',
     'Use category_split para comparar duas categorias sem ordem ou causalidade. Passe dois rótulos distintos (até 3 palavras e 30 caracteres) e dois exemplos concretos distintos em items (até 4 palavras e 18 caracteres), um por categoria na mesma ordem. Use orientation para mostrar a mesma amostra (sample, até 4 palavras e 18 caracteres) em pé e de ponta-cabeça com rotação real de 180°. Passe labels na ordem “Em pé”, “De cabeça para baixo”. Essas demonstrações usam split_horizontal, framed_plate, svg_diagram ou comparison_dual no miolo, com o diagrama como única mídia.',
+    `Use esta regra só quando compor_contexto indicar carouselCompositionAvailable=true. ${CAROUSEL_NATIVE_READABILITY_GUIDANCE}`,
     'Use uma demonstração governada no cta_closing apenas quando ela concluir uma lição pedida no briefing. Mantenha o diagrama como única mídia e reserve a área abaixo da demonstração para o texto da única chamada à ação.',
     'Em testes e comparações, aplique aos dois exemplos o mesmo critério de decisão do briefing e da cópia. Leia cada placa sozinha. Se o exemplo introduzir uma condição adicional, reformule o rótulo ou o exemplo para ficar fiel ao teste descrito.',
     'Antes da revisão, verifique o Gate 0: cada lâmina entrega uma ideia sustentada pelo briefing, por fonte citada ou por evidência real. Cite a fonte de números ou resultados em qualquer lâmina; preserve fatos declarados e retire números, depoimentos ou supostas provas sem lastro. Dê à Lâmina 2 uma manchete autônoma e a primeira entrega concreta. Reserve uma única chamada à ação no fechamento e use no máximo uma menção sustentada ao produto.',

@@ -65,9 +65,22 @@ function demonstration({ type, labels, sample, items }) {
   return `<div class="media diagram diagram-demonstration" data-demonstration="${type}">${panels.join('')}</div>`;
 }
 
+function readabilityMatrix(alt) {
+  const label = (copy, kind = '') => `<span class="matrix-label ${kind}" data-region="diagram-label">${copy}</span>`;
+  const panel = (copy, kind = '') => `<div class="matrix-panel ${kind}"${kind === 'low-contrast' ? '' : ' data-region="diagram-proof"'}>${copy}</div>`;
+  const sample = 'Oferta';
+  const hierarchy = '<strong>Oferta</strong><span>Detalhes</span>';
+  return `<div class="media readability-matrix" role="img" aria-label="${escape(alt)}">` +
+    label('Antes', 'before') + label('Com ajuste', 'after') +
+    label('Tamanho') + panel(sample, 'small') + panel(sample, 'large') +
+    label('Contraste') + panel(sample, 'low-contrast') + panel(sample) +
+    label('Hierarquia') + panel(hierarchy, 'equal-weight') + panel(hierarchy, 'primary-weight') + '</div>';
+}
+
 function media(slide) {
   if (slide.art) return '<div class="media"><img src="' + escape(slide.art) + '" alt=""></div>';
   if (!slide.diagram) return '';
+  if (slide.diagram.type === 'readability_matrix') return readabilityMatrix(slide.alt);
   if (demonstrationDiagrams.includes(slide.diagram.type)) return demonstration(slide.diagram);
   const { type, labels = [] } = typeof slide.diagram === 'string' ? { type: slide.diagram } : slide.diagram;
   const diagram = '<svg viewBox="0 0 608 300" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">' +
@@ -133,6 +146,20 @@ em{font-style:normal;color:var(--ink)}
 .typo_breather .content{border-left:10px solid var(--ink);padding-left:42px}
 .native_serial .content{justify-content:start;padding-top:144px}
 .native_serial .media{position:absolute;width:208px;height:180px;right:88px;bottom:174px}
+.native_serial:has(>.readability-matrix){grid-template-rows:max-content minmax(min-content,1fr);row-gap:24px;padding-bottom:188px}
+.native_serial:has(>.readability-matrix)>.content{grid-row:1}
+.native_serial>.readability-matrix{position:static;grid-row:2;align-self:end;width:100%;height:min-content;display:grid;gap:11px;overflow:visible;
+  grid-template-columns:210px repeat(2,minmax(0,1fr));grid-template-rows:auto repeat(3,92px)}
+.matrix-label{font-weight:700;font-size:37px;line-height:1.2;align-self:center}
+.matrix-label.before{grid-column:2;text-align:center}
+.matrix-label.after{grid-column:3;text-align:center}
+.matrix-panel{min-width:0;border:3px solid var(--ink);border-radius:16px;color:var(--fg);font-size:48px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:14px}
+.matrix-panel.small{font-size:30px}
+.matrix-panel.large{font-size:54px}
+.matrix-panel.low-contrast{color:color-mix(in srgb,var(--fg) 31%,var(--bg))}
+.matrix-panel.equal-weight,.matrix-panel.primary-weight{font-size:38px}
+.matrix-panel.equal-weight>*,.matrix-panel.primary-weight>span{font-weight:400}
+.matrix-panel.primary-weight>strong{font-weight:700}
 .cta_closing .content{justify-content:center;max-width:850px}
 .cta_closing .content::before{content:"";display:block;width:120px;height:8px;background:var(--ink)}
 .cta_closing .media{display:none}

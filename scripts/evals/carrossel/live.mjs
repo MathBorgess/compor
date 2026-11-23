@@ -4,7 +4,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'nod
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { AGENT_MODEL } from '../../../packages/agents-api/src/agent-model.mjs';
-import { CAROUSEL_OPENING_GUIDANCE } from '../../../packages/agents-api/src/creative-skills/format-carousel.mjs';
+import { CAROUSEL_NATIVE_READABILITY_GUIDANCE, CAROUSEL_OPENING_GUIDANCE } from '../../../packages/agents-api/src/creative-skills/format-carousel.mjs';
 import { createImageHandler } from '../../../packages/images-api/src/index.mjs';
 import { cadence, demonstrationLayouts, diagrams, layouts, validateDeck } from '../../../packages/carousel-renderer/src/plan.mjs';
 import { runRasterBatch } from './art-batch.mjs';
@@ -86,6 +86,7 @@ function plannerBody(testCase, cycle, artBatch) {
     'Em testes e comparações, aplique aos dois exemplos o mesmo critério de decisão do briefing e da cópia. Leia cada placa sozinha. Se o exemplo introduzir uma condição adicional, reformule o rótulo ou o exemplo para ficar fiel ao teste descrito.',
     'Quando a última lâmina também precisar demonstrar uma diferença indispensável ao briefing, use cta_closing com um diagrama demonstrativo, uma manchete que nomeia o aprendizado e somente o pedido de interação no corpo. Use o fechamento tipográfico quando a sequência já tiver entregado toda a demonstração.',
     'Para comparar uma amostra em pé e de cabeça para baixo, use orientation em vez de balance. Envie {"type":"orientation","labels":["Em pé","De cabeça para baixo"],"sample":"Página de zine"} com os rótulos literais nessa ordem e uma amostra única de até 18 caracteres e 4 palavras. O compositor aplica a rotação.',
+    ...(cycle >= 4 && testCase.mode === 'native_serial' ? [CAROUSEL_NATIVE_READABILITY_GUIDANCE] : []),
     'Cada slide tem id único, layout, headline, alt e opcionalmente body, kicker, listItems, source, accentPhrase, figure, bridge, diagram e polarity. Use bridge hairline_thread ou color_band_echo, polarity base ou inverted. O highlight, se houver, deve ocorrer literalmente na manchete e ter 1 a 3 palavras. Use uma frase de alt por slide.',
     `${testCase.exactSlideCount ? `Faça exatamente ${testCase.exactSlideCount} lâminas.` : 'Faça 4–6 lâminas.'} Capa ≤8 palavras e ≤65 caracteres. Manchetes do miolo ≤8 palavras e corpo alvo 12–25 palavras, teto 30 neste experimento. Um ponto concreto por lâmina. Até 4 células bento ou 5 itens de lista. A segunda lâmina deve citar o assunto e entregar um insight inteiro, sem anáfora. Termine com cta_closing e exatamente um pedido somando slide e legenda, que pode repetir a intenção sem introduzir outra. Até cinco hashtags na legenda.`,
     (artBatch ? 'Para editorial_art alterne arquétipos e use pranchas ou diagramas em pelo menos metade das lâminas.'

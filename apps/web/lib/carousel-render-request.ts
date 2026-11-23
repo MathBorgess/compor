@@ -31,7 +31,7 @@ const slide = z.strictObject({
   figure: z.string().optional(),
   bridge: z.string().optional(),
   artSha256: z.string().length(64).regex(/^[a-f0-9]{64}$/).optional(),
-}).refine(slide => allowsCarouselSemanticDiagram(slide.diagram, slide.layout, slide.artSha256 !== undefined));
+});
 const requestSchema = z.strictObject({
   projectId: z.uuid(),
   plan: z.strictObject({
@@ -43,6 +43,9 @@ const requestSchema = z.strictObject({
       accent: z.string().optional(),
     }).optional(),
     caption: z.string().optional(),
+  }).refine(({mode, slides}) => {
+    const deck = {mode, slideCount: slides.length};
+    return slides.every(slide => allowsCarouselSemanticDiagram(slide.diagram, slide.layout, slide.artSha256 !== undefined, deck));
   }),
 });
 

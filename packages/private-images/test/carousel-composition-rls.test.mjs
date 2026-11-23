@@ -302,6 +302,77 @@ test('preserva diagramas anteriores e vincula os diagramas semânticos ao recibo
   assert.deepEqual(rows.map(row => row.content), [legacyRendered, categoriesRendered, orientationRendered, closingRendered]);
 });
 
+test('matriz de leitura nativa aceita receita fixa e vincula o JPEG à versão isolada', async t => {
+  const db = await fixture(t);
+  await migrate(db, [
+    '20261122000048_carousel_composition',
+    '20261123000049_carousel_art_source',
+    '20261123000050_carousel_semantic_diagrams',
+  ]);
+  const previous = governedContent();
+  previous.carouselPlan.slides[1].diagram = {
+    type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Página 2',
+  };
+  const previousRendered = renderedContent(previous);
+  const typographic = governedContent();
+  typographic.carouselPlan.mode = 'native_serial';
+  typographic.carouselPlan.slides[1] = {
+    frameId: frameId(2), layout: 'native_serial', alt: 'Um teste de leitura para a prévia do feed.',
+  };
+  const matrix = { type: 'readability_matrix' };
+  const shortMatrix = structuredClone(typographic);
+  shortMatrix.carouselPlan.slides[1].diagram = matrix;
+  const draft = structuredClone(shortMatrix);
+  const closing = draft.frames[2];
+  draft.frames[2] = { ...closing, headline: 'Confira o contraste' };
+  draft.frames.push({ ...closing, id: frameId(4), position: 4 });
+  draft.carouselPlan.slides[2] = { frameId: frameId(3), layout: 'native_serial', alt: 'Um teste de contraste para a prévia.' };
+  draft.carouselPlan.slides.push({ ...recipes[2], frameId: frameId(4) });
+  await identify(db, alice);
+  assert.equal((await save(db, 0, 0, previousRendered)).status, 'saved');
+  await assert.rejects(save(db, 1, 1, draft), { code: '22023' });
+  await db.exec('reset role');
+  await migrate(db, ['20261123000051_carousel_readability_matrix']);
+  await identify(db, alice);
+  await assert.rejects(save(db, 1, 1, shortMatrix), { code: '22023' });
+  await assert.rejects(save(db, 1, 1, renderedContent(shortMatrix)), { code: '22023' });
+  const typographicRendered = renderedContent(typographic);
+  assert.deepEqual((await save(db, 1, 1, typographicRendered)).version.content, typographicRendered);
+
+  for (const fields of [
+    { layout: 'comparison_dual' },
+    { artSha256: 'a'.repeat(64) },
+    { diagram: 'readability_matrix' },
+    { diagram: { ...matrix, labels: ['Escala', 'Contraste'] } },
+    { diagram: { ...matrix, sample: 'Oferta' } },
+    { diagram: { ...matrix, items: ['Oferta', 'Detalhes'] } },
+    { diagram: { ...matrix, color: null } },
+  ]) {
+    const invalid = structuredClone(draft);
+    Object.assign(invalid.carouselPlan.slides[1], fields);
+    await assert.rejects(save(db, 2, 2, renderedContent(invalid)), { code: '22023' }, JSON.stringify(fields));
+  }
+  const wrongMode = structuredClone(draft);
+  wrongMode.carouselPlan.mode = 'editorial_art';
+  await assert.rejects(save(db, 2, 2, renderedContent(wrongMode)), { code: '22023' });
+  const rendered = renderedContent(draft);
+  const stale = structuredClone(rendered);
+  delete stale.carouselPlan.slides[1].diagram;
+  await assert.rejects(save(db, 2, 2, stale), { code: '22023' });
+
+  assert.deepEqual((await save(db, 2, 2, draft)).version.content, draft);
+  assert.deepEqual((await save(db, 3, 3, rendered)).version.content, rendered);
+  const jpegName = storagePath(alice, project, 4, jpegId(2) + '.jpg');
+  await writeObject(db, jpegBucket, jpegName);
+  const history = await db.query('select public.list_project_piece_versions_v3($1) result', [project]);
+  assert.deepEqual(history.rows[0].result.map(version => version.content), [previousRendered, typographicRendered, draft, rendered]);
+
+  await identify(db, bob);
+  assert.deepEqual(await save(db, 4, 4, rendered), { status: 'not_found' });
+  await assert.rejects(writeObject(db, jpegBucket, jpegName), { code: '42501' });
+  assert.deepEqual((await db.query('select name from storage.objects where bucket_id=$1', [jpegBucket])).rows, []);
+});
+
 test('JSONB inválido em composição ou marcador retorna invalid_request sem criar versões', async t => {
   const db = await fixture(t);
   await migrate(db, ['20261122000048_carousel_composition']);

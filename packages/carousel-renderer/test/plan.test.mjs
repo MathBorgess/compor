@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { accentAgainst, contrast, layouts, paletteFor, validateDeck } from '../src/index.mjs';
+import { accentAgainst, contrast, layouts, paletteFor, renderDeckInMemory, validateDeck } from '../src/index.mjs';
 import { slideDocument } from '../src/layouts.mjs';
 import { cadence, demonstrationDiagrams, demonstrationLayouts, isDiagram } from '../src/plan.mjs';
 
@@ -115,4 +115,31 @@ test('arte raster não pode ocultar um diagrama nem ficar oculta no fechamento',
   assert.deepEqual(validateDeck(valid).map(check => check.id), ['ART_SLOT']);
   valid.slides[1] = makeSlide('two', 'cta_closing', 'Salve para praticar', { art });
   assert.deepEqual(validateDeck(valid).map(check => check.id), ['ART_SLOT']);
+});
+
+test('matriz de leitura tem exemplo fixo e só ocupa a nota seriada sem raster em quatro ou mais lâminas', async () => {
+  const diagram = { type: 'readability_matrix' };
+  const native = { mode: 'native_serial', slides: [
+    makeSlide('one', 'native_serial', 'Revise seu anúncio no celular'),
+    makeSlide('two', 'native_serial', 'Compare a leitura do anúncio'),
+    makeSlide('three', 'cta_closing', 'Salve para a próxima revisão'),
+  ] };
+  assert.deepEqual(validateDeck(native), []);
+  const note = { ...native.slides[1], diagram };
+  native.slides[1] = note;
+  const refused = await renderDeckInMemory(native, {});
+  assert.deepEqual(refused.slides, []);
+  assert.deepEqual(refused.checks.map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+
+  native.slides.splice(2, 0, makeSlide('detail', 'native_serial', 'Ajuste a cor do título'));
+  assert.deepEqual(validateDeck(native), []);
+  assert.deepEqual(validateDeck({ ...native, mode: 'editorial_art' }).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+
+  native.slides[1] = { ...note, layout: 'cta_closing' };
+  assert.deepEqual(validateDeck(native).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+  native.slides[1] = { ...note, art: 'data:image/png;base64,AA==' };
+  assert.deepEqual(validateDeck(native).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+  for (const invalid of ['readability_matrix', { ...diagram, items: ['Oferta', 'Detalhes'] }, { ...diagram, labels: ['Antes', 'Com ajuste'] }]) {
+    assert.equal(isDiagram(invalid), false);
+  }
 });

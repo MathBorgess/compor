@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {test} from 'node:test';
 import {readCarouselRenderRequest} from '../lib/carousel-render-request.ts';
+import {carouselPlanSchema} from '../lib/studio-carousel-contract.ts';
 
 const projectId = 'a50ec8ee-d6f0-4443-9c37-07e560c02b56';
 const slide = {
@@ -92,6 +93,40 @@ test('preserva os slots semânticos canônicos e rejeita versões fora da receit
   assert.deepEqual(await readCarouselRenderRequest(multipart([
     ['request', JSON.stringify({projectId, plan: rasterPlan})], ['art:arte', new Blob([raster], {type: 'image/png'})],
   ])), invalid);
+});
+
+test('aceita a matriz nativa na composição e no plano salvo com a mesma receita', async () => {
+  const diagram = {type: 'readability_matrix'};
+  const alt = 'O quadro compara tamanho, contraste e hierarquia na mesma oferta.';
+  const indices = count => Array.from({length: count}, (_, index) => index + 1);
+  const read = (mode, fields = {}, count = 4) => readCarouselRenderRequest(request(JSON.stringify({
+    projectId, plan: {mode, slides: indices(count).map(index => ({
+      id: `slide-${index}`, headline: slide.headline, layout: 'native_serial', alt,
+      ...(index === 2 && {diagram, ...fields}),
+    }))},
+  })));
+  const native = await read('native_serial');
+  assert.ok(native.ok);
+  assert.deepEqual(native.plan.slides[1].diagram, diagram);
+
+  const forStorage = (mode, slots = {}, count = 4) => carouselPlanSchema.safeParse({
+    mode, slides: indices(count).map(index => ({
+      frameId: `00000000-0000-4000-8000-00000000000${index}`, alt, layout: 'native_serial',
+      ...(index === 2 && {diagram, ...slots}),
+    })),
+  }).success;
+  assert.equal(forStorage('native_serial'), true);
+  assert.equal(forStorage('editorial_art'), false);
+  assert.deepEqual(await read('editorial_art'), invalid);
+  assert.equal(forStorage('native_serial', {}, 3), false);
+  assert.deepEqual(await read('native_serial', {}, 3), invalid);
+  for (const slots of [
+    {layout: 'cta_closing'}, {diagram: 'readability_matrix'},
+    {diagram: {...diagram, items: ['Oferta', 'Detalhes']}}, {artSha256: 'f'.repeat(64)},
+  ]) {
+    assert.deepEqual(await read('native_serial', slots), invalid);
+    assert.equal(forStorage('native_serial', slots), false);
+  }
 });
 
 test('enforces the inclusive 32 KiB body limit even without a length header', async () => {

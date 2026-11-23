@@ -23,6 +23,7 @@ const semanticDiagramSchemas = {
     labels: { ...textList(30, 2, 2), items: { enum: orientationLabels } },
     sample: string(18),
   }),
+  readability_matrix: fields({ type: { enum: ['readability_matrix'] } }),
 };
 const compositionDiagramSchema = { anyOf: [
   { enum: diagramShapes },
@@ -141,9 +142,9 @@ function matchesCompositionSchema(value, schema) {
     Object.entries(value).every(([key, item]) => Object.hasOwn(schema.properties, key) &&
       matchesCompositionSchema(item, schema.properties[key])));
 }
-export function isCarouselSlideComposition(value) {
+export function isCarouselSlideComposition(value, deck) {
   return matchesCompositionSchema(value, compositionSchema)
-    && allowsCarouselSemanticDiagram(value.diagram, value.layout);
+    && allowsCarouselSemanticDiagram(value.diagram, value.layout, false, deck);
 }
 export const isCarouselCompositionTokens = value=>matchesCompositionSchema(value,compositionTokensSchema);
 
@@ -161,13 +162,17 @@ function distinctDemonstrationText(labels) {
 }
 
 function isSemanticDiagramType(type) {
-  return type === 'category_split' || type === 'orientation';
+  return typeof type === 'string' && Object.hasOwn(semanticDiagramSchemas, type);
 }
 
-export function allowsCarouselSemanticDiagram(diagram, layout, hasRaster = false) {
+export function allowsCarouselSemanticDiagram(diagram, layout, hasRaster = false, deck) {
   const type = typeof diagram === 'string' ? diagram : diagram?.type;
   if (!isSemanticDiagramType(type)) return true;
-  if (hasRaster || !demonstrationLayouts.includes(layout) || !matchesCompositionSchema(diagram, semanticDiagramSchemas[type])) return false;
+  if (hasRaster || !matchesCompositionSchema(diagram, semanticDiagramSchemas[type])) return false;
+  if (type === 'readability_matrix') {
+    return layout === 'native_serial' && (deck === undefined || (deck.mode === 'native_serial' && deck.slideCount >= 4));
+  }
+  if (!demonstrationLayouts.includes(layout)) return false;
   if (type === 'orientation') {
     return orientationLabels.every((label, index) => diagram.labels[index] === label)
       && cleanDemonstrationText(diagram.sample) && wordCount(diagram.sample) <= 4;
@@ -176,10 +181,11 @@ export function allowsCarouselSemanticDiagram(diagram, layout, hasRaster = false
     && distinctDemonstrationText(diagram.items) && diagram.items.every(item => wordCount(item) <= 4);
 }
 
-function validateComposedFrame({ composition, position, headline, body }) {
-  if (!isCarouselSlideComposition(composition)) throw Error('invalid_action');
+function validateComposedFrame({ composition, position, headline, body }, deck) {
+  if (!isCarouselSlideComposition(composition, deck)) throw Error('invalid_action');
   const { layout, diagram, source, figure, listItems, kicker, accentPhrase } = composition;
-  const isDemonstration = typeof diagram === 'object' && !diagramShapes.includes(diagram.type);
+  const semantic = isSemanticDiagramType(diagram?.type);
+  const isDemonstration = typeof diagram === 'object' && !semantic && !diagramShapes.includes(diagram.type);
   const titleBudget = position === 1 ? 11 : 12;
   if (!headline.trim() || headline.length > 160 || wordCount(headline) > titleBudget ||
       (position === 1 && Array.from(graphemeSegments.segment(headline)).length > 65) ||
@@ -189,7 +195,7 @@ function validateComposedFrame({ composition, position, headline, body }) {
       (layout === 'bento_grid' && listItems?.length > 4) ||
       (accentPhrase && (!headline.includes(accentPhrase) || wordCount(accentPhrase) > 3)) ||
       (isDemonstration && !demonstrationLayouts.includes(layout))) throw Error('invalid_action');
-  if (isSemanticDiagramType(diagram?.type)) return;
+  if (semantic) return;
   if (isDemonstration && (!distinctDemonstrationText(diagram.labels) ||
       (diagram.items && !distinctDemonstrationText(diagram.items)) ||
       (diagram.sample && !cleanDemonstrationText(diagram.sample)))) throw Error('invalid_action');
@@ -204,7 +210,8 @@ function validateComposition(value) {
   if (!hasMode && !hasTokens && !value.frames.some(frameHasComposition)) return;
   if (!hasMode || value.frames.length < 3 || !value.frames.every(frameHasComposition) ||
       (hasTokens && !isCarouselCompositionTokens(value.compositionTokens))) throw Error('invalid_action');
-  for (const frame of value.frames) validateComposedFrame(frame);
+  const deck = { mode: value.compositionMode, slideCount: value.frames.length };
+  for (const frame of value.frames) validateComposedFrame(frame, deck);
 }
 
 function parse(tool, value) {

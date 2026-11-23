@@ -24,6 +24,12 @@ Quando a última lâmina precisa demonstrar uma distinção pedida pelo briefing
 
 Nas capas com diagrama acima do texto, a grade reserva primeiro a altura intrínseca da cópia e a margem inferior de 180 px. A faixa do diagrama usa o espaço disponível até a altura preferida do arquétipo. A amostra de uma comparação semântica conserva a altura necessária aos seus rótulos. O split horizontal reserva 360 px para o diagrama de comparação. Em `comparison_dual`, a manchete de capa começa em 116 px, como nos demais arquétipos de capa.
 
+## Matriz de legibilidade em notas
+
+O modo `native_serial` admite `{"type":"readability_matrix"}` em uma lâmina do mesmo arquétipo, com a posição das notas preservada. A coleção precisa de pelo menos quatro lâminas para que o quadro caiba no limite de 30% de cobertura visual. A matriz usa as palavras fixas “Oferta” e “Detalhes” para isolar uma mudança por linha. O quadro compara tamanho, contraste e hierarquia em pares “Antes” e “Com ajuste”. A lâmina tem texto alternativo próprio. Os rótulos que explicam as diferenças passam pelo gate de contraste. O contraste insuficiente aparece na amostra didática de antes.
+
+A migração `20261123000051` valida a forma exata do diagrama, o modo e o arquétipo. O quadro é composição do renderer. A validação de `artSha256` continua exigindo que o raster ocupe um slot de mídia próprio. O digest guarda a escolha de diagrama. As palavras fixas dispensam campos editáveis de rótulo e amostra nesse contrato.
+
 ## Evidência para habilitação
 
 Executar o fluxo autenticado da rota em Linux no Preview da Vercel. Verificar o fechamento do Chromium em falha, os arquivos presentes no trace, o orçamento de tamanho do ZIP e o comportamento para planos recusados. Vínculo à versão e recuperação em outro navegador exigem mais uma verificação depois que o estúdio consumir esse contrato.

@@ -194,3 +194,26 @@ test('fechamento aceita demonstrações governadas sem abrir um slot de raster',
     ...closing.composition, diagram: proofs[0], art: 'data:image/png;base64,aQ==',
   })), /invalid_action/);
 });
+
+test('matriz de legibilidade tem uma receita fechada para notas seriadas', () => {
+  const plan = compositionPlan();
+  const frame = plan.frames[1];
+  const composition = { layout: 'native_serial', alt: 'A oferta muda de tamanho, contraste e peso.', diagram: { type: 'readability_matrix' } };
+  const native = { ...plan, compositionMode: 'native_serial', frames: [plan.frames[0], { ...frame, composition },
+    { ...frame, position: 3 }, { ...plan.frames[2], position: 4 }] };
+  const parse = value => parseStudioAction('compor_definir_plano_laminas', value);
+  const schema = AGENT_STUDIO_TOOLS.find(tool => tool.name === 'compor_definir_plano_laminas').parameters;
+  const variants = schema.properties.frames.items.properties.composition.properties.diagram.anyOf;
+  const matrix = variants.find(variant => variant.properties?.type.enum.includes('readability_matrix'));
+  assert.deepEqual(Object.keys(matrix.properties), ['type']);
+  assert.equal(matrix.additionalProperties, false);
+  assert.deepEqual(parse(native), native);
+  assert.throws(() => parse({ ...native, compositionMode: 'editorial_art' }), /invalid_action/);
+  assert.throws(() => parse({ ...native, frames: native.frames.slice(0, 3) }), /invalid_action/);
+  for (const slots of [
+    { layout: 'cta_closing' }, { diagram: 'readability_matrix' },
+    { diagram: { ...composition.diagram, items: ['Oferta', 'Detalhes'] } },
+  ]) {
+    assert.equal(isCarouselSlideComposition({ ...composition, ...slots }), false);
+  }
+});

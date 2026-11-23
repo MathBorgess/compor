@@ -416,3 +416,92 @@ test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { s
     await page.close();
   }
 });
+
+test('matriz de leitura mantém a série legível e distingue o espécime de baixo contraste', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  const fonts = {400: regular, 700: bold};
+  const tokens = {light:'#F5F1E8', dark:'#24272B', accent:'#D65135'};
+  const caption = 'Três notas para revisar um anúncio pequeno na tela do celular.';
+  const alt = 'Três comparações da mesma oferta mostram texto maior, escurecimento das letras e um destaque em negrito para Oferta.';
+  const proof = slide('native_serial', 'Confira o que aparece primeiro', {
+    id: 'hierarquia', kicker: 'Nota 03', body: 'Compare a mesma oferta e observe qual elemento chama sua atenção primeiro.',
+    alt, diagram: {type:'readability_matrix'},
+  });
+  const intro = [
+    slide('native_serial', 'Anúncio pequeno no celular', {id:'capa', body:'Notas para revisar o anúncio na tela.'}),
+    slide('native_serial', 'Teste o tamanho antes de publicar', {id:'tamanho', kicker:'Nota 01', body:'Aumente a frase principal se ela pedir zoom.'}),
+    slide('native_serial', 'Compare texto e fundo', {id:'contraste', kicker:'Nota 02', body:'Mude a cor das letras para separar texto e fundo.'}),
+  ];
+  const closing = slide('cta_closing', 'Revise antes de publicar', {body:'Salve estas notas para revisar seu próximo anúncio.'});
+  const colorHex = value => {
+    const channels = value.match(/[\d.]+/g).slice(0, 3).map(Number);
+    return '#' + channels.map(channel => Math.round(value.startsWith('color(srgb') ? channel * 255 : channel)
+      .toString(16).padStart(2, '0')).join('');
+  };
+  const page = await browser.newPage({viewport:{width:1080,height:1350}});
+  t.after(() => page.close());
+
+  for (const polarity of ['base', 'inverted']) {
+    const note = {...proof, polarity};
+    const result = await renderDeckInMemory({mode:'native_serial',tokens,caption,slides:[...intro,note,closing]},
+      {browser,sharp,fonts,repair:false});
+    assert.equal(result.slides.length, 5, JSON.stringify(result.checks));
+    assert.ok(result.slides.every(item => item.firstChecks.every(check => check.status === 'pass') && item.checks.every(check => check.status === 'pass')));
+    const cadence = result.checks.find(check => check.id === 'COLLECTION_CADENCE');
+    assert.equal(cadence?.status, 'pass');
+    assert.equal(cadence.observed.visualCoverage, 0.2);
+    assert.deepEqual(result.altTexts[3], {index:4,alt});
+    await page.setContent(slideDocument(note,{index:4,palette:paletteFor(tokens),fonts}));
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await page.getByRole('img', {name:alt}).count(), 1);
+    const details = await page.evaluate(() => {
+      const box = element => element.getBoundingClientRect();
+      const proof = document.querySelector('.readability-matrix');
+      const text = document.createRange();
+      const panels = Array.from(proof.querySelectorAll('.matrix-panel'), panel => {
+        const style = getComputedStyle(panel);
+        const bounds = box(panel);
+        const walker = document.createTreeWalker(panel, NodeFilter.SHOW_TEXT);
+        const fragments = [];
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          text.selectNodeContents(node);
+          const region = text.getBoundingClientRect();
+          fragments.push({ inside:region.left >= bounds.left && region.right <= bounds.right && region.top >= bounds.top && region.bottom <= bounds.bottom,
+            weight:Number(getComputedStyle(node.parentElement).fontWeight) });
+        }
+        return {text:panel.textContent, font:Number.parseFloat(style.fontSize), color:style.color, fragments,
+          measured:panel.hasAttribute('data-region'), area:bounds.width * bounds.height};
+      });
+      const labels = Array.from(proof.querySelectorAll('.matrix-label'), label => ({text:label.textContent,
+        font:Number.parseFloat(getComputedStyle(label).fontSize), color:getComputedStyle(label).color,
+        measured:label.dataset.region === 'diagram-label'}));
+      return {panels,labels,anchor:box(document.querySelector('.content>*')).top,
+        bodyBottom:box(document.querySelector('.body')).bottom, top:box(proof).top, bottom:box(proof).bottom,
+        background:getComputedStyle(document.querySelector('main')).backgroundColor};
+    });
+    assert.equal(details.anchor, 300);
+    assert.ok(details.bodyBottom < details.top && details.bottom <= 1170);
+    assert.ok(details.panels.reduce((area, panel) => area + panel.area, 0) / (1080 * 1350) >= 0.12);
+    assert.ok(details.panels.every(panel => panel.fragments.every(fragment => fragment.inside)));
+    assert.deepEqual(details.labels.map(label => label.text), ['Antes','Com ajuste','Tamanho','Contraste','Hierarquia']);
+    assert.ok(details.labels.every(label => label.measured && label.font / 3 >= 12 && contrast(colorHex(label.color), colorHex(details.background)) >= 4.5));
+    const [small, large, low, high, equal, weighted] = details.panels;
+    assert.equal(small.text, large.text);
+    assert.ok(small.font < large.font && small.color === large.color);
+    assert.equal(low.text, high.text);
+    assert.equal(low.font, high.font);
+    assert.ok(!low.measured && high.measured);
+    assert.ok(contrast(colorHex(low.color), colorHex(details.background)) < 4.5);
+    assert.ok(contrast(colorHex(high.color), colorHex(details.background)) >= 4.5);
+    assert.equal(equal.text, weighted.text);
+    assert.deepEqual(equal.fragments.map(fragment => fragment.weight), [400, 400]);
+    assert.deepEqual(weighted.fragments.map(fragment => fragment.weight), [700, 400]);
+  }
+});

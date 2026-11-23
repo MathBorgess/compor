@@ -1,5 +1,5 @@
 import * as z from './schema.ts';
-import {isCarouselSlideComposition,isCarouselCompositionTokens,type CarouselSlideComposition,
+import {allowsCarouselSemanticDiagram,isCarouselSlideComposition,isCarouselCompositionTokens,type CarouselSlideComposition,
   type CarouselCompositionTokens} from '@compor/agents-api/studio-chat-tools';
 
 const uuid = z.string().check(z.regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
@@ -21,7 +21,10 @@ export const carouselPlanSchema = z.strictObject({
   mode: z.enum(['editorial_art', 'native_serial']),
   tokens: z.optional(tokens),
   slides: z.array(slide).check(z.minLength(3),z.maxLength(10)),
-});
+}).check(z.refine(({mode,slides})=>{
+  const deck={mode,slideCount:slides.length};
+  return slides.every(slide=>allowsCarouselSemanticDiagram(slide.diagram,slide.layout,slide.artSha256!==undefined,deck));
+}));
 
 export const carouselRenderSchema = z.strictObject({
   planSha256: digest,
