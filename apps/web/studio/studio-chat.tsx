@@ -8,7 +8,7 @@ import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
 import {useObjectUrl} from './use-object-url.ts';
 import {ReviewDisclosureBadge} from './image-review-disclosure';
-import {compiler as compileMarkdown} from "markdown-to-jsx";
+import MessageMarkdown from './message-markdown';
 import {sha256Hex} from "../lib/browser-bytes.ts";
 import {
   prepareAdjustment,
@@ -120,22 +120,6 @@ export type InitialPostRequest={
   isCurrent:()=>boolean;
 };
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
-/** Assistant text is Markdown without raw HTML; links open safely and images become their alt text. */
-function MessageMarkdown({text}:{text:string}) {
-  return compileMarkdown(text,{
-    disableParsingRawHTML: true,
-    sanitizer: (value) => {
-      try {
-        const url = new URL(value);
-        return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : null;
-      } catch { return null; }
-    },
-    overrides: {
-      a: ({href, children}: {href?: string; children?: ReactNode}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
-      img: ({alt}: {alt?: string}) => <span>{alt}</span>,
-    },
-  });
-}
 function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageReceipt|null{
  const parsed=receiptSchema.safeParse(input);if(!parsed.success)return null;const value=parsed.data;
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='assetId,pieceId,projectId,requestId,userId,version'||value.userId!==userId||value.projectId!==projectId||![value.assetId,value.pieceId,value.requestId,userId,projectId].every(uuid)||!Number.isSafeInteger(value.version)||value.version<1)return null;

@@ -1,5 +1,5 @@
 import { IMAGE_PROPOSAL_SCHEMA } from './image-proposal.mjs';
-import { POST_FORMATS, FORMAT_SPECS } from './creative-skills/formats.mjs';
+import { POST_FORMATS, FORMAT_FRAME_LIMITS } from './creative-skills/format-limits.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const string = maxLength => ({ type: 'string', maxLength });
@@ -241,7 +241,7 @@ function parse(tool, value) {
   if (tool.name === 'compor_adicionar_campo' && (!value.label.trim() || /[\u0000-\u001f\u007f]/.test(value.label))) throw Error('invalid_action');
   if ('prompt' in value && !value.prompt.trim()) throw Error('invalid_action');
   if (tool.name === 'compor_definir_formato' && value.frameCount !== undefined) {
-    const spec = FORMAT_SPECS[value.format];
+    const spec = FORMAT_FRAME_LIMITS[value.format];
     if (value.frameCount < spec.minFrames || value.frameCount > spec.maxFrames) throw Error('invalid_action');
   }
   if (tool.name === 'compor_definir_plano_laminas') validateComposition(value);

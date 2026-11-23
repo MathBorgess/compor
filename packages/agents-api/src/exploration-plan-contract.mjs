@@ -1,5 +1,5 @@
 import {validateVisualInputManifest,validateVisualReferenceSelection} from './visual-input-contract.mjs';
-import {isPostFormat} from './creative-skills/formats.mjs';
+import {isPostFormat} from './creative-skills/format-limits.mjs';
 const object=x=>Boolean(x)&&typeof x==='object'&&!Array.isArray(x);
 const exact=(x,keys)=>object(x)&&Object.keys(x).sort().join(',')===keys.slice().sort().join(',');
 const shape=(x,required,optional=[])=>object(x)&&required.every(k=>Object.hasOwn(x,k))&&Object.keys(x).every(k=>required.includes(k)||optional.includes(k));
