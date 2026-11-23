@@ -9,7 +9,7 @@ import { promisify } from 'node:util';
 import { calibrationFile, measureJudgeCalibration, readJudgeCalibration } from './calibration.mjs';
 import { evaluate } from './evaluate.mjs';
 import { readCaseEvidence } from './evidence.mjs';
-import { judgeBriefing, judgeDeckHash, judgeModel, judgeRubricSha256 } from './judge-evidence.mjs';
+import { judgeBriefing, judgeDeckHash, judgeInstructions, judgeModel, judgeRubricSha256, validateJudgeResult } from './judge-evidence.mjs';
 import { judgeWeights, readDocument, sha256 } from './protocol.mjs';
 
 const dimensions = Object.keys(judgeWeights);
@@ -37,6 +37,23 @@ function judgeSide({ criticalDefects, scores }) {
     scores: Object.fromEntries(dimensions.map(key => [key, { value: scores[key], evidence }])),
   };
 }
+
+test('a rubrica distingue defeito primário de outro defeito com evidência na mesma lâmina', () => {
+  for (const grade of [0, 1, 2, 3, 4, 5]) assert.match(judgeInstructions, new RegExp(grade + ' —'));
+  const primary = { slide: 2, dimension: 'reentry', evidence: 'Um pronome sem antecedente.' };
+  const other = { slide: 2, dimension: 'editorial', evidence: 'Uma promessa de redução sem fonte.' };
+  const answer = defects => ({ A: judgeSide(sideLabel(sha256('a'), defects)), B: judgeSide(sideLabel(sha256('b'))),
+    winner: 'B', reason: evidence,
+  });
+  assert.doesNotThrow(() => validateJudgeResult(answer([primary, other])));
+  assert.throws(
+    () => validateJudgeResult(answer([primary, { ...other, evidence: '  UM  PRONOME SEM ANTECEDENTE. ' }])),
+    /judge_duplicate_defect_evidence/,
+  );
+  const withUncappedCritical = answer([primary]);
+  withUncappedCritical.A.scores.reentry.value = 3;
+  assert.throws(() => validateJudgeResult(withUncappedCritical), /judge_critical_cap_invalid/);
+});
 
 async function writePair(root, stem, label, adjust = () => {}) {
   const input = {
