@@ -361,7 +361,11 @@ async function assertFullNameOnFocus(control,title){
  assert.equal(closed.open,false);
  assert.equal(closed.visible,false,'antes do foco o nome não aparece só porque existe um title de hover');
  await control.scrollIntoViewIfNeeded();
- await control.focus();
+ // O popover fecha quando a página rola. Aguarde o evento da rolagem da preparação.
+ await control.evaluate(async element=>{
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  element.focus({preventScroll:true});
+ });
  await assertTooltipOpen(control,title);
  await control.evaluate(element=>element.blur());
  const hidden=await readNameTooltip(control);
