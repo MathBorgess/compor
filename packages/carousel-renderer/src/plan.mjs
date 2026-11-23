@@ -11,6 +11,12 @@ export const modes = Object.freeze(['editorial_art', 'native_serial']);
 export const diagrams = Object.freeze(['flow', 'balance', 'steps', 'focus']);
 export const demonstrationDiagrams = Object.freeze(['contrast', 'type_scale', 'hierarchy', 'category_split', 'orientation']);
 export const demonstrationLayouts = Object.freeze(['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual', 'cta_closing']);
+const shapeLayouts = ['split_horizontal', 'svg_diagram', 'framed_plate'];
+const editorialDemonstrationLayouts = new Map([
+  ['spacing', ['svg_diagram']],
+  ['shape_scale', shapeLayouts],
+  ['shape_grouping', shapeLayouts],
+]);
 
 const MODE_POLARITY = ['base', 'inverted'];
 const IMAGE = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
@@ -60,7 +66,7 @@ function copyIssues(slide, index) {
 export function isDiagram(spec) {
   if (diagrams.includes(spec)) return true;
   if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return false;
-  if (spec.type === 'readability_matrix' || spec.type === 'spacing') {
+  if (spec.type === 'readability_matrix' || editorialDemonstrationLayouts.has(spec.type)) {
     return Object.keys(spec).length === 1 && Object.hasOwn(spec, 'type');
   }
   if (demonstrationDiagrams.includes(spec.type)) return isDemonstration(spec);
@@ -114,14 +120,14 @@ function slideIssues(slide, index, deck) {
   if (slide.diagram !== undefined && !validDiagram) findings.push(issue('DIAGRAM', index, 'Diagrama não permitido.'));
   const type = slide.diagram?.type;
   const matrix = type === 'readability_matrix';
-  const spacing = type === 'spacing';
+  const editorialLayouts = editorialDemonstrationLayouts.get(type);
   const comparison = demonstrationDiagrams.includes(type);
-  const demonstration = validDiagram && (matrix || spacing || comparison);
+  const demonstration = validDiagram && (matrix || editorialLayouts !== undefined || comparison);
   if (validDiagram && !demonstration && slide.layout === 'cta_closing') {
     findings.push(issue('CTA_DIAGRAM', index, 'Mova o diagrama básico para uma lâmina de conteúdo ou remova-o do fechamento.'));
   }
   const supportsDemonstration = (matrix && deck.mode === 'native_serial' && deck.slides.length >= 4 && slide.layout === 'native_serial') ||
-    (spacing && deck.mode === 'editorial_art' && slide.layout === 'svg_diagram') ||
+    (deck.mode === 'editorial_art' && editorialLayouts?.includes(slide.layout)) ||
     (comparison && demonstrationLayouts.includes(slide.layout));
   if (demonstration && (!supportsDemonstration || slide.art !== undefined)) {
     findings.push(issue('DEMONSTRATION_LAYOUT', index, 'A comparação exige painel largo e arte exclusiva do diagrama.'));

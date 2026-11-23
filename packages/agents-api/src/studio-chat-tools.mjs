@@ -16,6 +16,9 @@ const diagramShapes = ['flow', 'balance', 'steps', 'focus'];
 const demonstrationLayouts = ['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual', 'cta_closing'];
 const textList = (maxLength, minItems, maxItems) => ({ type: 'array', minItems, maxItems, items: string(maxLength) });
 const orientationLabels = ['Em pé', 'De cabeça para baixo'];
+const editorialPanels = ['spacing', 'shape_scale', 'shape_grouping'];
+const fixedDiagrams = ['readability_matrix', ...editorialPanels];
+const fixedDiagramSchema = fields({ type: { enum: fixedDiagrams } });
 const semanticDiagramSchemas = {
   category_split: fields({ type: { enum: ['category_split'] }, labels: textList(30, 2, 2), items: textList(18, 2, 2) }),
   orientation: fields({
@@ -23,8 +26,6 @@ const semanticDiagramSchemas = {
     labels: { ...textList(30, 2, 2), items: { enum: orientationLabels } },
     sample: string(18),
   }),
-  readability_matrix: fields({ type: { enum: ['readability_matrix'] } }),
-  spacing: fields({ type: { enum: ['spacing'] } }),
 };
 const compositionDiagramSchema = { anyOf: [
   { enum: diagramShapes },
@@ -32,6 +33,7 @@ const compositionDiagramSchema = { anyOf: [
   fields({ type: { enum: ['contrast', 'type_scale'] }, labels: textList(30, 2, 2), sample: string(18) }),
   fields({ type: { enum: ['hierarchy'] }, labels: textList(30, 2, 2), items: textList(10, 3, 3) }),
   ...Object.values(semanticDiagramSchemas),
+  fixedDiagramSchema,
 ] };
 const compositionSchema = fields({
   layout: { enum: compositionLayouts },
@@ -69,14 +71,14 @@ const commands = [
   ['compor_registrar_feedback_visual', 'Registra somente uma avaliação expressa pela pessoa na mensagem atual sobre uma referência selecionada e identificada. quote deve ser trecho literal da mensagem; se não for claro qual imagem, pergunte antes. Não trate seleção como aprovação ou invente avaliação.', {referenceId:string(36),action:{enum:['selected','rejected','comment']},quote:string(1000)}, false],
   ['compor_comentar_imagem_gerada', 'Registra um comentário literal da pessoa sobre uma imagem gerada que ela identificou pelo número exibido, mesmo sem selecioná-la. Use ordinal exatamente como escrito e quote como trecho literal do comentário. Se ela mencionar mais de um número ou a imagem não estiver clara, peça esclarecimento; não invente opinião.', {ordinal:{type:'integer',minimum:1,maximum:2147483647},quote:string(1000)}, false],
   ['compor_novo_post', 'Inicia um post em rascunho no projeto. O rascunho anterior é preservado no navegador.', {}, false],
-  ['compor_definir_formato', 'Altera o formato do post atual (single = Post único 4:5, carousel = Carrossel 4:5 de 3 a 10 lâminas, collection = Coleção 4:5 de 2 a 10 fotos, story = Story vertical 9:16). Não inicia geração de imagem.', { pieceId: string(36), format: { enum: [...POST_FORMATS] }, frameCount: { type: 'integer', minimum: 1, maximum: 10 } }, false],
-  ['compor_definir_plano_laminas', 'Define ou atualiza o plano ordenado de Carrossel (3..10) ou Coleção (2..10) para revisão humana. Para composição de Carrossel, defina compositionMode e composição com alt em todas as lâminas. Essas escolhas estruturam a revisão; a ferramenta não inicia geração.', {
+  ['compor_definir_formato', 'Escolhe o formato do post. single, carousel e collection usam 4:5. story usa 9:16. A geração exige outra ação.', { pieceId: string(36), format: { enum: [...POST_FORMATS] }, frameCount: { type: 'integer', minimum: 1, maximum: 10 } }, false],
+  ['compor_definir_plano_laminas', 'Grava o plano ordenado para revisão humana. Carrossel tem 3–10 lâminas e Coleção tem 2–10 fotos. Para compor Carrossel, inclua compositionMode e composition com alt em cada lâmina.', {
     ...framePlanProperties,
     frames: { type: 'array', minItems: 2, maxItems: 10, items: framePlanItemSchema },
     compositionMode: { enum: compositionModes },
     compositionTokens: compositionTokensSchema,
   }, false],
-  ['compor_editar_lamina', 'Edita cirurgicamente um único campo de uma lâmina específica do Carrossel ou Coleção (role, headline, body ou visualCue), preservando as demais lâminas intactas.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, frameId: string(36), field: { enum: ['role', 'headline', 'body', 'visualCue'] }, value: string(1000) }, false],
+  ['compor_editar_lamina', 'Altera um campo da lâmina indicada em Carrossel ou Coleção.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, frameId: string(36), field: { enum: ['role', 'headline', 'body', 'visualCue'] }, value: string(1000) }, false],
   ['compor_editar_peca', 'Edita um campo do post em rascunho na aba.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, field: { enum: ['headline', 'price', 'date', 'caption'] }, value: string(4000) }, false],
   ['compor_adicionar_campo', 'Acrescenta ao rascunho um campo vazio relevante para o tipo de post. Nomeie apenas a informação necessária; não invente seu valor. A pessoa pode preenchê-lo ou removê-lo.', {pieceId:string(36),baseVersion:{type:'integer',minimum:0},label:string(80)}, false],
   ['compor_abrir_versao', 'Abre uma versão existente como base sem sobrescrever o rascunho anterior.', { pieceId: string(36), version: { type: 'integer', minimum: 1 } }, false],
@@ -163,17 +165,20 @@ function distinctDemonstrationText(labels) {
 }
 
 function isSemanticDiagramType(type) {
-  return typeof type === 'string' && Object.hasOwn(semanticDiagramSchemas, type);
+  return typeof type === 'string' && (Object.hasOwn(semanticDiagramSchemas, type) || fixedDiagrams.includes(type));
 }
 
 export function allowsCarouselSemanticDiagram(diagram, layout, hasRaster = false, deck) {
   const type = typeof diagram === 'string' ? diagram : diagram?.type;
   if (!isSemanticDiagramType(type)) return true;
-  if (hasRaster || !matchesCompositionSchema(diagram, semanticDiagramSchemas[type])) return false;
+  if (hasRaster || !matchesCompositionSchema(diagram, semanticDiagramSchemas[type] ?? fixedDiagramSchema)) return false;
   if (type === 'readability_matrix') {
     return layout === 'native_serial' && (deck === undefined || (deck.mode === 'native_serial' && deck.slideCount >= 4));
   }
-  if (type === 'spacing') return layout === 'svg_diagram' && (deck === undefined || deck.mode === 'editorial_art');
+  if (editorialPanels.includes(type)) {
+    return (deck === undefined || deck.mode === 'editorial_art') &&
+      (layout === 'svg_diagram' || (type !== 'spacing' && ['split_horizontal', 'framed_plate'].includes(layout)));
+  }
   if (!demonstrationLayouts.includes(layout)) return false;
   if (type === 'orientation') {
     return orientationLabels.every((label, index) => diagram.labels[index] === label)

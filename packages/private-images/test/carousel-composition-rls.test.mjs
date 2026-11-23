@@ -426,6 +426,75 @@ test('diagrama de espaçamento editorial preserva o plano e o recibo com receita
   assert.deepEqual(history.rows[0].result.map(version => version.content), [previousRendered, draft, rendered]);
 });
 
+test('diagramas de formas admitem só a receita editorial e vinculam o tipo ao recibo JPEG', async t => {
+  const db = await fixture(t);
+  await migrate(db, [
+    '20261122000048_carousel_composition',
+    '20261123000049_carousel_art_source',
+    '20261123000050_carousel_semantic_diagrams',
+    '20261123000051_carousel_readability_matrix',
+    '20261123000052_carousel_spacing_diagram',
+  ]);
+  const spacing = governedContent();
+  Object.assign(spacing.carouselPlan.slides[1], { layout: 'svg_diagram', diagram: { type: 'spacing' } });
+  const spacingRendered = renderedContent(spacing);
+  const types = ['shape_scale', 'shape_grouping'];
+  const drafts = types.map(type => {
+    const draft = governedContent();
+    Object.assign(draft.carouselPlan.slides[1], { layout: 'split_horizontal', diagram: { type } });
+    return draft;
+  });
+
+  await identify(db, alice);
+  assert.deepEqual((await save(db, 0, 0, legacy)).version.content, legacy);
+  assert.deepEqual((await save(db, 1, 1, spacingRendered)).version.content, spacingRendered);
+  for (const draft of drafts) await assert.rejects(save(db, 2, 2, draft), { code: '22023' });
+  await db.exec('reset role');
+  await migrate(db, ['20261123000053_carousel_shape_diagrams']);
+  await identify(db, alice);
+  assert.deepEqual((await save(db, 2, 2, spacing)).version.content, spacing);
+
+  for (const draft of drafts) {
+    const { type } = draft.carouselPlan.slides[1].diagram;
+    for (const fields of [
+      { layout: 'comparison_dual' },
+      { layout: 'native_serial' },
+      { layout: 'cta_closing' },
+      { artSha256: 'a'.repeat(64) },
+      { art: 'data:image/png;base64,AA==' },
+      { diagram: type },
+      { diagram: { type, labels: ['Antes', 'Depois'] } },
+      { diagram: { type, sample: 'Oferta' } },
+      { diagram: { type, color: null } },
+    ]) {
+      const invalid = structuredClone(draft);
+      Object.assign(invalid.carouselPlan.slides[1], fields);
+      await assert.rejects(save(db, 3, 3, renderedContent(invalid)), { code: '22023' }, JSON.stringify(fields));
+    }
+    const wrongMode = structuredClone(draft);
+    wrongMode.carouselPlan.mode = 'native_serial';
+    await assert.rejects(save(db, 3, 3, renderedContent(wrongMode)), { code: '22023' }, type);
+    const stale = renderedContent(draft);
+    stale.carouselPlan.slides[1].diagram = { type: types.find(candidate => candidate !== type) };
+    await assert.rejects(save(db, 3, 3, stale), { code: '22023' }, type);
+  }
+
+  const expected = [legacy, spacingRendered, spacing];
+  for (const draft of drafts) {
+    assert.deepEqual((await save(db, expected.length, expected.length, draft)).version.content, draft);
+    expected.push(draft);
+    for (const layout of ['split_horizontal', 'svg_diagram', 'framed_plate']) {
+      const candidate = structuredClone(draft);
+      candidate.carouselPlan.slides[1].layout = layout;
+      const rendered = renderedContent(candidate);
+      assert.deepEqual((await save(db, expected.length, expected.length, rendered)).version.content, rendered);
+      expected.push(rendered);
+    }
+  }
+  const history = await db.query('select public.list_project_piece_versions_v3($1) result', [project]);
+  assert.deepEqual(history.rows[0].result.map(version => version.content), expected);
+});
+
 test('JSONB inválido em composição ou marcador retorna invalid_request sem criar versões', async t => {
   const db = await fixture(t);
   await migrate(db, ['20261122000048_carousel_composition']);

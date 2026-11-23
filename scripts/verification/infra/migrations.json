@@ -210,6 +210,10 @@
     {
       "name": "20261123000052_carousel_spacing_diagram.sql",
       "sha256": "96aa09c0ed7eb03b897ef46acd5bccf1a518c447cc6efd336192400d0d357fe7"
+    },
+    {
+      "name": "20261123000053_carousel_shape_diagrams.sql",
+      "sha256": "759ea9fe106d401fa685cc527557c722fcd26f5544bc0eaaacfc5ef89eae3dd5"
     }
   ]
 }

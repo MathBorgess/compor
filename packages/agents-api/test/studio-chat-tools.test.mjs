@@ -244,3 +244,20 @@ test('espaçamento tem receita fechada para SVG editorial', () => {
   assert.equal(isCarouselSlideComposition({ ...composition, layout: 'cta_closing' }), false);
   assert.equal(isCarouselSlideComposition({ ...composition, diagram: { ...composition.diagram, labels: ['Customizado'] } }), false);
 });
+
+test('escala e agrupamento usam somente suas formas fixas no miolo editorial', () => {
+  const plan = compositionPlan();
+  const [cover, frame, closing] = plan.frames;
+  const parse = value => parseStudioAction('compor_definir_plano_laminas', value);
+  for (const type of ['shape_scale', 'shape_grouping']) {
+    const diagram = { type };
+    const composition = { layout: 'svg_diagram', diagram, alt: 'As formas demonstram o ajuste de composição.' };
+    for (const layout of ['split_horizontal', 'svg_diagram', 'framed_plate']) {
+      const editorial = { ...plan, frames: [cover, { ...frame, composition: { ...composition, layout } }, closing] };
+      assert.deepEqual(parse(editorial), editorial);
+      assert.throws(() => parse({ ...editorial, compositionMode: 'native_serial' }), /invalid_action/);
+    }
+    assert.equal(isCarouselSlideComposition({ ...composition, layout: 'cta_closing' }), false);
+    assert.equal(isCarouselSlideComposition({ ...composition, diagram: { ...diagram, labels: ['Outra forma'] } }), false);
+  }
+});

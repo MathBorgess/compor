@@ -40,6 +40,12 @@ A migração `20261123000051` valida a forma exata do diagrama, o modo e o arqu�
 
 A migração `20261123000052` admite a receita exata na persistência. O quadro ocupa o slot de composição do SVG, com JPEG, descrição e digest vinculados à versão como nos demais painéis. O fluxo autenticado local com identidade simulada conferiu o ZIP e a integridade do JPEG. O teste em PGlite verificou a receita, as restrições do arquivo, o vínculo ao recibo e a leitura de versões anteriores.
 
+## Comparações de escala e agrupamento
+
+`editorial_art` admite as receitas fechadas `{"type":"shape_scale"}` e `{"type":"shape_grouping"}` nos painéis largos `split_horizontal`, `svg_diagram` e `framed_plate`. Cada receita ocupa sozinha o slot visual. Na primeira, aumenta apenas o círculo central. Na segunda, seis pontos à mesma distância do centro passam de dispersos a dois grupos. Os rótulos são fixos, e a descrição da ação fica no alt da lâmina.
+
+A migração `20261123000053` acrescenta as duas receitas à validação do plano persistido. As provas em Chromium e PGlite cobrem as combinações admitidas, a exclusividade da mídia, versões anteriores e o vínculo aos bytes. O ZIP da rota passou na execução local com identidade simulada, com conferência do perfil e dos hashes dos JPEGs, da legenda e dos alts.
+
 ## Evidência para habilitação
 
 Executar o fluxo autenticado da rota em Linux no Preview da Vercel. Verificar o fechamento do Chromium em falha, os arquivos presentes no trace, o orçamento de tamanho do ZIP e o comportamento para planos recusados. Vínculo à versão e recuperação em outro navegador exigem mais uma verificação depois que o estúdio consumir esse contrato.

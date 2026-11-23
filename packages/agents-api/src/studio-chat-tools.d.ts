@@ -10,7 +10,7 @@ type CompositionDiagram = DiagramShape
   | { type: 'hierarchy'; labels: string[]; items: string[] }
   | { type: 'category_split'; labels: [string, string]; items: [string, string] }
   | { type: 'orientation'; labels: ['Em pé', 'De cabeça para baixo']; sample: string }
-  | { type: 'readability_matrix' | 'spacing' };
+  | { type: 'readability_matrix' | 'spacing' | 'shape_scale' | 'shape_grouping' };
 export interface CarouselSlideComposition {
   layout: 'hero_bleed' | 'split_horizontal' | 'split_vertical' | 'framed_plate' | 'stat_monument'
     | 'svg_diagram' | 'comparison_dual' | 'bento_grid' | 'artifact_proof' | 'typo_breather' | 'native_serial' | 'cta_closing';

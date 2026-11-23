@@ -536,6 +536,99 @@ test('prova de respiro muda apenas a posição dos vizinhos e mantém rótulos l
   }
 });
 
+test('provas isolam escala do foco e agrupamento dos vizinhos', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  const fonts = { 400: regular, 700: bold };
+  const tokens = { light: '#f4f0e7', dark: '#202d35', accent: '#d95d39' };
+  const cover = slide('framed_plate', 'Hierarquia da ilustração antes do texto', { id: 'capa', diagram: 'focus' });
+  const closing = slide('cta_closing', 'Salve o guia para sua próxima ilustração');
+  const scale = slide('split_horizontal', 'Use escala para indicar a forma principal', {
+    body: 'Compare os tamanhos das formas. Aumente a escolhida como foco e mantenha as demais menores para criar uma diferença visível.',
+    alt: 'À esquerda, os círculos têm o mesmo tamanho. À direita, só o círculo central aumenta.',
+    diagram: { type: 'shape_scale' },
+  });
+  const grouping = slide('framed_plate', 'Organize o entorno para preservar o foco', {
+    body: 'Observe quais formas cercam o elemento principal. Agrupe as secundárias no entorno para deixar a composição mais fácil de percorrer.',
+    alt: 'As seis formas menores passam de dispersas a dois grupos de três, mantendo a mesma distância até o centro.',
+    diagram: { type: 'shape_grouping' },
+  });
+  const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
+  t.after(() => page.close());
+
+  for (const polarity of ['base', 'inverted']) {
+    const slides = [cover, { ...scale, polarity }, { ...grouping, polarity }, closing];
+    const result = await renderDeckInMemory({ mode: 'editorial_art', tokens, slides }, { browser, sharp, fonts, repair: false });
+    assert.ok(result.slides.every(item => item.checks.every(check => check.status === 'pass')));
+    assert.equal(result.checks.find(check => check.id === 'COLLECTION_CADENCE').observed.visualCoverage, 0.75);
+
+    for (const [index, proof] of slides.slice(1, 3).entries()) {
+      const item = result.slides[index + 1];
+      assert.ok(item.firstChecks.every(check => check.status === 'pass'));
+      assert.deepEqual(item.repairs, []);
+      assert.equal(item.artAreaFraction, 904 * 360 / (1080 * 1350));
+      assert.deepEqual(result.altTexts[index + 1], { index: index + 2, alt: proof.alt });
+
+      await page.setContent(slideDocument(proof, { index: index + 2, fonts, palette: paletteFor(tokens) }));
+      await page.evaluate(() => document.fonts.ready);
+      const panel = page.getByRole('img', { name: proof.alt });
+      assert.deepEqual(await panel.boundingBox(), { x: 88, y: 156, width: 904, height: 360 });
+      const background = colorHex(await page.locator('main').evaluate(main => getComputedStyle(main).backgroundColor));
+      const scenes = await panel.locator('figure').evaluateAll(figures => figures.map(figure => {
+        const readShape = shape => {
+          const { x, y, width, height } = shape.getBBox();
+          return { x: x + width / 2, y: y + height / 2, width, height, fill: getComputedStyle(shape).fill };
+        };
+        const caption = figure.querySelector('figcaption');
+        const captionStyle = getComputedStyle(caption);
+        return {
+          width: figure.querySelector('svg').getBoundingClientRect().width,
+          focus: readShape(figure.querySelector('.scene-focus')),
+          neighbors: [...figure.querySelectorAll('.scene-neighbor')].map(readShape),
+          label: caption.textContent, region: caption.dataset.region,
+          labelColor: captionStyle.color, fontSize: Number.parseFloat(captionStyle.fontSize),
+        };
+      }));
+      const [before, after] = scenes;
+      assert.equal(before.width, after.width);
+      assert.equal(before.focus.fill, after.focus.fill);
+      assert.ok(scenes.every(scene => scene.fontSize / 3 >= 12 && scene.region === 'diagram-label' &&
+        contrast(colorHex(scene.labelColor), background) >= 4.5 && contrast(colorHex(scene.focus.fill), background) >= 3 &&
+        scene.neighbors.every(neighbor => contrast(colorHex(neighbor.fill), background) >= 3)));
+
+      if (proof.diagram.type === 'shape_scale') {
+        assert.deepEqual(scenes.map(scene => scene.label), ['Escalas iguais', 'Foco ampliado']);
+        assert.deepEqual(before.neighbors, after.neighbors);
+        assert.deepEqual([before.focus.x, before.focus.y], [after.focus.x, after.focus.y]);
+        assert.deepEqual([before.focus.width, after.focus.width], [38, 86]);
+        assert.ok(before.neighbors.every(neighbor => neighbor.width === before.focus.width));
+      } else {
+        assert.deepEqual(scenes.map(scene => scene.label), ['Formas dispersas', 'Em dois grupos']);
+        assert.deepEqual(before.focus, after.focus);
+        for (const scene of scenes) {
+          assert.equal(scene.neighbors.length, 6);
+          assert.ok(scene.neighbors.every(({ x, y, width, height, fill }) =>
+            width === 17 && height === 17 && fill === before.neighbors[0].fill &&
+            Math.abs(Math.hypot(x - scene.focus.x, y - scene.focus.y) - 76) < 0.001));
+        }
+        const groups = [-1, 1].map(side => after.neighbors.filter(point => Math.sign(point.x - after.focus.x) === side));
+        assert.deepEqual(groups.map(group => group.length), [3, 3]);
+        const gap = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+        assert.ok(before.neighbors.every((point, index) =>
+          before.neighbors.slice(index + 1).every(other => gap(point, other) >= 75.999)));
+        assert.ok(groups.every(group => group.every(a => group.every(b => gap(a, b) < 45))));
+        assert.ok(groups[0].every(a => groups[1].every(b => gap(a, b) > 140)));
+      }
+    }
+  }
+});
+
 test('matriz de leitura mantém a série legível e distingue o espécime de baixo contraste', { skip, timeout: 60_000 }, async t => {
   const { chromium } = require('playwright-core');
   const sharp = require('sharp');

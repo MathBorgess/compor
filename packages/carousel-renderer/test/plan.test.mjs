@@ -150,6 +150,27 @@ test('comparação de respiro tem shape fechada e ocupa apenas um diagrama edito
   }
 });
 
+test('provas de escala e agrupamento têm forma fechada e usam apenas painéis editoriais largos', () => {
+  const plan = deck();
+  for (const type of ['shape_scale', 'shape_grouping']) {
+    const diagram = { type };
+    assert.ok(!demonstrationDiagrams.includes(type));
+    for (const invalid of [type, { ...diagram, labels: ['Antes', 'Depois'] }, { ...diagram, radius: 43 }]) {
+      assert.equal(isDiagram(invalid), false);
+    }
+    for (const layout of ['split_horizontal', 'svg_diagram', 'framed_plate']) {
+      plan.slides[1] = makeSlide('two', layout, 'Veja como as formas mudam', { diagram });
+      assert.deepEqual(validateDeck(plan), []);
+    }
+    const proof = plan.slides[1];
+    assert.deepEqual(validateDeck({ ...plan, mode: 'native_serial' }).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+    for (const invalid of [{ layout: 'cta_closing' }, { layout: 'comparison_dual' }, { art: 'data:image/png;base64,AA==' }]) {
+      plan.slides[1] = { ...proof, ...invalid };
+      assert.deepEqual(validateDeck(plan).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+    }
+  }
+});
+
 test('matriz de leitura tem exemplo fixo e só ocupa a nota seriada sem raster em quatro ou mais lâminas', async () => {
   const diagram = { type: 'readability_matrix' };
   const native = { mode: 'native_serial', slides: [

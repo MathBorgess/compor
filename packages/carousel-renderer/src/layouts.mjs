@@ -65,6 +65,37 @@ function demonstration({ type, labels, sample, items }) {
   return `<div class="media diagram diagram-demonstration" data-demonstration="${type}">${panels.join('')}</div>`;
 }
 
+function comparisonScene(label, shapes) {
+  return `<figure class="diagram-panel">
+    <svg viewBox="0 0 420 192" aria-hidden="true">${shapes}</svg>
+    <figcaption data-region="diagram-label">${label}</figcaption>
+  </figure>`;
+}
+
+function shapeScale(radius) {
+  const neighbors = [[142, 63], [278, 63], [142, 129], [278, 129]];
+  return `<circle class="scene-focus" cx="210" cy="96" r="${radius}"/>` +
+    neighbors.map(([x, y]) => `<circle class="scene-neighbor" cx="${x}" cy="${y}" r="19"/>`).join('');
+}
+
+function shapeGrouping(angles) {
+  return '<rect class="scene-focus" x="177" y="63" width="66" height="66" rx="21"/>' +
+    angles.map(degrees => {
+      const radians = degrees * Math.PI / 180;
+      const x = (210 + 76 * Math.cos(radians)).toFixed(3);
+      const y = (96 + 76 * Math.sin(radians)).toFixed(3);
+      return `<circle class="scene-neighbor" cx="${x}" cy="${y}" r="8.5"/>`;
+    }).join('');
+}
+
+function shapeComparison(type, alt) {
+  const scenes = type === 'shape_scale'
+    ? comparisonScene('Escalas iguais', shapeScale(19)) + comparisonScene('Foco ampliado', shapeScale(43))
+    : comparisonScene('Formas dispersas', shapeGrouping([0, 60, 120, 180, 240, 300])) +
+      comparisonScene('Em dois grupos', shapeGrouping([-17, 0, 17, 163, 180, 197]));
+  return `<div class="media diagram diagram-demonstration scene-proof" data-scene="${type}" role="img" aria-label="${escape(alt)}">${scenes}</div>`;
+}
+
 function spacingPlate(label, dx, dy) {
   const positions = [[-dx, -dy], [dx, -dy], [-dx, dy], [dx, dy]];
   const neighbors = positions.map(([x, y], index) => {
@@ -101,6 +132,9 @@ function readabilityMatrix(alt) {
 function media(slide) {
   if (slide.art) return '<div class="media"><img src="' + escape(slide.art) + '" alt=""></div>';
   if (!slide.diagram) return '';
+  if (slide.diagram.type === 'shape_scale' || slide.diagram.type === 'shape_grouping') {
+    return shapeComparison(slide.diagram.type, slide.alt);
+  }
   if (slide.diagram.type === 'spacing') return spacingComparison(slide.alt);
   if (slide.diagram.type === 'readability_matrix') return readabilityMatrix(slide.alt);
   if (demonstrationDiagrams.includes(slide.diagram.type)) return demonstration(slide.diagram);
@@ -135,6 +169,11 @@ em{font-style:normal;color:var(--ink)}
 .diagram-panel{display:grid;gap:12px;min-width:0;margin:0}
 .diagram-panel svg{display:block}
 .diagram-panel figcaption{padding:0 8px;color:var(--fg);font-size:32px;line-height:1.23;text-align:center;overflow-wrap:anywhere}
+.scene-proof figcaption{font-size:36px}
+.scene-proof{position:relative}
+.scene-proof::before{position:absolute;content:"";left:50%;top:52px;bottom:52px;width:2px;background:color-mix(in srgb,var(--fg) 26%,var(--bg))}
+.scene-focus{fill:var(--ink)}
+.scene-neighbor{fill:color-mix(in srgb,var(--fg) 64%,var(--bg))}
 .spacing-proof figcaption{font-size:36px}
 .spacing-frame{fill:var(--bg);stroke:var(--ink);stroke-width:2;stroke-opacity:.64}
 .spacing-focus{fill:var(--ink)}

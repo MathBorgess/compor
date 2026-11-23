@@ -153,6 +153,31 @@ test('espaçamento é aceito no SVG editorial e no plano salvo com os mesmos lim
   }
 });
 
+test('restringe escala e agrupamento no pedido de render e na versão salva', async () => {
+  const mode = 'editorial_art';
+  const alt = 'As formas comparam a organização dos vizinhos.';
+  for (const type of ['shape_scale', 'shape_grouping']) {
+    const diagram = {type};
+    const recipe = {layout: 'framed_plate', diagram, alt};
+    const read = (slots, deckMode = mode) => readCarouselRenderRequest(request(JSON.stringify({
+      projectId, plan: {mode: deckMode, slides: [{...slide, ...recipe, ...slots}]},
+    })));
+    const saved = (slots, deckMode = mode) => carouselPlanSchema.safeParse({
+      mode: deckMode, slides: [1, 2, 3].map(index => ({frameId: `00000000-0000-4000-8000-00000000000${index}`, ...recipe, ...slots})),
+    }).success;
+    for (const layout of ['split_horizontal', 'svg_diagram', 'framed_plate']) {
+      assert.ok((await read({layout})).ok);
+      assert.equal(saved({layout}), true);
+    }
+    assert.deepEqual(await read({}, 'native_serial'), invalid);
+    assert.equal(saved({}, 'native_serial'), false);
+    for (const slots of [{layout: 'cta_closing'}, {artSha256: '0'.repeat(64)}, {diagram: {...diagram, sample: 'Texto'}}]) {
+      assert.deepEqual(await read(slots), invalid);
+      assert.equal(saved(slots), false);
+    }
+  }
+});
+
 test('enforces the inclusive 32 KiB body limit even without a length header', async () => {
   const body = JSON.stringify(input);
   const byteLimit = 32 * 1024;

@@ -67,6 +67,8 @@ export type CarouselDiagram =
   | { type: 'category_split'; labels: [string, string]; items: [string, string] }
   | { type: 'orientation'; labels: ['Em pé', 'De cabeça para baixo']; sample: string }
   | { type: 'spacing' }
+  | { type: 'shape_scale' }
+  | { type: 'shape_grouping' }
   | { type: 'readability_matrix' };
 
 export const layouts: readonly string[];
