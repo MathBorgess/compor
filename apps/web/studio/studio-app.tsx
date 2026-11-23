@@ -23,6 +23,8 @@ import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import { StudioStorageError } from '../lib/studio-storage.ts';
+import {sha256Hex} from '../lib/browser-bytes.ts';
+import {setDraftCarouselRender} from '../lib/studio-state.ts';
 import {bindVersionImage, lookupVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
 import {fetchPrivateImage} from '../lib/private-image-fetch.ts';
 import {composeStudioPng} from '../lib/studio-compose.ts';
@@ -79,12 +81,12 @@ import StudioAssets from "./studio-assets";
 import * as z from '../lib/schema.ts';
 import { projectsSchema, projectResponseSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
 import { versionsSchema, versionSchema } from '../lib/studio-piece-contract';
-import type { StudioState, StudioReference, ActionResult, PieceFrame } from '../lib/studio-domain';
+import type { StudioState, StudioReference, ActionResult, PieceFrame, PieceContent, StudioDraft } from '../lib/studio-domain';
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 const ParallelExplorationRecovery=lazy(()=>import('./parallel-exploration-recovery'));
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;awaitConfirmedIdentity?:()=>Promise<boolean>;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;carouselRenderAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;awaitConfirmedIdentity?:()=>Promise<boolean>;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
 type Confirmation={name:StudioActionName;args:StudioAction};
@@ -120,6 +122,7 @@ export default function StudioApp({
   selectedVisualsAvailable = false,
   selectedVisualsRequired = false,
   referenceAuthorityEnabled = false,
+  carouselRenderAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -337,6 +340,7 @@ export default function StudioApp({
         selectedVisualsAvailable={selectedVisualsAvailable}
         selectedVisualsRequired={selectedVisualsRequired}
         referenceAuthorityEnabled={referenceAuthorityEnabled}
+        carouselRenderAvailable={carouselRenderAvailable}
         onUseAI={onUseAI}
         onPauseAI={onPauseAI}
         getApiKey={getApiKey}
@@ -417,6 +421,7 @@ function ProjectStudio({
   selectedVisualsAvailable = false,
   selectedVisualsRequired = false,
   referenceAuthorityEnabled = false,
+  carouselRenderAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -489,6 +494,9 @@ function ProjectStudio({
     [drawer, setDrawer] = useState<StudioDrawer>(null),
     [viewingArt, setViewingArt] = useState(false),
     [panelRequest, setPanelRequest] = useState<{id:string;nonce:number}|null>(null);
+  const carouselRequest=useRef<AbortController|null>(null);
+  const [composingCarousel,setComposingCarousel]=useState(false);
+  const [loadedCarousel,setLoadedCarousel]=useState<string|null>(null);
   const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
   const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
   const referenceUrls=useRef(new Map<string,number>()),referenceUrlGeneration=useRef(0),referenceUrlCleanup=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -812,9 +820,21 @@ function ProjectStudio({
     await cacheSavedImage(pieceId, version, blob);
     return blob;
   }
-  async function workingFrameImage(pieceId:string, baseVersion:number, frame:PieceFrame) {
+  async function workingFrameImage(pieceId:string, baseVersion:number, frame:PieceFrame, content?:PieceContent) {
     const storage=local.storage.current;
     if(!storage)return null;
+    if(content?.carouselPlan){
+      const panel=content.carouselRender?.frames.find(item=>item.frameId===frame.id);
+      if(!panel)return null;
+      const {carouselPreviewId}=await import('../lib/studio-carousel-client');
+      const address={pieceId,baseVersion,kind:'preview' as const,frameId:await carouselPreviewId(frame.id,panel.sha256)};
+      const scope={userId,projectId:project.id};
+      const preview=await storage.getDraftAsset(scope,address);
+      if(preview?.file.type==='image/jpeg' && await sha256Hex(await preview.file.arrayBuffer())===panel.sha256)return preview.file;
+      if(baseVersion<1||!frame.assetId)return null;
+      const {readSavedFrameImage}=await import('../lib/piece-version-frame-assets');
+      return readSavedFrameImage({projectId:project.id,pieceId,version:baseVersion,frameId:frame.id,assetId:frame.assetId,expectedSha256:panel.sha256});
+    }
     const stored=await storage.getDraftAsset({userId,projectId:project.id}, {
       pieceId,baseVersion,kind:'base',frameId:frame.id,
     });
@@ -825,6 +845,42 @@ function ProjectStudio({
     if(file)await cacheSavedImage(pieceId,baseVersion,file,frame.id).catch(()=>{});
     return file;
   }
+  async function requestCarouselComposition(source:StudioDraft) {
+    const storage=local.storage.current;
+    if(!carouselRenderAvailable||!storage||carouselRequest.current||saveLock.current)return;
+    const controller=new AbortController();
+    carouselRequest.current=controller;
+    setComposingCarousel(true);setNotice('');
+    try{
+      const {carouselPlanFor,composeCarousel,carouselPreviewId}=await import('../lib/studio-carousel-client');
+      const plan=carouselPlanFor(source.content);
+      if(!plan)throw Error('carousel_plan_invalid');
+      const {receipt,images}=await composeCarousel(project.id,plan,controller.signal);
+      for(const image of images){
+        controller.signal.throwIfAborted();
+        await storage.putDraftAsset({userId,projectId:project.id,pieceId:source.pieceId,baseVersion:source.baseVersion,
+          kind:'preview',frameId:await carouselPreviewId(image.frameId,image.sha256),file:image.file});
+      }
+      controller.signal.throwIfAborted();
+      if(!active.current) return;
+      local.change(value=>setDraftCarouselRender(value,source,receipt));
+      await local.flush();
+    }catch(error){
+      if(active.current&&!controller.signal.aborted){
+        setNotice(error instanceof Error&&error.message==='carousel_quality_held'
+          ? 'A revisão encontrou problemas nas lâminas. Ajuste os textos ou o plano no estúdio antes de compor novamente.'
+          : 'Não foi possível concluir a composição. Confira o plano ou tente novamente.');
+      }
+    }finally{
+      if(carouselRequest.current===controller)carouselRequest.current=null;
+      if(active.current)setComposingCarousel(false);
+    }
+  }
+  useEffect(()=>()=>carouselRequest.current?.abort(),[draft?.pieceId,draft?.baseVersion]);
+  const receiptKey=draft?.content.carouselRender
+    ? [draft.pieceId,draft.baseVersion,draft.content.carouselRender.planSha256,...draft.content.carouselRender.frames.map(frame=>frame.sha256)].join(':')
+    : null;
+  const visibleFrameBlobs=!draft?.content.carouselPlan || (receiptKey&&loadedCarousel===receiptKey) ? frameBlobs : {};
   const draftFrameIds = (draft?.content.frames ?? []).map(frame => frame.id).join(',');
   const draftFrameAssets = (draft?.content.frames ?? []).map(frame => frame.assetId ?? '').join(',');
   useEffect(() => {
@@ -843,7 +899,7 @@ function ProjectStudio({
     if (!draft || !local.storage.current) return;
     let live = true;
     const pieceId=draft.pieceId, baseVersion=draft.baseVersion;
-    workingImage(pieceId, baseVersion)
+    if(!draft.content.carouselPlan) workingImage(pieceId, baseVersion)
       .then(async file=>{
         if(!live||loadGeneration!==baseLoadGeneration.current)return;
         if(file){setBase(file);return;}
@@ -858,7 +914,7 @@ function ProjectStudio({
     const frames = draft.content.frames ?? [];
     if (frames.length) {
       Promise.allSettled(frames.map(async frame => {
-        const file=await workingFrameImage(pieceId,baseVersion,frame);
+        const file=await workingFrameImage(pieceId,baseVersion,frame,draft.content);
         return {id:frame.id,file};
       })).then(entries => {
         if(!live)return;
@@ -866,20 +922,27 @@ function ProjectStudio({
         for(const entry of entries){
           if(entry.status==='fulfilled'&&entry.value.file)map[entry.value.id]=entry.value.file;
         }
-        setFrameBlobs(current=>({...map,...current}));
+        if(draft.content.carouselPlan){
+          setFrameBlobs(map);
+          setLoadedCarousel(receiptKey);
+          const cover=frames.find(frame=>frame.position===1);
+          if(cover)setBase(map[cover.id]??null);
+        }else setFrameBlobs(current=>({...map,...current}));
         if(entries.some(entry=>entry.status==='rejected'))setNotice('Não foi possível verificar todas as lâminas desta versão.');
       });
     }
     return () => {
       live = false;
     };
-  }, [draft?.pieceId, draft?.baseVersion, draftFrameIds, draftFrameAssets]);
+  }, [draft?.pieceId, draft?.baseVersion, draftFrameIds, draftFrameAssets, draft?.content.carouselPlan!==undefined, receiptKey]);
   async function useBase({ blob, pieceId, version, frameId, assetId, creationContext }:ImageSelection) {
     baseLoadGeneration.current++;
     try {
       if(!local.storage.current)throw Error("Armazenamento indisponível.");
       const storage=local.storage.current;
       const scope={userId, projectId:project.id};
+      if(local.get().drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===version)?.content.carouselPlan)
+        throw Error('Use a composição do carrossel para criar as lâminas deste plano.');
       let shown=blob;
       if (frameId) {
         await storage.putDraftAsset({
@@ -1052,7 +1115,8 @@ function ProjectStudio({
     setDialog(null);
   }
   async function saveCurrent(args?:SaveDraftInput):Promise<ActionResult> {
-    if(!getCurrentDraft(local.get())||saveLock.current)throw Error("save_unavailable");
+    const selected=getCurrentDraft(local.get());
+    if(!selected||saveLock.current||carouselRequest.current||(args?.operation&&selected.content.carouselPlan))throw Error("save_unavailable");
     setSaving(true);setNotice("");
     try {
       const outcome=await journey.saveCurrent({
@@ -1067,10 +1131,11 @@ function ProjectStudio({
           if(!storage||input.userId!==userId||input.projectId!==project.id)return {status:'unknown'};
           const scope={userId:input.userId, projectId:input.projectId};
           const {projectId,pieceId,version}=input;
-          const frameLookup=!args&&input.content.format==='carousel'&&input.content.frames?.length
+          const governed=input.content.carouselPlan!==undefined;
+          const frameLookup=(!args||governed)&&input.content.format==='carousel'&&input.content.frames?.length
             ? await lookupVersionImage({projectId,pieceId,version})
             : null;
-          if(frameLookup?.status==='unknown')return {status:'unknown'};
+          if(frameLookup?.status==='unknown'||(governed&&frameLookup?.status!=='enabled'))return {status:'unknown'};
           if(frameLookup?.status==='enabled'){
             const {prepareSavedFrameImages,publishSavedFrameImage}=await import('../lib/piece-version-frame-assets');
             const baseVersion=input.source.baseVersion;
@@ -1078,7 +1143,8 @@ function ProjectStudio({
               version:{projectId,pieceId,version},
               content:input.content,
               readFrame:async frame=>{
-                const file=await workingFrameImage(pieceId,baseVersion,frame);
+                const file=await workingFrameImage(pieceId,baseVersion,frame,input.content);
+                if(governed)return file;
                 if(file)return file;
                 if(baseVersion>=1&&frame.assetId?.[14]==='5')throw Error('frame_image_unconfirmed');
                 if(frame.position!==1)return null;
@@ -1092,10 +1158,10 @@ function ProjectStudio({
               for(const image of prepared.images){
                 const file=await publishSavedFrameImage(image);
                 if(!file)return 'unknown';
-                await cacheSavedImage(pieceId,savedVersion,file,image.address.frameId).catch(()=>{});
+                if(!governed)await cacheSavedImage(pieceId,savedVersion,file,image.address.frameId).catch(()=>{});
                 if(image.address.frameId===firstFrame?.id)cover={assetId:image.address.assetId,file};
               }
-              if(cover){
+              if(cover&&!governed){
                 if(await bindVersionImage({projectId,pieceId,version:savedVersion,assetId:cover.assetId})!=='published')return 'unknown';
                 await cacheSavedImage(pieceId,savedVersion,cover.file).catch(()=>{});
               }
@@ -1160,6 +1226,7 @@ function ProjectStudio({
         baseVersion: d?.baseVersion ?? null,
         expectedLatestVersion: d?.expectedLatestVersion ?? 0,
         unsaved: Boolean(d?.dirty),
+        ...(carouselRenderAvailable?{carouselCompositionAvailable:true}:{}),
       };
     },
     compor_editar_briefing: async (args,context) => {
@@ -1183,6 +1250,9 @@ function ProjectStudio({
         baseVersion: args.baseVersion,
         visualInvariants: args.visualInvariants,
         frames: args.frames,
+        ...(carouselRenderAvailable&&args.compositionMode?{
+          compositionMode:args.compositionMode,compositionTokens:args.compositionTokens,
+        }:{}),
       }));
       const firstId = next?.drafts.find(item => item.pieceId === args.pieceId && item.baseVersion === args.baseVersion)?.content.frames?.[0]?.id;
       if (firstId) setActiveFrameId(firstId);
@@ -1517,7 +1587,7 @@ function ProjectStudio({
       format={activeFormat}
       frames={activeFrames}
       activeFrameId={activeFrameId}
-      frameBlobs={frameBlobs}
+      frameBlobs={visibleFrameBlobs}
       canTriggerAI={canUseProjectAI}
       onSelectFrame={setActiveFrameId}
       onUpdateFrame={(frameId, patch) => {
@@ -1544,7 +1614,7 @@ function ProjectStudio({
           ? `Revise e aprimore os textos das lâminas deste ${activeFormatOption.label.toLowerCase()} usando copy-na-imagem (gancho direct response na capa, complementos com continuidade e adequação ao meu perfil/tom). Proponha até 3 opções de gancho para a capa e ajustes nos complementos sem gerar imagem ainda.`
           : `Revise e aprimore o texto desta imagem (${activeFormatOption.label} ${activeFormatOption.ratioLabel}) usando copy-na-imagem com foco em gancho, direct response e adequação ao meu perfil/tom de voz. Proponha até 3 opções de gancho sem gerar imagem ainda.`);
       }}
-      onGenerateRemainingFrames={() => {
+      onGenerateRemainingFrames={draft?.content.carouselPlan ? undefined : () => {
         if (!draft) return;
         const pendingPositions = [...activeFrames].sort((a, b) => a.position - b.position).slice(1).filter(item => !frameBlobs[item.id]).map(item => item.position);
         if (!pendingPositions.length) return;
@@ -2023,8 +2093,10 @@ function ProjectStudio({
             base={base}
             format={activeFormat}
             frames={activeFrames}
-            frameBlobs={frameBlobs}
+            frameBlobs={visibleFrameBlobs}
             saving={saving}
+            composing={composingCarousel}
+            onCompose={carouselRenderAvailable&&draft?.content.carouselPlan ? ()=>{void requestCarouselComposition(draft);} : undefined}
             onSave={() => {
               void saveCurrent().catch(() => setNotice('Não foi possível iniciar o salvamento desta versão.'));
             }}

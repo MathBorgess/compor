@@ -145,4 +145,18 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
   }
   const cover = await sharp(extract('cover-grid.png')).metadata();
   assert.deepEqual([cover.width, cover.height], [270, 360]);
+
+  const editor = await post({ projectId, plan }, { Accept: 'multipart/form-data' });
+  assert.equal(editor.status, 200);
+  assert.match(editor.headers.get('content-type'), /^multipart\/form-data; boundary=/);
+  const parts=await editor.formData();
+  const editorManifest=JSON.parse(await parts.get('qa-manifest.json').text());
+  assert.equal(editorManifest.planSha256,manifest.planSha256);
+  assert.deepEqual(editorManifest.final.slides.map(panel=>panel.id),manifest.final.slides.map(panel=>panel.id));
+  for (const panel of editorManifest.final.slides) {
+    const image=parts.get(panel.file);
+    assert.equal(image.type,'image/jpeg');
+    assert.equal(image.size,panel.bytes);
+    assert.equal(createHash('sha256').update(Buffer.from(await image.arrayBuffer())).digest('hex'),panel.sha256);
+  }
 });

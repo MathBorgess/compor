@@ -592,6 +592,7 @@ export default function StudioChat({
         const snapshot = getState(), selected = getCurrentDraft(snapshot);
         const source = snapshot.drafts.find(item => item.pieceId === context.pieceId && item.baseVersion === context.baseVersion);
         if (!source || ((preparedTarget||proposal.operation === 'edit') && (selected?.pieceId !== context.pieceId || selected?.baseVersion !== (preparedTarget?.version??context.baseVersion)))) throw Error('Abra a versão indicada para revisar as imagens desta proposta.');
+        if(source.content.carouselPlan)throw Error('Abra a revisão e componha as lâminas deste plano.');
         if(data.visualInputRequired){
           if(!conversationId)throw Error('Não foi possível recuperar as imagens desta conversa.');
           visualSnapshot=await requestVisualSnapshot({userId:snapshot.userId,projectId:snapshot.projectId,conversationId,requestId});
@@ -1399,7 +1400,7 @@ export default function StudioChat({
     catch{setBusy(false);setNotice('Não foi possível verificar a versão reservada para esta proposta.');return;}
     const draft=snapshot.drafts.find(item=>item.pieceId===action.context.pieceId&&item.baseVersion===action.context.baseVersion);
     if (
-      !draft || !action.artworkInput ||
+      !draft || draft.content.carouselPlan || !action.artworkInput ||
       (typeof prepareImageVersion !== "function" && (draft.dirty || draft.baseVersion < 1)) ||
       selectedDraft?.pieceId!==draft.pieceId || selectedDraft.baseVersion!==(preparedTarget?.version??draft.baseVersion) ||
       (action.preparedTarget && !preparedTarget) ||

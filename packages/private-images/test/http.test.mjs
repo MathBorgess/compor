@@ -101,3 +101,87 @@ test('PNG maior que limite Vercel é recuperado em partes com autorização por 
  authenticatedUser='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';const unauthorized=new URL(base);unauthorized.searchParams.set('part','0');assert.equal((await handler(new Request(unauthorized))).status,404);assert.equal(storage,4);
  const invalid=new URL(base);invalid.searchParams.set('part','4');assert.equal((await handler(new Request(invalid))).status,400);assert.equal(storage,4);
 });
+
+test('JPEG exige opt-in para escrita, é ligado à lâmina salva e preserva os bytes', async () => {
+  const jpegUrl = new URL(base);
+  jpegUrl.searchParams.set('format', 'jpeg');
+  const bytes = Buffer.from([255, 216, 42, 255, 217]);
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  const frameId = '55555555-5555-4555-8555-555555555555';
+  let stored, uploads = 0, downloads = 0, checks = 0, validations = 0;
+  const options = {
+    appOrigin: 'https://compor.example', supabaseUrl: 'https://project.supabase.co', publishableKey: 'sb_publishable_test',
+    authenticate: async () => ({ userId: user, token: 'user-token' }),
+    validateCarouselJpeg: async image => {
+      validations += 1;
+      assert.deepEqual(image, bytes);
+      return true;
+    },
+    fetch: async (url, init) => {
+      assert.equal(init.headers.authorization, 'Bearer user-token');
+      if (url.pathname === '/rest/v1/piece_versions') {
+        checks += 1;
+        assert.match(url.searchParams.get('select'), /,content$/);
+        return Response.json([{
+          project_id: project, piece_id: piece, version: 1, projects: { owner_id: user },
+          content: {
+            format: 'carousel', frames: [{ id: frameId, assetId: asset, position: 1 }],
+            carouselRender: { planSha256: '5'.repeat(64), frames: [{ frameId, sha256, alt: 'Abertura.' }] },
+          },
+        }]);
+      }
+      assert.match(url.pathname, new RegExp('/compor-carousel-jpegs/' + user + '/' + project + '/' + piece + '/1/' + asset + '[.]jpg$'));
+      if (init.method === 'POST') {
+        uploads += 1;
+        assert.equal(init.headers['content-type'], 'image/jpeg');
+        assert.equal(init.headers['x-upsert'], 'false');
+        stored = init.body;
+        return Response.json({});
+      }
+      downloads += 1;
+      return new Response(stored, { headers: { 'content-type': 'image/jpeg' } });
+    },
+  };
+  const post = (body = bytes) => new Request(jpegUrl, { method: 'POST', headers: { origin: 'https://compor.example', 'content-type': 'image/jpeg' }, body });
+  const readOnly = createPrivateImageHandler(options);
+  const readWrite = createPrivateImageHandler({ ...options, allowCarouselJpegUploads: true });
+  assert.equal((await readOnly(post())).status, 503);
+  assert.equal(checks, 0);
+  assert.equal((await readWrite(post(Buffer.from([255, 216, 41, 255, 217])))).status, 400);
+  assert.equal((await readWrite(post(Buffer.alloc(4 * 1024 * 1024 + 1)))).status, 400);
+  assert.equal(uploads, 0);
+  assert.equal(validations, 0);
+  assert.equal((await readWrite(post())).status, 201);
+  const result = await readOnly(new Request(jpegUrl));
+  assert.equal(result.status, 200);
+  assert.equal(result.headers.get('content-type'), 'image/jpeg');
+  assert.ok(Buffer.from(await result.arrayBuffer()).equals(bytes));
+  stored = Buffer.from([255, 216, 40, 255, 217]);
+  assert.equal((await readOnly(new Request(jpegUrl))).status, 503);
+  assert.equal(uploads, 1);
+  assert.equal(downloads, 2);
+  assert.equal(validations, 2);
+});
+
+test('JPEG de versão comum, de lâmina sem vínculo ou de outra conta não chega ao Storage', async () => {
+  const jpegUrl = new URL(base);
+  jpegUrl.searchParams.set('format', 'jpeg');
+  const frameId = '55555555-5555-4555-8555-555555555555';
+  const read = row => createPrivateImageHandler({
+    appOrigin: 'https://compor.example', supabaseUrl: 'https://project.supabase.co', publishableKey: 'sb_publishable_test',
+    authenticate: async () => ({ userId: user, token: 'user-token' }),
+    validateCarouselJpeg: async () => true,
+    fetch: async url => {
+      assert.equal(url.pathname, '/rest/v1/piece_versions');
+      return Response.json([{ project_id: project, piece_id: piece, version: 1, projects: { owner_id: user }, ...row }]);
+    },
+  })(new Request(jpegUrl));
+  const content = {
+    format: 'carousel', frames: [{ id: frameId, assetId: asset, position: 1 }],
+    carouselRender: { planSha256: '5'.repeat(64), frames: [] },
+  };
+  assert.equal((await read({})).status, 404);
+  assert.equal((await read({ content, projects: { owner_id: project } })).status, 404);
+  assert.equal((await read({ content })).status, 404);
+  assert.equal((await read({ content: { ...content, format: 'collection' } })).status, 404);
+});

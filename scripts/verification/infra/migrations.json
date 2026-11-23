@@ -190,6 +190,10 @@
     {
       "name": "20261121000047_post_formats_and_frames.sql",
       "sha256": "9229096628b2612800a1d619a94abb3e19b3cdc308d37c10b0875a01871af0ee"
+    },
+    {
+      "name": "20261122000048_carousel_composition.sql",
+      "sha256": "4b13d5f6f2a536393ed9261b7546a85de7230266aebe79095db5f919e8937ce5"
     }
   ]
 }

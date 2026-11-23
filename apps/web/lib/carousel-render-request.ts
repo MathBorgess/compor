@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {sha256Hex} from './browser-bytes.ts';
+import {carouselPlanJson} from './carousel-plan-json.ts';
 
 const MAX_REQUEST_BYTES = 32 * 1024;
 const diagram = z.union([
@@ -83,12 +84,5 @@ export async function readCarouselRenderRequest(request: Request): Promise<ReadR
   if (!parsed.success) return invalidRequest;
   const {projectId, plan} = parsed.data;
 
-  // Hash the UTF-8 JSON of the plan alone, sorting object keys by UTF-16 code
-  // units at every level. Array order and the original string values are kept.
-  const canonicalPlan = JSON.stringify(plan, (_key: string, value: unknown) => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
-    const fields = value as Record<string, unknown>;
-    return Object.fromEntries(Object.keys(fields).sort().map(key => [key, fields[key]]));
-  });
-  return {ok: true, projectId: projectId.toLowerCase(), plan, planSha256: await sha256Hex(canonicalPlan)};
+  return {ok: true, projectId: projectId.toLowerCase(), plan, planSha256: await sha256Hex(carouselPlanJson(plan))};
 }

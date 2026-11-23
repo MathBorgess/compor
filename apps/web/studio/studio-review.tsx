@@ -14,18 +14,20 @@ function sanitizeFileBase(title: string) {
   return title.trim().replace(/[\\/<>:"|?*\u0000-\u001f]/g, "-") || "post";
 }
 
-function frameFilename(fileBase: string, position: number) {
-  return `${fileBase}-${String(position).padStart(2, '0')}.png`;
+function frameFilename(fileBase: string, position: number, extension = 'png') {
+  return `${fileBase}-${String(position).padStart(2, '0')}.${extension}`;
 }
 
 function FrameReviewCard({
   frame,
   blob,
+  alt,
   busy,
   onDownload,
 }: {
   frame: PieceFrame;
   blob: Blob | null;
+  alt?: string;
   busy: boolean;
   onDownload: (frame: PieceFrame, blob: Blob) => void;
 }) {
@@ -39,7 +41,7 @@ function FrameReviewCard({
         <img
           src={url}
           className="studio-export-preview"
-          alt={`Prévia da lâmina ${frame.position}, sem textos adicionados pelo aplicativo`}
+          alt={alt ?? `Prévia da lâmina ${frame.position}`}
         />
       ) : (
         <p className="studio-hint">Imagem desta lâmina ainda não disponível.</p>
@@ -66,6 +68,8 @@ export default function StudioReview({
   frames = EMPTY_FRAMES,
   frameBlobs = EMPTY_FRAME_BLOBS,
   saving = false,
+  composing = false,
+  onCompose,
   onSave,
 }: {
   title: string;
@@ -76,6 +80,8 @@ export default function StudioReview({
   frames?: readonly PieceFrame[];
   frameBlobs?: Readonly<Record<string, Blob>>;
   saving?: boolean;
+  composing?: boolean;
+  onCompose?: () => void;
   onSave?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -87,7 +93,14 @@ export default function StudioReview({
   const orderedFrames = [...frames].sort((a, b) => a.position - b.position);
   const isCarousel = format === 'carousel' && orderedFrames.length > 0;
   const isMultiFrame = isCarousel || (format === 'collection' && orderedFrames.length > 0);
-  const reviewFrames = orderedFrames.map(frame => ({ frame, blob: frameBlobs[frame.id] ?? (frame.position === 1 ? base : null) }));
+  const governed = isCarousel && draft?.content.carouselPlan !== undefined;
+  const render = governed ? draft?.content.carouselRender : undefined;
+  const extension = governed ? 'jpg' : 'png';
+  const reviewFrames = orderedFrames.map(frame => ({
+    frame,
+    blob: governed ? render && frameBlobs[frame.id]?.type === 'image/jpeg' ? frameBlobs[frame.id] : null
+      : frameBlobs[frame.id] ?? (frame.position === 1 ? base : null),
+  }));
   const availableFrames = reviewFrames.filter((entry): entry is { frame: PieceFrame; blob: Blob } => entry.blob !== null);
   const missingPositions = reviewFrames.filter(({blob}) => !blob).map(({frame}) => frame.position);
   const completeCarousel = isCarousel && missingPositions.length === 0;
@@ -141,7 +154,8 @@ export default function StudioReview({
     setBusy(true);
     setNotice("");
     try {
-      await triggerPngDownload(blob, frameFilename(`${sanitizeFileBase(filenameTitle)}-v${draft.baseVersion}`, frame.position), current);
+      const file = governed ? blob : await composeStudioPng({ base: blob });
+      triggerDownload(file, frameFilename(`${sanitizeFileBase(filenameTitle)}-v${draft.baseVersion}`, frame.position, extension), current);
     } catch (error) {
       if (current === generation.current) setNotice(errorMessage(error));
     } finally {
@@ -183,9 +197,13 @@ export default function StudioReview({
       const entries = [];
       for (const {frame, blob} of availableFrames) {
         if (!isCurrent()) return;
-        entries.push({name: frameFilename(fileBase, frame.position), file: await composeStudioPng({base: blob})});
+        entries.push({name: frameFilename(fileBase, frame.position, extension), file: governed ? blob : await composeStudioPng({base: blob})});
       }
       entries.push({name: 'legenda.txt', file: new Blob([caption], {type: 'text/plain;charset=utf-8'})});
+      if (render) {
+        const alt = render.frames.map(({alt},index)=>({index:index+1,alt}));
+        entries.push({name:'alt-text.json',file:new Blob([JSON.stringify(alt,null,2)+'\n'],{type:'application/json'})});
+      }
       const archive = await createStudioZip(entries, isCurrent);
       if (archive && triggerDownload(archive, `${fileBase}.zip`, current)) {
         setNotice('Download do ZIP iniciado.');
@@ -211,7 +229,11 @@ export default function StudioReview({
     <section aria-label="Arte e legenda do projeto">
       <h3>{title}</h3>
       <p className="studio-hint">{formatOption.label} · {formatOption.ratioLabel}{isMultiFrame ? ` · ${orderedFrames.length} lâminas` : ''}</p>
-      {isCarousel && !completeCarousel && (
+      {governed && !render ? (
+        <p id={availabilityId} className="studio-hint" role="status">
+          {composing ? 'Compondo e verificando as lâminas…' : 'Componha as lâminas deste plano para revisar as imagens.'}
+        </p>
+      ) : isCarousel && !completeCarousel && (
         <p id={availabilityId} className="studio-hint" role="status">
           Carrossel incompleto. {availableFrames.length} de {orderedFrames.length} lâminas disponíveis. {missingPositions.length === 1 ? 'Falta' : 'Faltam'} {missingPositions.join(', ')}.
         </p>
@@ -229,6 +251,7 @@ export default function StudioReview({
               key={frame.id}
               frame={frame}
               blob={blob}
+              alt={render?.frames.find(item=>item.frameId===frame.id)?.alt}
               busy={busy}
               onDownload={(target, blob) => { void downloadFrame(target, blob); }}
             />
@@ -246,8 +269,13 @@ export default function StudioReview({
       )}
       {caption && <p className="studio-review-caption">{caption}</p>}
       <div className="studio-review-actions">
+        {governed && !completeCarousel && onCompose && (
+          <button type="button" className="studio-button" disabled={composing || saving || busy} onClick={onCompose}>
+            {composing ? 'Compondo…' : 'Compor lâminas'}
+          </button>
+        )}
         {isCarousel && draft && onSave && (
-          <button type="button" className="studio-button-secondary" disabled={saving || busy} onClick={onSave}>
+          <button type="button" className="studio-button-secondary" disabled={saving || busy || composing || (governed && !completeCarousel)} onClick={onSave}>
             {saving ? "Salvando…" : "Salvar versão"}
           </button>
         )}
@@ -255,7 +283,7 @@ export default function StudioReview({
           <button
             type="button"
             className="studio-button"
-            disabled={busy || saving || !completeCarousel || !draft}
+            disabled={busy || saving || composing || !completeCarousel || !draft}
             aria-describedby={completeCarousel ? undefined : availabilityId}
             onClick={() => { void downloadCarousel(); }}
           >

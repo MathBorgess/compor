@@ -20,15 +20,18 @@ async function readBounded(stream:ReadableStream<Uint8Array>|null, limit:number)
 }
 
 // Each request is authorized separately; no URL, path or credential from a provider reaches the browser.
-export async function fetchPrivateImage(query:URLSearchParams|string,{fetch:fetchApi=globalThis.fetch,signal}:{fetch?:typeof fetch;signal?:AbortSignal}={}) {
+export async function fetchPrivateImage(query:URLSearchParams|string,{fetch:fetchApi=globalThis.fetch,signal,expectedSha256}:{fetch?:typeof fetch;signal?:AbortSignal;expectedSha256?:string}={}) {
+  const jpeg = new URLSearchParams(query).get('format') === 'jpeg';
+  const mime = jpeg ? 'image/jpeg' : 'image/png';
   const get=async (params:URLSearchParams|string)=>fetchApi(`/api/images?${params}`,{cache:'no-store',signal});
   const initial=await get(query);
-  if(initial.ok && /^image\/png(?:\s*;|$)/i.test(initial.headers.get('content-type')??'')) {
+  if(initial.ok && initial.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() === mime) {
     const bytes=await readBounded(initial.body,MAX_HTTP_BYTES);if(!bytes.length)throw Error('empty image');
-    return new Blob([bytes],{type:'image/png'});
+    if(expectedSha256 !== undefined && await sha256Hex(bytes) !== expectedSha256)throw Error('image changed');
+    return new Blob([bytes],{type:mime});
   }
   if(initial.status===404)throw new PrivateImageNotFound('image unavailable');
-  if(initial.status!==413 || initial.headers.get('x-compor-chunked')!=='1')throw Error('image unavailable');
+  if(jpeg || initial.status!==413 || initial.headers.get('x-compor-chunked')!=='1')throw Error('image unavailable');
   let expectedSize:number|null=null,expectedHash:string|null=null,expectedParts:number|null=null;const chunks=[];
   for(let index=0;index<4;index++) {
     const params=new URLSearchParams(query);params.set('part',String(index));
@@ -47,6 +50,6 @@ export async function fetchPrivateImage(query:URLSearchParams|string,{fetch:fetc
   if(chunks.length!==expectedParts||expectedSize===null)throw Error('incomplete image');
   const image=new Uint8Array(expectedSize);let offset=0;
   for(const bytes of chunks){image.set(bytes,offset);offset+=bytes.length;}
-  if(await sha256Hex(image)!==expectedHash)throw Error('image changed');
+  if(await sha256Hex(image)!==expectedHash || (expectedSha256 !== undefined && expectedSha256 !== expectedHash))throw Error('image changed');
   return new Blob([image],{type:'image/png'});
 }

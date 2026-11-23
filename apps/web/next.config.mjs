@@ -8,6 +8,8 @@ const nextConfig = {
     // The studio has one page. Project and post history use the browser History API.
     optimisticRouting: false,
     prefetchInlining: false,
+    // There are no App Router pages for the Pages Router to match.
+    clientRouterFilter: false,
   },
   // Browser tests run two files at once; test/next-dist-dir.mjs gives each its own dist dir.
   distDir: process.env.COMPOR_TEST_NEXT_DIST_DIR || '.next',

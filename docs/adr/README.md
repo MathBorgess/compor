@@ -95,5 +95,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0080](0080-skills-criativas-copy-e-modos-de-post.md) | implementado localmente; migration não aplicada | Skills criativas em duas camadas, copy na imagem (`on-image-copy.v1`), quatro modos nativos (4:5 e 9:16), fluxo Capa Âncora e Marco 5 estendido |
 | [0081](0081-imagens-do-carrossel-na-versao-salva.md) | implementado e verificado localmente | PNGs por lâmina e versão, retomada de upload e ZIP recuperável em outro navegador |
 | [0082](0082-renderizador-deterministico-de-carrossel.md) | porta de integração local | Composição JPEG compartilhada entre o laboratório e a rota autenticada do estúdio |
+| [0083](0083-composicao-e-versoes-de-carrossel.md) | implementação em validação | Plano tipado, revisão, JPEG privado e vínculo com a versão do carrossel |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

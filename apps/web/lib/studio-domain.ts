@@ -2,6 +2,7 @@ import {postNameText} from './post-catalog';
 import * as z from './schema.ts';
 import { pinOriginSchema } from './reference-exploration-contract.ts';
 import { boardSlugSchema } from './phoenix/catalog.ts';
+import { carouselMatchesFrames, carouselPlanSchema, carouselRenderSchema } from './studio-carousel-contract.ts';
 
 const id = z.string();
 const uuidText = z.string().check(z.regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
@@ -33,7 +34,9 @@ export const pieceContentSchema = z.strictObject({
   format:z.optional(postFormatSchema),
   visualInvariants:z.optional(multilineSafeText(1000)),
   frames:z.optional(z.array(pieceFrameSchema).check(z.minLength(2)).check(z.maxLength(10)).check(z.refine(frames=>new Set(frames.map(frame=>frame.id.toLowerCase())).size===frames.length && new Set(frames.map(frame=>frame.position)).size===frames.length && frames.every(frame=>frame.position<=frames.length)))),
-});
+  carouselPlan:z.optional(carouselPlanSchema),
+  carouselRender:z.optional(carouselRenderSchema),
+}).check(z.refine(carouselMatchesFrames));
 export type PieceContent = z.infer<typeof pieceContentSchema>;
 export const approvalSchema = z.union([z.strictObject({status:z.literal('unapproved')}),z.strictObject({status:z.literal('approved'),kind:z.enum(['explicit','inherited']),sourceVersion:z.number(),at:z.string()})]);
 export type Approval = z.infer<typeof approvalSchema>;
@@ -88,7 +91,7 @@ export const adjustmentSchema=z.strictObject({id,messageId:id,createdAt:z.string
 export type Adjustment=z.infer<typeof adjustmentSchema>;
 export const eventSchema=z.strictObject({id,type:z.enum(['context_frozen','operation_in_progress','action_required','operation_completed','operation_failed','outcome_unknown','version_saved','approval_explicit']),requestId:z.nullable(id),sequence:z.number()});
 export type StudioEvent=z.infer<typeof eventSchema>;
-export const actionResultSchema=z.strictObject({status:z.enum(['completed','declined','unknown','pending_confirmation']),revision:z.optional(z.number()),projectId:z.optional(id),pieceId:z.optional(z.nullable(id)),baseVersion:z.optional(z.nullable(z.number())),expectedLatestVersion:z.optional(z.number()),version:z.optional(z.number()),unsaved:z.optional(z.boolean()),local:z.optional(z.boolean()),title:z.optional(z.string()),feedbackStatus:z.optional(z.enum(['recorded','ambiguous','quote_not_found','reference_unavailable']))});
+export const actionResultSchema=z.strictObject({status:z.enum(['completed','declined','unknown','pending_confirmation']),revision:z.optional(z.number()),projectId:z.optional(id),pieceId:z.optional(z.nullable(id)),baseVersion:z.optional(z.nullable(z.number())),expectedLatestVersion:z.optional(z.number()),version:z.optional(z.number()),unsaved:z.optional(z.boolean()),carouselCompositionAvailable:z.optional(z.boolean()),local:z.optional(z.boolean()),title:z.optional(z.string()),feedbackStatus:z.optional(z.enum(['recorded','ambiguous','quote_not_found','reference_unavailable']))});
 export type ActionResult=z.infer<typeof actionResultSchema>;
 export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.string(),result:actionResultSchema});
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;

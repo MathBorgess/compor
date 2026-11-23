@@ -7,6 +7,36 @@ const fields = (properties, required = Object.keys(properties)) => ({ type: 'obj
 const scopeProperties = { projectId: string(36), revision: { type: 'integer', minimum: 0 }, requestId: string(36) };
 export const SHORT_PROJECT_TITLE_LENGTH = 48;
 
+const compositionModes = ['editorial_art', 'native_serial'];
+const compositionLayouts = [
+  'hero_bleed', 'split_horizontal', 'split_vertical', 'framed_plate', 'stat_monument', 'svg_diagram',
+  'comparison_dual', 'bento_grid', 'artifact_proof', 'typo_breather', 'native_serial', 'cta_closing',
+];
+const diagramShapes = ['flow', 'balance', 'steps', 'focus'];
+const demonstrationLayouts = ['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual'];
+const textList = (maxLength, minItems, maxItems) => ({ type: 'array', minItems, maxItems, items: string(maxLength) });
+const compositionDiagramSchema = { anyOf: [
+  { enum: diagramShapes },
+  fields({ type: { enum: diagramShapes }, labels: textList(30, 1, 3) }),
+  fields({ type: { enum: ['contrast', 'type_scale'] }, labels: textList(30, 2, 2), sample: string(18) }),
+  fields({ type: { enum: ['hierarchy'] }, labels: textList(30, 2, 2), items: textList(10, 3, 3) }),
+] };
+const compositionSchema = fields({
+  layout: { enum: compositionLayouts },
+  alt: string(350),
+  polarity: { enum: ['base', 'inverted'] },
+  diagram: compositionDiagramSchema,
+  kicker: string(80),
+  listItems: textList(90, 1, 7),
+  source: string(110),
+  accentPhrase: string(70),
+  figure: string(18),
+  bridge: { enum: ['hairline_thread', 'color_band_echo'] },
+}, ['layout', 'alt']);
+const hexColor = { ...string(7), pattern: '^#[0-9a-fA-F]{6}$' };
+const compositionTokensSchema = { ...fields({ light: hexColor, dark: hexColor, accent: hexColor }, []), minProperties: 1 };
+const framePlanProperties = { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, visualInvariants: string(1000) };
+
 const framePlanItemSchema = fields({
   id: string(36),
   position: { type: 'integer', minimum: 1, maximum: 10 },
@@ -14,6 +44,7 @@ const framePlanItemSchema = fields({
   headline: string(500),
   body: string(1000),
   visualCue: string(500),
+  composition: compositionSchema,
 }, ['position', 'role', 'headline', 'body', 'visualCue']);
 
 const commands = [
@@ -27,7 +58,12 @@ const commands = [
   ['compor_comentar_imagem_gerada', 'Registra um comentário literal da pessoa sobre uma imagem gerada que ela identificou pelo número exibido, mesmo sem selecioná-la. Use ordinal exatamente como escrito e quote como trecho literal do comentário. Se ela mencionar mais de um número ou a imagem não estiver clara, peça esclarecimento; não invente opinião.', {ordinal:{type:'integer',minimum:1,maximum:2147483647},quote:string(1000)}, false],
   ['compor_novo_post', 'Inicia um post em rascunho no projeto. O rascunho anterior é preservado no navegador.', {}, false],
   ['compor_definir_formato', 'Altera o formato do post atual (single = Post único 4:5, carousel = Carrossel 4:5 de 3 a 10 lâminas, collection = Coleção 4:5 de 2 a 10 fotos, story = Story vertical 9:16). Não inicia geração de imagem.', { pieceId: string(36), format: { enum: [...POST_FORMATS] }, frameCount: { type: 'integer', minimum: 1, maximum: 10 } }, false],
-  ['compor_definir_plano_laminas', 'Define ou atualiza o plano ordenado das lâminas de um Carrossel (3..10) ou Coleção (2..10), incluindo invariantes visuais compartilhados e texto/papel de cada lâmina. Atualiza a interface para revisão humana sem gerar imagens.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, visualInvariants: string(1000), frames: { type: 'array', minItems: 2, maxItems: 10, items: framePlanItemSchema } }, false],
+  ['compor_definir_plano_laminas', 'Define ou atualiza o plano ordenado de Carrossel (3..10) ou Coleção (2..10) para revisão humana. Para composição de Carrossel, defina compositionMode e composição com alt em todas as lâminas. Essas escolhas estruturam a revisão; a ferramenta não inicia geração.', {
+    ...framePlanProperties,
+    frames: { type: 'array', minItems: 2, maxItems: 10, items: framePlanItemSchema },
+    compositionMode: { enum: compositionModes },
+    compositionTokens: compositionTokensSchema,
+  }, false],
   ['compor_editar_lamina', 'Edita cirurgicamente um único campo de uma lâmina específica do Carrossel ou Coleção (role, headline, body ou visualCue), preservando as demais lâminas intactas.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, frameId: string(36), field: { enum: ['role', 'headline', 'body', 'visualCue'] }, value: string(1000) }, false],
   ['compor_editar_peca', 'Edita um campo do post em rascunho na aba.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, field: { enum: ['headline', 'price', 'date', 'caption'] }, value: string(4000) }, false],
   ['compor_adicionar_campo', 'Acrescenta ao rascunho um campo vazio relevante para o tipo de post. Nomeie apenas a informação necessária; não invente seu valor. A pessoa pode preenchê-lo ou removê-lo.', {pieceId:string(36),baseVersion:{type:'integer',minimum:0},label:string(80)}, false],
@@ -40,6 +76,7 @@ const commands = [
 const customRequired = {
   compor_registrar_afirmacao_persona: ['projectId', 'revision', 'requestId', 'text', 'provenance'],
   compor_definir_formato: ['projectId', 'revision', 'requestId', 'pieceId', 'format'],
+  compor_definir_plano_laminas: ['projectId', 'revision', 'requestId', ...Object.keys(framePlanProperties), 'frames'],
 };
 
 export const STUDIO_TOOLS = Object.freeze(commands.map(([name, description, properties, consequential, readOnly]) => Object.freeze({
@@ -63,7 +100,7 @@ function validateFramePlan(frames) {
   for (const frame of frames) {
     if (!frame || typeof frame !== 'object' || Array.isArray(frame)) throw Error('invalid_action');
     const keys = Object.keys(frame);
-    if (keys.some(k => !['id', 'position', 'role', 'headline', 'body', 'visualCue'].includes(k))) throw Error('invalid_action');
+    if (keys.some(k => !Object.hasOwn(framePlanItemSchema.properties, k))) throw Error('invalid_action');
     if (!['position', 'role', 'headline', 'body', 'visualCue'].every(k => Object.hasOwn(frame, k))) throw Error('invalid_action');
     if (frame.id !== undefined) {
       if (!uuid(frame.id) || ids.has(frame.id.toLowerCase())) throw Error('invalid_action');
@@ -75,6 +112,69 @@ function validateFramePlan(frames) {
       throw Error('invalid_action');
     }
   }
+}
+
+function matchesCompositionSchema(value, schema) {
+  if (schema.anyOf) return schema.anyOf.some(item => matchesCompositionSchema(value, item));
+  if (schema.enum) return schema.enum.includes(value);
+  if (schema.type === 'string') {
+    return safeString(value, schema.maxLength, false) && Boolean(value.trim()) &&
+      (!schema.pattern || new RegExp(schema.pattern).test(value));
+  }
+  if (schema.type === 'array') {
+    return Array.isArray(value) && value.length >= schema.minItems && value.length <= schema.maxItems &&
+      Array.from(value).every(item => matchesCompositionSchema(item, schema.items));
+  }
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value) &&
+    Object.keys(value).length >= (schema.minProperties ?? 0) &&
+    schema.required.every(key => Object.hasOwn(value, key)) &&
+    Object.entries(value).every(([key, item]) => Object.hasOwn(schema.properties, key) &&
+      matchesCompositionSchema(item, schema.properties[key])));
+}
+export const isCarouselSlideComposition = value=>matchesCompositionSchema(value,compositionSchema);
+export const isCarouselCompositionTokens = value=>matchesCompositionSchema(value,compositionTokensSchema);
+
+const wordSegments = new Intl.Segmenter('pt-BR', { granularity: 'word' });
+const graphemeSegments = new Intl.Segmenter('pt-BR', { granularity: 'grapheme' });
+const wordCount = value => Array.from(wordSegments.segment(value)).filter(word => word.isWordLike).length;
+const frameHasComposition = frame => Object.hasOwn(frame, 'composition');
+const dependentReentry = /^(?:por isso|veja abaixo|isso (?:muda|significa|faz|vale)|essa é|como vimos|então,?)\b/i;
+const demonstrationText = /^[\p{L}\p{N}][\p{L}\p{M}\p{N} .,!?:%+×–—’'/-]*$/u;
+const cleanDemonstrationText = text => text === text.trim() && !text.includes('  ') && demonstrationText.test(text);
+
+function distinctDemonstrationText(labels) {
+  return labels.every(cleanDemonstrationText) &&
+    new Set(labels.map(label => label.normalize('NFC').toLocaleLowerCase('pt-BR'))).size === labels.length;
+}
+
+function validateComposedFrame({ composition, position, headline, body }) {
+  if (!isCarouselSlideComposition(composition)) throw Error('invalid_action');
+  const { layout, diagram, source, figure, listItems, kicker, accentPhrase } = composition;
+  const isDemonstration = typeof diagram === 'object' && !diagramShapes.includes(diagram.type);
+  const titleBudget = position === 1 ? 11 : 12;
+  if (!headline.trim() || headline.length > 160 || wordCount(headline) > titleBudget ||
+      (position === 1 && Array.from(graphemeSegments.segment(headline)).length > 65) ||
+      (position === 2 && dependentReentry.test(headline.trim())) ||
+      body.length > 480 || wordCount(body) > 50 || (kicker && wordCount(kicker) > 8) ||
+      (layout === 'svg_diagram' && !diagram) || (layout === 'stat_monument' && (!figure || !source)) ||
+      (layout === 'bento_grid' && listItems?.length > 4) ||
+      (accentPhrase && (!headline.includes(accentPhrase) || wordCount(accentPhrase) > 3)) ||
+      (isDemonstration && !demonstrationLayouts.includes(layout))) throw Error('invalid_action');
+  if (isDemonstration && (!distinctDemonstrationText(diagram.labels) ||
+      (diagram.items && !distinctDemonstrationText(diagram.items)) ||
+      (diagram.sample && !cleanDemonstrationText(diagram.sample)))) throw Error('invalid_action');
+  if (diagram?.labels?.some(label => wordCount(label) > 3) ||
+      diagram?.items?.some(item => wordCount(item) > 2) ||
+      (diagram?.sample && wordCount(diagram.sample) > 4)) throw Error('invalid_action');
+}
+
+function validateComposition(value) {
+  const hasMode = Object.hasOwn(value, 'compositionMode');
+  const hasTokens = Object.hasOwn(value, 'compositionTokens');
+  if (!hasMode && !hasTokens && !value.frames.some(frameHasComposition)) return;
+  if (!hasMode || value.frames.length < 3 || !value.frames.every(frameHasComposition) ||
+      (hasTokens && !isCarouselCompositionTokens(value.compositionTokens))) throw Error('invalid_action');
+  for (const frame of value.frames) validateComposedFrame(frame);
 }
 
 function parse(tool, value) {
@@ -97,6 +197,7 @@ function parse(tool, value) {
     const spec = FORMAT_SPECS[value.format];
     if (value.frameCount < spec.minFrames || value.frameCount > spec.maxFrames) throw Error('invalid_action');
   }
+  if (tool.name === 'compor_definir_plano_laminas') validateComposition(value);
   if (tool.name === 'compor_editar_lamina') {
     if (!uuid(value.frameId)) throw Error('invalid_action');
     const maxByField = { role: 80, headline: 500, body: 1000, visualCue: 500 };

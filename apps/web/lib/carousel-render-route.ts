@@ -24,7 +24,7 @@ function jsonFile(value: unknown) {
   return new Blob([JSON.stringify(value, null, 2) + '\n'], { type: 'application/json' });
 }
 
-async function exportCarousel({ profile, slides, checks, artifacts, caption, altTexts }: Result, planSha256: string, signal: AbortSignal) {
+async function exportCarousel({ profile, slides, checks, artifacts, caption, altTexts }: Result, planSha256: string, request: Request) {
   const failed = [
     ...checks.filter(check => check.status === 'fail'),
     ...slides.flatMap(slide => slide.checks.filter(check => check.status === 'fail').map(check => ({ ...check, index: slide.index }))),
@@ -53,7 +53,17 @@ async function exportCarousel({ profile, slides, checks, artifacts, caption, alt
     ...artifacts.map(({ file, data }) => ({ name: file, file: new Blob([new Uint8Array(data)]) })),
   ];
   if (entries.reduce((bytes, entry) => bytes + entry.file.size, 0) >= MAX_ZIP_BYTES) return reply({ error: 'archive_too_large' }, 422);
-  const archive = await createStudioZip(entries, () => !signal.aborted);
+  if (request.headers.get('accept') === 'multipart/form-data') {
+    const form = new FormData();
+    for (const { name, file } of entries) form.append(name, file, name);
+    const response = new Response(form, { headers: privateHeaders });
+    const bytes = await response.arrayBuffer();
+    if (bytes.byteLength > MAX_ZIP_BYTES) return reply({ error: 'archive_too_large' }, 422);
+    request.signal.throwIfAborted();
+    response.headers.set('Content-Length', String(bytes.byteLength));
+    return new Response(bytes, { headers: response.headers });
+  }
+  const archive = await createStudioZip(entries, () => !request.signal.aborted);
   if (!archive) return reply({ error: 'request_aborted' }, 499);
   if (archive.size > MAX_ZIP_BYTES) return reply({ error: 'archive_too_large' }, 422);
   return new Response(archive, { headers: {
@@ -78,7 +88,7 @@ export function createCarouselRenderRoute({ appOrigin, resolveActor, ownsProject
       if (checks.length) return reply({ error: 'invalid_plan', checks }, 422);
       request.signal.throwIfAborted();
       const result = await render(input.plan, request.signal);
-      return await exportCarousel(result, input.planSha256, request.signal);
+      return await exportCarousel(result, input.planSha256, request);
     } catch (error) {
       if (request.signal.aborted) return reply({ error: 'request_aborted' }, 499);
       if (error instanceof CarouselRuntimeError) {

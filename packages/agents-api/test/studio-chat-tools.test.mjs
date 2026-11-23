@@ -52,3 +52,73 @@ test('agente renomeia o projeto com título curto de até 48 caracteres',()=>{
  assert.throws(()=>parseStudioAction('compor_renomear_projeto',{...value,title:'  '}),/invalid_action/);
  assert.equal(AGENT_STUDIO_TOOLS.find(tool=>tool.name==='compor_renomear_projeto').parameters.properties.title.maxLength,48,'o modelo vê o limite no esquema da ferramenta');
 });
+
+function compositionPlan() {
+  return {
+    ...scope,
+    revision: 1,
+    pieceId: '33333333-3333-4333-8333-333333333333',
+    baseVersion: 0,
+    visualInvariants: 'Areia e grafite',
+    compositionMode: 'editorial_art',
+    compositionTokens: { accent: '#FFF3A4' },
+    frames: [
+      { position: 1, role: 'capa', headline: 'Seu anúncio some no feed?', body: '', visualCue: 'Tensão no título',
+        composition: { layout: 'hero_bleed', alt: 'A capa pergunta se o anúncio some no feed.', bridge: 'hairline_thread' } },
+      { position: 2, role: 'comparação', headline: 'Texto pequeno perde leitura', body: 'Leia antes de publicar.', visualCue: 'Compare escalas',
+        composition: { layout: 'comparison_dual', alt: 'Dois tamanhos de texto ilustram a diferença de leitura.',
+          diagram: { type: 'type_scale', labels: ['Texto pequeno', 'Texto ampliado'], sample: 'Seu anúncio' } } },
+      { position: 3, role: 'fechamento', headline: 'Salve para a próxima edição', body: '', visualCue: 'Texto amplo',
+        composition: { layout: 'cta_closing', alt: 'O fechamento pede que a pessoa salve as orientações.', polarity: 'inverted' } },
+    ],
+  };
+}
+
+test('plano de composição valida receitas completas e preserva a forma anterior da ação', () => {
+  const parsePlan = value => parseStudioAction('compor_definir_plano_laminas', value);
+  const plan = compositionPlan();
+  assert.deepEqual(parsePlan(plan), plan);
+
+  const legacy = compositionPlan();
+  delete legacy.compositionMode;
+  delete legacy.compositionTokens;
+  legacy.frames.pop();
+  for (const frame of legacy.frames) delete frame.composition;
+  assert.deepEqual(parsePlan(legacy), legacy);
+  assert.throws(() => parsePlan({ ...legacy, compositionTokens: { dark: '#222222' } }), /invalid_action/);
+  assert.throws(() => parsePlan({ ...legacy, compositionMode: 'native_serial' }), /invalid_action/);
+
+  const schema = AGENT_STUDIO_TOOLS.find(tool => tool.name === 'compor_definir_plano_laminas').parameters;
+  assert.equal(schema.required.includes('compositionMode'), false);
+  assert.equal(schema.required.includes('compositionTokens'), false);
+  assert.deepEqual(schema.properties.frames.items.properties.composition.required, ['layout', 'alt']);
+});
+
+test('contrato de composição rejeita receitas parciais, slots inválidos e segunda capa dependente', () => {
+  const plan = compositionPlan();
+  const parsePlan = value => parseStudioAction('compor_definir_plano_laminas', value);
+  const foreground = composition => ({ ...plan, frames: [plan.frames[0], { ...plan.frames[1], composition }, plan.frames[2]] });
+  const base = plan.frames[1].composition;
+  for (const invalid of [
+    { ...plan, compositionMode: undefined },
+    { ...plan, compositionTokens: {} },
+    { ...plan, compositionTokens: { light: '#FFF' } },
+    { ...plan, compositionTokens: { primary: '#FFFFFF' } },
+    { ...plan, frames: plan.frames.slice(0, 2) },
+    { ...plan, frames: [plan.frames[0], { ...plan.frames[1], headline: 'Por isso faz diferença' }, plan.frames[2]] },
+    foreground(undefined),
+    foreground({ ...base, html: '<div />' }),
+    foreground({ ...base, alt: '   ' }),
+    foreground({ ...base, alt: 'sk-segredo-sintetico' }),
+    foreground({ ...base, layout: 'inventado' }),
+    foreground({ ...base, bridge: 'foto_cruzada' }),
+    foreground({ ...base, diagram: { type: 'flow', sample: 'slot desconhecido' } }),
+    foreground({ ...base, diagram: { ...base.diagram, labels: ['A', 'a'] } }),
+    foreground({ ...base, layout: 'svg_diagram', diagram: undefined }),
+    foreground({ ...base, layout: 'stat_monument', diagram: 'flow', figure: '70%' }),
+    foreground({ ...base, layout: 'bento_grid', diagram: 'flow', listItems: ['A', 'B', 'C', 'D', 'E'] }),
+  ]) assert.throws(() => parsePlan(invalid), /invalid_action/);
+
+  const proof = foreground({ layout: 'stat_monument', figure: '70%', source: 'Pesquisa citada no briefing.', alt: 'Percentual da pesquisa.' });
+  assert.deepEqual(parsePlan(proof), proof);
+});

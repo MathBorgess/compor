@@ -4,6 +4,9 @@ import { parseDirection, proposeCriterion, decideCriterion } from './studio-dire
 import {conversationDirection,effectiveReferences,emptyPostSettings,postContext,validatePostSettings} from './studio-post-context.ts';
 import { audienceResolution } from './studio-context.ts';
 import { clampFrameCount, postFormatOption, resizeFrames } from './studio-post-formats.ts';
+import {carouselPlanJson} from './carousel-plan-json.ts';
+import {carouselMatchesFrames,carouselPlanSchema,carouselRenderSchema,type CarouselPlan,type CarouselRender} from './studio-carousel-contract.ts';
+import type {FramePlanInput} from '@compor/agents-api/studio-chat-tools';
 export const STUDIO_SCHEMA_VERSION = 4;
 export const REFERENCE_SELECTION_EVENT = 'A seleção de referências ficou estável.';
 export const STUDIO_LIMITS = Object.freeze({ messages: 200, drafts: 100, marks: 200, references: 20, adjustments: 100, events: 500, actionReceipts: 200, stateBytes: 512 * 1024, referenceBytes: 8 * 1024 * 1024, referenceTotalBytes: 64 * 1024 * 1024, localFiles: 500, localFileBytes: 256 * 1024 * 1024 });
@@ -21,10 +24,15 @@ const text = (value: unknown, max: number, empty = true): value is string => typ
 const iso = (value: unknown): value is string => typeof value === 'string' && value.length <= 32 && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
 const unique = <T>(items: T[], by: (item:T)=>unknown = item => item && typeof item === "object" && "id" in item ? item.id : undefined) => new Set(items.map(by)).size === items.length;
 const frameValid = (frame: PieceFrame, total: number) => keys(frame, ['id','position','role','headline','body','visualCue','assetId']) && uuid(frame.id) && integer(frame.position, 1) && frame.position <= total && text(frame.role, 80) && !/[\u0000-\u001f\u007f]/.test(frame.role) && text(frame.headline, 500) && !/[\u0000-\u0009\u000b-\u001f\u007f]/.test(frame.headline) && text(frame.body, 1000) && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(frame.body) && text(frame.visualCue, 500) && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(frame.visualCue) && (frame.assetId === null || uuid(frame.assetId));
-const contentValid = (value: PieceContent) => keys(value, ['headline','price','date','caption','captionOrigin'], ['fields','format','visualInvariants','frames']) && text(value.headline, 500) && text(value.price, 100) && text(value.date, 100) && text(value.caption, 4000) && ['user','agent'].includes(value.captionOrigin) && (value.fields === undefined || Array.isArray(value.fields) && value.fields.length <= 20 && new Set(value.fields.map(field=>field.id.toLowerCase())).size===value.fields.length && value.fields.every(field=>keys(field,['id','label','value','origin']) && uuid(field.id) && text(field.label,80,false) && text(field.value,500) && !/[\u0000-\u001f\u007f]/.test(field.label+field.value) && ['user','agent'].includes(field.origin))) && (value.format === undefined || ['single','carousel','collection','story'].includes(value.format)) && (value.visualInvariants === undefined || text(value.visualInvariants, 1000) && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value.visualInvariants)) && (value.frames === undefined || (value.format === 'carousel' || value.format === 'collection') && Array.isArray(value.frames) && value.frames.length >= 2 && value.frames.length <= 10 && new Set(value.frames.map(frame => frame.id.toLowerCase())).size === value.frames.length && new Set(value.frames.map(frame => frame.position)).size === value.frames.length && value.frames.every(frame => frameValid(frame, value.frames!.length)));
+const contentValid = (value: PieceContent) => keys(value, ['headline','price','date','caption','captionOrigin'], ['fields','format','visualInvariants','frames','carouselPlan','carouselRender']) && text(value.headline, 500) && text(value.price, 100) && text(value.date, 100) && text(value.caption, 4000) && ['user','agent'].includes(value.captionOrigin) && (value.fields === undefined || Array.isArray(value.fields) && value.fields.length <= 20 && new Set(value.fields.map(field=>field.id.toLowerCase())).size===value.fields.length && value.fields.every(field=>keys(field,['id','label','value','origin']) && uuid(field.id) && text(field.label,80,false) && text(field.value,500) && !/[\u0000-\u001f\u007f]/.test(field.label+field.value) && ['user','agent'].includes(field.origin))) && (value.format === undefined || ['single','carousel','collection','story'].includes(value.format)) && (value.visualInvariants === undefined || text(value.visualInvariants, 1000) && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value.visualInvariants)) && (value.frames === undefined || (value.format === 'carousel' || value.format === 'collection') && Array.isArray(value.frames) && value.frames.length >= 2 && value.frames.length <= 10 && new Set(value.frames.map(frame => frame.id.toLowerCase())).size === value.frames.length && new Set(value.frames.map(frame => frame.position)).size === value.frames.length && value.frames.every(frame => frameValid(frame, value.frames!.length)))
+  && (value.carouselPlan===undefined || carouselPlanSchema.safeParse(value.carouselPlan).success)
+  && (value.carouselRender===undefined || carouselRenderSchema.safeParse(value.carouselRender).success)
+  && carouselMatchesFrames(value);
 export const sameCreativeFields = (left: CreativeField[] | undefined, right: CreativeField[] | undefined) => left === undefined ? right === undefined : right !== undefined && left.length === right.length && left.every((field,index)=>{const other=right[index];return !!other && (['id','label','value','origin'] as const).every(key=>field[key]===other[key]);});
 export const samePieceFrames = (left: PieceFrame[] | undefined, right: PieceFrame[] | undefined) => left === undefined ? right === undefined : right !== undefined && left.length === right.length && left.every((frame,index)=>{const other=right[index];return !!other && (['id','position','role','headline','body','visualCue','assetId'] as const).every(key=>frame[key]===other[key]);});
-export const samePieceContent = (left: PieceContent, right: PieceContent) => contentValid(left) && contentValid(right) && (['headline','price','date','caption','captionOrigin'] as const).every(key=>left[key]===right[key]) && left.format === right.format && left.visualInvariants === right.visualInvariants && sameCreativeFields(left.fields,right.fields) && samePieceFrames(left.frames,right.frames);
+export const samePieceContent = (left: PieceContent, right: PieceContent) => contentValid(left) && contentValid(right) && (['headline','price','date','caption','captionOrigin'] as const).every(key=>left[key]===right[key]) && left.format === right.format && left.visualInvariants === right.visualInvariants && sameCreativeFields(left.fields,right.fields) && samePieceFrames(left.frames,right.frames)
+  && carouselPlanJson(left.carouselPlan)===carouselPlanJson(right.carouselPlan)
+  && carouselPlanJson(left.carouselRender)===carouselPlanJson(right.carouselRender);
 const sameContent = samePieceContent;
 const approvalValid = (value: Approval) => keys(value, ['status'], ['kind','sourceVersion','at']) && (value.status === 'unapproved' ? Object.keys(value).length === 1 : value.status === 'approved' && ['explicit','inherited'].includes(value.kind) && integer(value.sourceVersion,1) && iso(value.at));
 const approvalForBase = (value: Approval,baseVersion: number) => approvalValid(value) && (value.status==='unapproved'||value.sourceVersion<=baseVersion&&(value.kind==='inherited'||value.sourceVersion===baseVersion));
@@ -38,7 +46,7 @@ const clone = <T>(value: T): T => structuredClone(value);
 const blankContent = (): PieceContent => ({ headline: '', price: '', date: '', caption: '', captionOrigin: 'user' });
 const noApproval = (): Approval => ({ status: 'unapproved' });
 const requestStates: RequestStatus[] = ['pending','in_progress','consent_required','completed','failed','unknown'];
-const actionResultValid = (value: ActionResult,projectId: string) => keys(value,['status'],['revision','projectId','pieceId','baseVersion','expectedLatestVersion','version','unsaved','local','title','feedbackStatus']) && ['completed','declined','unknown','pending_confirmation'].includes(value.status) && (!Object.hasOwn(value,'revision')||integer(value.revision)) && (!Object.hasOwn(value,'projectId')||value.projectId===projectId) && (!Object.hasOwn(value,'pieceId')||value.pieceId===null||uuid(value.pieceId)) && (!Object.hasOwn(value,'baseVersion')||value.baseVersion===null||integer(value.baseVersion)) && (!Object.hasOwn(value,'expectedLatestVersion')||integer(value.expectedLatestVersion)) && (!Object.hasOwn(value,'version')||integer(value.version,1)) && (['unsaved','local'] as const).every(key=>!Object.hasOwn(value,key)||typeof value[key]==='boolean') && (!Object.hasOwn(value,'title')||text(value.title,200,false)) && (!Object.hasOwn(value,'feedbackStatus')||['recorded','ambiguous','quote_not_found','reference_unavailable'].includes(value.feedbackStatus!));
+const actionResultValid = (value: ActionResult,projectId: string) => keys(value,['status'],['revision','projectId','pieceId','baseVersion','expectedLatestVersion','version','unsaved','local','title','feedbackStatus','carouselCompositionAvailable']) && ['completed','declined','unknown','pending_confirmation'].includes(value.status) && (!Object.hasOwn(value,'revision')||integer(value.revision)) && (!Object.hasOwn(value,'projectId')||value.projectId===projectId) && (!Object.hasOwn(value,'pieceId')||value.pieceId===null||uuid(value.pieceId)) && (!Object.hasOwn(value,'baseVersion')||value.baseVersion===null||integer(value.baseVersion)) && (!Object.hasOwn(value,'expectedLatestVersion')||integer(value.expectedLatestVersion)) && (!Object.hasOwn(value,'version')||integer(value.version,1)) && (['unsaved','local','carouselCompositionAvailable'] as const).every(key=>!Object.hasOwn(value,key)||typeof value[key]==='boolean') && (!Object.hasOwn(value,'title')||text(value.title,200,false)) && (!Object.hasOwn(value,'feedbackStatus')||['recorded','ambiguous','quote_not_found','reference_unavailable'].includes(value.feedbackStatus!));
 const actionReceiptValid = (value: ActionReceipt,projectId: string) => keys(value,['requestId','fingerprint','result']) && uuid(value.requestId) && typeof value.fingerprint==='string' && /^[0-9a-f]{64}$/.test(value.fingerprint) && actionResultValid(value.result,projectId);
 const sameActionResult = (left: ActionResult,right: ActionResult) => Object.keys(left).length===Object.keys(right).length && Object.keys(left).every(key=>Object.hasOwn(right,key)&&Reflect.get(left,key)===Reflect.get(right,key));
 
@@ -116,6 +124,23 @@ export const updateBrandVoice = (state: StudioState, patch: Partial<BrandVoice>)
   if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => ['tone','examples','avoid'].includes(key))) fail();
   next.brandVoice = { tone: '', examples: '', avoid: '', ...next.brandVoice, ...patch };
 });
+function invalidateCarouselRender(content: PieceContent) {
+  if (!content.carouselRender) return;
+  delete content.carouselRender;
+  if (content.frames) content.frames=content.frames.map(frame=>({...frame,assetId:null}));
+}
+export function setDraftCarouselRender(state: StudioState, source: StudioDraft, render: CarouselRender) {
+  return changeStudioState(state, next=>{
+    const draft=current(next);
+    if (!sameDraft(draft,source) || draft.expectedLatestVersion!==source.expectedLatestVersion ||
+      !samePieceContent(draft.content,source.content)) throw new StudioStateError('studio_carousel_changed');
+    invalidateCarouselRender(draft.content);
+    draft.content.carouselRender=carouselRenderSchema.parse(render);
+    if (!contentValid(draft.content)) fail();
+    draft.dirty=true;
+  });
+}
+
 export function setPostFormat(state: StudioState, pieceId: string, format: PostFormat, frameCount?: number) {
   return changeStudioState(state, next => {
     if (!uuid(pieceId) || !['single','carousel','collection','story'].includes(format)) fail();
@@ -125,6 +150,10 @@ export function setPostFormat(state: StudioState, pieceId: string, format: PostF
     post.targetFrameCount = count;
     const draft = next.selection?.pieceId === pieceId ? current(next) : next.drafts.find(item => item.pieceId === pieceId);
     if (draft) {
+      if (format!=='carousel' || draft.content.frames?.length!==count) {
+        invalidateCarouselRender(draft.content);
+        delete draft.content.carouselPlan;
+      }
       draft.content.format = format;
       if (postFormatOption(format).multiFrame) {
         draft.content.frames = resizeFrames(format, draft.content.frames, count, draft.content.headline);
@@ -137,17 +166,28 @@ export function setPostFormat(state: StudioState, pieceId: string, format: PostF
     }
   });
 }
-export function setDraftFrames(state: StudioState, { pieceId, baseVersion, visualInvariants, frames }: { pieceId: string; baseVersion: number; visualInvariants?: string; frames: Array<{ id?: string; position: number; role: string; headline: string; body: string; visualCue: string; assetId?: string | null }> }) {
+export function setDraftFrames(state: StudioState, {
+  pieceId, baseVersion, visualInvariants, frames, compositionMode, compositionTokens,
+}: {
+  pieceId:string; baseVersion:number; visualInvariants?:string;
+  frames:(FramePlanInput&{assetId?:string|null})[];
+  compositionMode?:CarouselPlan['mode']; compositionTokens?:CarouselPlan['tokens'];
+}) {
   return changeStudioState(state, next => {
     const draft = next.drafts.find(item => item.pieceId === pieceId && item.baseVersion === baseVersion);
     if (!draft) throw new StudioStateError('studio_draft_unavailable');
     const post = next.posts[pieceId] ?? (next.posts[pieceId] = emptyPostSettings());
     const format: PostFormat = post.format === 'carousel' || post.format === 'collection' ? post.format : 'carousel';
+    if (compositionMode && format!=='carousel') fail();
+    const hadComposition = draft.content.carouselPlan !== undefined;
+    if (compositionMode || hadComposition) invalidateCarouselRender(draft.content);
+    delete draft.content.carouselPlan;
     post.format = format;
     post.targetFrameCount = clampFrameCount(format, frames.length);
     const existingById = new Map((draft.content.frames ?? []).map(frame => [frame.id, frame]));
     const existingByPosition = new Map((draft.content.frames ?? []).map(frame => [frame.position, frame]));
-    const ordered = [...frames].sort((a, b) => a.position - b.position).map((frame, index) => {
+    const sorted = [...frames].sort((a,b)=>a.position-b.position);
+    const ordered = sorted.map((frame, index) => {
       const matched = (frame.id && existingById.get(frame.id)) || existingByPosition.get(index + 1);
       return {
         id: frame.id ?? matched?.id ?? crypto.randomUUID(),
@@ -156,12 +196,16 @@ export function setDraftFrames(state: StudioState, { pieceId, baseVersion, visua
         headline: frame.headline,
         body: frame.body,
         visualCue: frame.visualCue,
-        assetId: frame.assetId !== undefined ? frame.assetId : (matched?.assetId ?? null),
+        assetId: compositionMode || hadComposition ? null : frame.assetId !== undefined ? frame.assetId : (matched?.assetId ?? null),
       };
     });
     draft.content.format = format;
     if (visualInvariants !== undefined) draft.content.visualInvariants = visualInvariants;
     draft.content.frames = ordered;
+    if (compositionMode) draft.content.carouselPlan=carouselPlanSchema.parse({
+      mode:compositionMode,tokens:compositionTokens,
+      slides:sorted.map((frame,index)=>({...frame.composition,frameId:ordered[index].id})),
+    });
     if (ordered[0]?.headline) draft.content.headline = ordered[0].headline;
     if (!contentValid(draft.content)) fail();
     draft.dirty = true;
@@ -173,6 +217,10 @@ export function updateDraftFrame(state: StudioState, { pieceId, baseVersion, fra
     if (!draft || !draft.content.frames) throw new StudioStateError('studio_draft_unavailable');
     const index = draft.content.frames.findIndex(item => item.id === frameId);
     if (index < 0) throw new StudioStateError('studio_draft_unavailable');
+    if (draft.content.carouselPlan && patch.assetId!==undefined) fail();
+    if (Object.entries(patch).some(([key,value])=>Reflect.get(draft.content.frames?.[index]??{},key)!==value)) {
+      invalidateCarouselRender(draft.content);
+    }
     draft.content.frames[index] = { ...draft.content.frames[index], ...patch };
     if (draft.content.frames[index].position === 1 && patch.headline !== undefined) draft.content.headline = patch.headline;
     if (!contentValid(draft.content)) fail();
@@ -185,9 +233,10 @@ export function reorderDraftFrames(state: StudioState, { pieceId, baseVersion, f
     if (!draft || !draft.content.frames) throw new StudioStateError('studio_draft_unavailable');
     const list = [...draft.content.frames].sort((a, b) => a.position - b.position);
     if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length || fromIndex === toIndex) return;
+    invalidateCarouselRender(draft.content);
     const [moved] = list.splice(fromIndex, 1);
     list.splice(toIndex, 0, moved);
-    draft.content.frames = list.map((frame, index) => ({ ...frame, position: index + 1 }));
+    draft.content.frames = list.map((frame, index) => ({ ...frame, position: index + 1, ...(draft.content.carouselPlan?{assetId:null}:{}) }));
     if (draft.content.frames[0]?.headline) draft.content.headline = draft.content.frames[0].headline;
     if (!contentValid(draft.content)) fail();
     draft.dirty = true;
@@ -215,6 +264,11 @@ export function editDraft(state: StudioState, {field,value,captionOrigin='user'}
     const draft=current(next);
     if (!['headline','price','date','caption'].includes(field)) fail();
     if(field==='caption'&&(draft.content.caption!==value||captionOrigin==='user')) draft.content.captionOrigin=captionOrigin;
+    if (draft.content[field]!==value && (field==='caption'||field==='headline')) {
+      invalidateCarouselRender(draft.content);
+      const cover=draft.content.frames?.find(frame=>frame.position===1);
+      if (field==='headline' && cover && draft.content.carouselPlan) cover.headline=value;
+    }
     draft.content[field]=value;
     draft.dirty=true;
   });
