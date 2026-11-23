@@ -68,7 +68,11 @@ export default function ReferencePanel({projectWide,onScope,entry='post',project
         {recovery}
         <div className="guided-reference-source reference-workbench-source" id={sourceId}>
           <div hidden={source!=='search'}>{typeof search==='function'?search(sourceControl):<>{sourceControl}{search}</>}</div>
-          <div hidden={source!=='upload'}>{sourceControl}<p>As imagens enviadas aparecem em “Revisar seleção e alcance”.</p></div>
+          <div hidden={source!=='upload'}>
+            {sourceControl}
+            <p>Suas imagens enviadas já estão na seleção abaixo. Você também pode ajustar o alcance em “Revisar seleção e alcance”.</p>
+            {selection}
+          </div>
           <div hidden={source!=='compor'} aria-busy={proposalPhase==='generating'}>
             {sourceControl}
             {proposals}

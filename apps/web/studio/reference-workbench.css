@@ -21,10 +21,10 @@
 .reference-step :is(input,select,textarea) { max-width:100%;border:1px solid var(--studio-line);border-radius:10px;background:white;color:var(--studio-ink); }
 .reference-step :is(label,section,form,div) { min-width:0; }
 .reference-step .reference-exploration { display:flex;flex-direction:column;gap:0;width:100%;max-width:none;padding:0;border:0;border-radius:0;background:white;font-size:16px; }
-.reference-step .reference-search-heading { order:1;margin:12px 0 32px; }
+.reference-step .reference-search-heading { order:0;margin:0 0 24px; }
 .reference-step .reference-search-heading > h2 { display:none; }
 .reference-step .reference-search-heading p { margin:0;color:var(--studio-muted);font-size:14px; }
-.reference-step .reference-exploration form { order:0;display:flex;flex-wrap:wrap;align-items:end;gap:16px; }
+.reference-step .reference-exploration form { order:1;display:flex;flex-wrap:wrap;align-items:end;gap:16px;margin-bottom:24px; }
 .reference-step .reference-exploration form label { display:grid;gap:8px; }
 .reference-step .reference-exploration form label:not(.reference-source-control) { flex:1 1 280px; }
 .reference-step .reference-exploration form input { width:100%;min-height:48px;padding:10px 12px; }

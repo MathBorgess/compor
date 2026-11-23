@@ -363,9 +363,9 @@ export default function StudioApp({
       accountLabel={accountLabel}
       localAccount={localAccount}
       onSignOut={onSignOut}
-      onNewProject={() =>
+      onNewProject={hasProjects ? () =>
         document.getElementById("studio-project-name")?.focus()
-      }
+      : undefined}
     >
       {recoveryBanner}
 
@@ -2052,11 +2052,18 @@ function ProjectStudio({
   const validPostName=postNameSchema.safeParse(preparedName).success;
   const initialPost=Boolean(pendingPost?.initial);
   const canGenerateFirstPost=canUseProjectAI&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&!pendingTurn;
+  const POST_ANGLE_STARTERS:[string,string,string][]=[
+    ['+ Quebrar objeção','Quebrar objeção comum do público','Mostre por que a dúvida mais comum sobre '+(s.brief.offer.trim()||'o tema do projeto')+' não precisa travar quem está começando.'],
+    ['+ Bastidores','Mostrar bastidores e processo real','Compartilhe um detalhe real de bastidor sobre '+(s.brief.offer.trim()||'este projeto')+' para gerar proximidade.'],
+    ['+ Benefício prático','Destacar um benefício prático imediato','Explique um ganho prático que a pessoa percebe logo no início com '+(s.brief.offer.trim()||'a oferta')+'.'],
+    ['+ Últimas vagas','Chamada direta com urgência real','Convide quem acompanhou até aqui para garantir participação com condição clara.'],
+  ];
   const postPreparation=preparingPost&&(
     <section className="studio-panel guided-question" aria-labelledby="post-preparation-title">
       <p className="studio-eyebrow">PREPARAR POST</p>
       <h2 id="post-preparation-title">{initialPost?'Vamos preparar o primeiro post':'Vamos preparar este post'}</h2>
       <p>{initialPost?'Revise o nome e a mensagem sugeridos, escolha o formato e informe o objetivo deste post. O público do projeto já faz parte do contexto.':'Escolha um nome para organizar esta peça e defina o formato e o que ela deve comunicar.'}</p>
+      {!initialPost&&<div className="guided-context-examples" aria-label="Continue sua divulgação"><span>Continue sua divulgação:</span>{POST_ANGLE_STARTERS.map(([label,objective,message])=><button key={label} type="button" className="studio-button-secondary guided-chip" onClick={()=>changePreparation({objective,message})}>{label}</button>)}</div>}
       <form onSubmit={event=>{event.preventDefault();void confirmPostCreation();}}>
         <fieldset className="guided-post-preparation-fields" disabled={creatingPost}>
           <label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" onChange={event=>changePreparation({name:event.target.value})}/></label>
@@ -2077,8 +2084,8 @@ function ProjectStudio({
     {referencesOpen&&!referencesModal&&referencePanel}
     <div className="studio-workspace-host" hidden={referencesOpen&&!referencesModal}>
       {pendingTurn&&!preparing&&!viewingPendingConversation&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(!pendingTurn.context.conversationId){setSettings('history');}else if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else{setChatMinimized(false);openPost(pendingTurn.context.pieceId);}}}>Abrir a conversa desse pedido</button></p>}
-      {preparing&&s.workflow.phase!=='references'&&<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:aiPanel}</>}
-      {!preparing&&s.workflow.view==='posts'&&<ProjectPosts state={s} versions={versions} posts={postRecords} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>}
+      {preparing&&s.workflow.phase!=='references'&&<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} defaultAvailable={defaultAvailable} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))} onSkipToPost={()=>{local.change(value=>updateWorkflow(value,{aiPreference:'default',phase:'ready'}));journey.preparePost(crypto.randomUUID(),{initial:true,initialProjectTitle:projectDetails.title});}}/>:aiPanel}</>}
+      {!preparing&&s.workflow.view==='posts'&&<ProjectPosts state={s} versions={versions} posts={postRecords} loadThumbnail={async(pieceId,version)=>await workingImage(pieceId,version)??(version>=1?await canonicalImage(pieceId,version).catch(()=>null):null)} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>}
       <div className="guided-post-host" hidden={preparing||s.workflow.view==='posts'} style={{height:'100%',minHeight:0,overflowY:preparingPost?'auto':undefined}}>{postPreparation}<div className="studio-workspace-view" data-active={!preparing&&!referencesOpen&&s.workflow.view!=='posts'&&!preparingPost} hidden={preparingPost} style={{height:'100%',minHeight:0}}><GuidedWorkspace chat={chats} artwork={artwork} intro={intro} chatMinimized={chatMinimized} onChatMinimizedChange={setChatMinimized} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/></div></div>
     </div>
   </>;
