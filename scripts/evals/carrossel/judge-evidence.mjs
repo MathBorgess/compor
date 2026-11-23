@@ -13,10 +13,10 @@ const dimensions = {
   cover: 'Promessa específica e legível na miniatura recortada da capa.',
   editorial: 'Fatos sustentados, ideias novas e exemplos concretos ao longo da coleção.',
   artMessage: 'A arte contribui como prova, modelo visual ou metáfora complementar. Descreva o que se perde ao retirar a arte. Quando retirar a arte decorativa preserva toda a informação, limite a nota de artMessage a 2 e registre a decoração como defeito não crítico. Marque critical em artMessage quando a arte distorce evidência, induz uma interpretação errada do conteúdo ou oculta informação essencial. Identifique o dado ou a relação afetada.',
-  hierarchy: 'Ordem de leitura, contraste e legibilidade num telefone.',
-  rhythm: 'Coesão com variedade deliberada. Compare transições concretas e considere a repetição intencional em séries nativas.',
+  hierarchy: 'Avalie a ordem de leitura em tamanho de telefone. Identifique o elemento informativo de leitura mais exigente e o que se precisa entender dele. Nota 4 indica um percurso claro com um ajuste pontual observável de escala, respiro ou ordem. Para nota 5, indique como posição, peso e escala guiam a leitura e mantêm legível esse elemento. Explicite quando a miniatura limita a inspeção.',
+  rhythm: 'Cite o elemento que dá continuidade à coleção e descreva uma transição concreta. Nota 4 indica continuidade e uma transição que poderia sinalizar melhor a mudança de função. Para nota 5, mostre como a variação observada ajuda a acompanhar a mudança de função sem perder a continuidade. Em séries nativas, a posição recorrente de um elemento pode guiar a comparação ou marcar a progressão.',
   reentry: 'A lâmina 2 isolada nomeia seu assunto e entrega uma ideia que pode ser compreendida sem a capa.',
-  voice: 'Palavras adequadas ao público e à situação do briefing. Para chamar um trecho de genérico, cite-o e explique o que o torna intercambiável.',
+  voice: 'Cite uma expressão e explique como ela serve ao modo de agir do público. Nota 4 indica linguagem natural e adequada à tarefa, com espaço para explicitar a situação de uso. Para nota 5, indique a escolha de palavras que situa a rotina desse público e facilita executar ou lembrar a ação. Se identificar um trecho genérico, cite-o e explique o que o torna intercambiável entre públicos ou situações.',
   closing: 'Um único pedido explícito de interação alinhado à meta do briefing. Conte ações distintas, como salvar e enviar. Uma instrução que ensina o procedimento é parte do conteúdo. A repetição do mesmo pedido conta uma vez.',
 };
 
@@ -26,7 +26,7 @@ export const judgeInstructions = [
   'Atribua cada defeito à sua dimensão primária. A falta de contexto para entender a lâmina 2 pertence a reentry. Reserve editorial para um defeito distinto, como uma afirmação de resultado sem lastro ou a repetição verificável de um argumento. Registre uma segunda dimensão apenas se houver outro defeito com evidência própria.',
   'Marque critical quando o defeito observado impede a dimensão de cumprir seu propósito. Indique o trecho ou elemento e explique o efeito. Use abstenção se faltar evidência para comparar.',
   'Use esta escala inteira em cada dimensão. 0 — ausente. 1 — falha grave, quase nada aproveitável. 2 — entrega parcial com obstáculo grave. 3 — entrega compreensível com uma limitação concreta. 4 — entrega clara com ajuste pontual. 5 — entrega clara, adequada ao briefing e sustentada por evidência observável, sem limitação relevante.',
-  'Atribua no máximo 2 à dimensão com critical=true. Justifique as oito notas. Escolha A, B, tie ou abstain conforme o briefing e os defeitos observados.',
+  'Atribua no máximo 2 à dimensão com critical=true. Justifique as oito notas. Escolha A, B, tie ou abstain conforme o briefing e os defeitos observados. Use tie quando as diferenças observáveis preservarem a promessa e a utilidade para o público. Justifique uma preferência com um efeito concreto para quem lê.',
   'Responda com JSON {"A":{"defects":[{"slide":1,"dimension":"cover","evidence":"...","critical":false}],"scores":{"cover":{"value":4,"evidence":"..."}}},"B":{"defects":[],"scores":{}},"winner":"A|B|tie|abstain","reason":"..."}. Preencha todas as oito dimensões em A e B.',
   ...Object.entries(dimensions).map(([name, description]) => name + ' — ' + description),
 ].join('\n');
@@ -56,7 +56,7 @@ export function validateJudgeResult(result) {
     requireCondition(new Set(observations).size === observations.length, 'judge_duplicate_defect_evidence');
     for (const key of Object.keys(judgeWeights)) {
       const score = answer.scores?.[key];
-      requireCondition(bounded(score?.value, 5) && hasText(score.evidence), 'judge_score_invalid');
+      requireCondition(Number.isInteger(score?.value) && bounded(score.value, 5) && hasText(score.evidence), 'judge_score_invalid');
       if (answer.defects.some(defect => defect.critical && defect.dimension === key)) {
         requireCondition(score.value <= 2, 'judge_critical_cap_invalid');
       }

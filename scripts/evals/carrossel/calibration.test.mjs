@@ -53,6 +53,9 @@ test('a rubrica distingue defeito primário de outro defeito com evidência na m
   const withUncappedCritical = answer([primary]);
   withUncappedCritical.A.scores.reentry.value = 3;
   assert.throws(() => validateJudgeResult(withUncappedCritical), /judge_critical_cap_invalid/);
+  const withFractionalGrade = answer([]);
+  withFractionalGrade.A.scores.hierarchy.value = 4.5;
+  assert.throws(() => validateJudgeResult(withFractionalGrade), /judge_score_invalid/);
 });
 
 async function writePair(root, stem, label, adjust = () => {}) {
