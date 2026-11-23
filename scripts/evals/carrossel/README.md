@@ -123,6 +123,19 @@ node --test scripts/evals/carrossel/live.test.mjs
 
 `runLiveCarousel` em `live.mjs` recebe `key` do processo que já a mantém em memória. Passe `root` como caminho absoluto privado, fora do repositório. Uma execução seleciona um `caseId` ou `caseIndex` e chama a Agents API gerenciada uma vez. C1 e C3 podem solicitar uma arte de capa (`generateCover: true`). O runner grava o plano e o recibo como arquivos irmãos de `<root>/cN/<caseId>/`. O recibo contém modelo, identificadores e contagem de uso quando informada pelo provedor. Um resultado desconhecido mantém `paid-active.json` e bloqueia outro envio naquele `root` até reconciliação do recibo. `render: false` guarda o plano para a CLI de renderização local.
 
+O lote experimental de rasters de `editorial_art` está disponível em C3+ com `artBatch: {maxImages}`. O teto aceita de 2 a 6 imagens, incluindo a âncora de capa, e exige `generateCover: true`. O planejador fornece `artDirection`, com médium e iluminação governados e pranchas ligadas por ID às lâminas. O runner deriva a paleta do plano, fixa a restrição de texto e exige alterações declaradas em três dos quatro eixos em relação à prancha anterior. A checagem é estrutural e a variedade percebida e a ausência de letras continuam no parecer visual.
+
+Uma geração sem referência produz S1. As edições seguintes usam somente o raster S1 em multipart como referência de estilo, em ondas de até duas chamadas. O pedido orienta o provedor a conservar médium, paleta, luz e textura e a compor a cena nova. O recibo registra o SHA-256 da fonte e dos bytes de transporte. Quando a fonte excede 2 MiB, o runner reduz uma cópia para respeitar o contrato do adaptador. Cada PNG confirmado fica em `<root>/cN/<caseId>.art/`, com hash e recibo da prancha. Uma incerteza conserva a trava do runner e permite que a onda já enviada termine. Um erro confirmado encerra o lote e libera a trava. A revisão selada congela também o teto raster do ciclo.
+
+O comando a seguir pré-verifica um caso sintético público, o teto e o diretório. A pré-verificação funciona sem credencial e sem chamada ao provedor.
+
+```sh
+node scripts/evals/carrossel/cli.mjs art-batch \
+  --cycle 3 --case dev-amarelo-papel --evidence "$LAB/lote-c3" --max-images 4 --no-render
+```
+
+Acrescente `--execute` quando o lote já estiver autorizado e `OPENAI_API_KEY` estiver disponível no ambiente. `--no-render` conserva o plano com os rasters para renderizar depois. Com Chromium configurado, omitir a opção também executa o render e gera a folha de arte. O runner atribui os rasters às lâminas antes de validar o plano e a cadência novamente. O recibo liga o SHA-256 desse plano à direção e aos arquivos emitidos.
+
 Para casos privados, forneça somente dados sintéticos e congele a revisão em um checkout estável. Calcule `candidateSha256` com `fingerprintLiveCarouselCandidate()` antes de receber a suíte. O hash cobre os arquivos do planejador, do renderer, seus adaptadores locais, fontes e lockfile. Execute a revisão congelada em um processo novo. Registre a versão do Chromium e a configuração de execução junto da evidência.
 
 | Execução | Opções adicionais de `runLiveCarousel` |

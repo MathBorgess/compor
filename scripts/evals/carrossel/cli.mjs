@@ -131,13 +131,35 @@ async function calibrateCommand(arguments_) {
   if (result.status !== 'pass') process.exitCode = 2;
 }
 
+async function artBatchCommand(arguments_) {
+  const { values } = parseArgs({ args: arguments_, options: {
+    cycle: { type: 'string' }, case: { type: 'string' }, evidence: { type: 'string' }, 'max-images': { type: 'string' },
+    execute: { type: 'boolean' }, 'no-render': { type: 'boolean' },
+  } });
+  requireCondition(/^[3-5]$/.test(values.cycle ?? '') && isId(values.case) && values.evidence
+    && /^[2-6]$/.test(values['max-images'] ?? ''),
+  'Use art-batch --cycle 3..5 --case <caso sintético> --evidence <diretório> --max-images 2..6.');
+  const { runLiveCarousel } = await import('./live.mjs');
+  const maxImages = Number(values['max-images']);
+  const result = await runLiveCarousel({
+    key: values.execute ? process.env.OPENAI_API_KEY : undefined,
+    preflightOnly: !values.execute, artBatch: { maxImages },
+    cycle: Number(values.cycle), caseId: values.case, root: resolve(values.evidence), render: !values['no-render'],
+  });
+  console.log(JSON.stringify({ state: result.state, caseId: result.caseId, cycle: result.cycle, maxImages,
+    ...(result.state !== 'preflight' && { receiptPath: result.receiptPath, reused: result.reused === true }),
+  }));
+  if (!['preflight', 'planned', 'delivered'].includes(result.state)) process.exitCode = 2;
+}
+
 try {
   const [command, ...arguments_] = process.argv.slice(2);
   if (command === 'evaluate') await evaluateCommand(arguments_);
   else if (command === 'render') await renderCommand(arguments_);
   else if (command === 'novelty') await noveltyCommand(arguments_);
   else if (command === 'calibrate') await calibrateCommand(arguments_);
-  else throw Error('Comandos: evaluate, render, novelty e calibrate. Consulte scripts/evals/carrossel/README.md.');
+  else if (command === 'art-batch') await artBatchCommand(arguments_);
+  else throw Error('Comandos: evaluate, render, novelty, calibrate e art-batch. Consulte scripts/evals/carrossel/README.md.');
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
