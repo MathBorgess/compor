@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PACKAGES = ('agents-api', 'agile-deliberation', 'images-api', 'private-images', 'remote-mcp')
+PACKAGES = ('agents-api', 'agile-deliberation', 'carousel-renderer', 'images-api', 'private-images', 'remote-mcp')
 PHOENIX_FILES = ('handlers/api/studio/decision/route.ts', 'lib/phoenix-worker.ts',
                  'lib/studio-decision-route.ts', 'lib/studio-decision-contract.ts',
                  'lib/phoenix/catalog.ts', 'lib/phoenix/deterministic.ts',
@@ -21,6 +21,17 @@ DEPENDENCIES = ('dependencies', 'devDependencies', 'optionalDependencies', 'peer
 UPSTREAM_FILES = {
     'third_party/google-research/agile_deliberation/LICENSE': 'apps/web/vendor/agile-deliberation/LICENSE',
     'third_party/google-research/agile_deliberation/provenance.json': 'apps/web/vendor/agile-deliberation/UPSTREAM-PROVENANCE.json',
+}
+CAROUSEL_FILES = {
+    'apps/web/handlers/api/studio/carousel/render/route.ts',
+    'apps/web/pages/api/studio/carousel/render.ts',
+    'apps/web/lib/carousel-render-request.ts',
+    'apps/web/lib/carousel-render-route.ts',
+    'apps/web/lib/carousel-runtime.ts',
+    'apps/web/public/studio/dm-sans-regular.ttf',
+    'apps/web/public/studio/dm-sans-bold.ttf',
+    'apps/web/vendor/carousel-renderer/src/index.mjs',
+    'apps/web/vendor/carousel-renderer/src/index.d.ts',
 }
 
 def git(*args):
@@ -101,7 +112,7 @@ def main():
     names = {name for name, _ in entries}
     required = {'apps/web/package.json', 'apps/web/package-lock.json', 'apps/web/next.config.mjs',
                 'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts',
-                'apps/web/build/studio-schema-loader.cjs', 'apps/web/pages/index.tsx', 'apps/web/pages/api/studio/decision.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values()) | {f'apps/web/{name}' for name in PHOENIX_FILES}
+                'apps/web/build/studio-schema-loader.cjs', 'apps/web/pages/index.tsx', 'apps/web/pages/api/studio/decision.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values()) | {f'apps/web/{name}' for name in PHOENIX_FILES} | CAROUSEL_FILES
     if not required.issubset(names) or not all(any(name.startswith('apps/web/' + folder + '/') for name in names) for folder in ('pages', 'studio', 'handlers')):
         raise ValueError('missing required source files')
     output.mkdir(mode=0o700)

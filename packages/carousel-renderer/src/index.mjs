@@ -130,9 +130,8 @@ async function imageFor(sharp, art) {
   return image.autoOrient().resize({ width: WIDTH, height: HEIGHT, fit: 'inside', withoutEnlargement: true }).png().toBuffer();
 }
 
-async function writeAsset(outputDir, file, bytes) {
-  await writeFile(join(outputDir, file), bytes, { flag: 'wx', mode: 0o600 });
-  return { file, sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length };
+function describeAsset(file, data) {
+  return { file, sha256: createHash('sha256').update(data).digest('hex'), bytes: data.length };
 }
 
 async function inspect(page, slide, options) {
@@ -142,7 +141,7 @@ async function inspect(page, slide, options) {
   return { geometry, checks };
 }
 
-async function renderSlide({ page, sharp, slide, index, fonts, palette, outputDir, incoming, repair }) {
+async function renderSlide({ page, sharp, slide, index, fonts, palette, incoming, repair }) {
   const sourceArt = await imageFor(sharp, slide.art).catch(() => false);
   if (sourceArt === false) {
     return { result: { id: slide.id, index, checks: [check('ASSET_DECODE', false, 'Imagem raster inválida.')] } };
@@ -176,7 +175,7 @@ async function renderSlide({ page, sharp, slide, index, fonts, palette, outputDi
     meta.space === 'srgb' && meta.hasProfile && !meta.isProgressive && meta.chromaSubsampling === '4:4:4' && jpeg.length <= 8_000_000,
   { width: meta.width, height: meta.height, bytes: jpeg.length, chroma: meta.chromaSubsampling, smallFile: jpeg.length < 15_000 });
   checks.push(jpegCheck);
-  const asset = await writeAsset(outputDir, 'slide-' + String(index).padStart(2, '0') + '.jpg', jpeg);
+  const asset = describeAsset('slide-' + String(index).padStart(2, '0') + '.jpg', jpeg);
   return { result: { id: slide.id, index, ...asset, checks, firstChecks, repairs, artAreaFraction: geometry.mediaArea / (WIDTH * HEIGHT) }, jpeg, sourceArt };
 }
 
@@ -191,36 +190,41 @@ async function sheet(sharp, images, { width = 216, height = 270, format = 'png' 
   return format === 'jpeg' ? canvas.withIccProfile('srgb').jpeg(JPEG).toBuffer() : canvas.png().toBuffer();
 }
 
-async function renderArtifacts(sharp, rendered, outputDir) {
+async function renderArtifacts(sharp, rendered) {
   const artifacts = [];
+  const add = (file, data) => artifacts.push({ ...describeAsset(file, data), data });
   const slides = rendered.flatMap(slide => slide.jpeg ? [slide.jpeg] : []);
   const art = rendered.flatMap(slide => slide.sourceArt ? [slide.sourceArt] : []);
-  if (slides.length) artifacts.push(await writeAsset(outputDir, 'contact-sheet.png', await sheet(sharp, slides)));
+  if (slides.length) add('contact-sheet.png', await sheet(sharp, slides));
   if (rendered[0]?.jpeg) {
     const cover = await sharp(rendered[0].jpeg).extract({ left: 34, top: 0, width: 1012, height: HEIGHT }).resize(270, 360).png().toBuffer();
-    artifacts.push(await writeAsset(outputDir, 'cover-grid.png', cover));
+    add('cover-grid.png', cover);
   }
-  if (art.length) artifacts.push(await writeAsset(outputDir, 'art-sheet.jpg', await sheet(sharp, art, { format: 'jpeg' })));
+  if (art.length) add('art-sheet.jpg', await sheet(sharp, art, { format: 'jpeg' }));
   return artifacts;
 }
 
-export async function renderDeck(deck, { outputDir, browser, sharp, fonts, repair = true }) {
+export async function renderDeckInMemory(deck, { browser, sharp, fonts, repair = true, signal }) {
   const profile = 'compor-carousel-jpeg-4x5.v1';
   const planChecks = validateDeck(deck);
   if (planChecks.length) return { profile, slides: [], checks: planChecks, artifacts: [] };
   if (!fonts?.[400]?.length || !fonts?.[700]?.length) throw Error('carousel_fonts_required');
-  await mkdir(outputDir, { recursive: true, mode: 0o700 });
+  signal?.throwIfAborted();
   const context = await browser.newContext({
     viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 2,
     locale: 'pt-BR', serviceWorkers: 'block', reducedMotion: 'reduce',
   });
+  const cancel = () => { void context.close().catch(() => {}); };
+  signal?.addEventListener('abort', cancel, { once: true });
   try {
+    signal?.throwIfAborted();
     await context.route('**/*', route => route.abort());
     const page = await context.newPage();
     const palette = paletteFor(deck.tokens);
     const rendered = [];
     for (const [offset, slide] of deck.slides.entries()) {
-      rendered.push(await renderSlide({ page, sharp, slide, index: offset + 1, fonts, palette, outputDir, incoming: deck.slides[offset - 1]?.bridge, repair }));
+      signal?.throwIfAborted();
+      rendered.push(await renderSlide({ page, sharp, slide, index: offset + 1, fonts, palette, incoming: deck.slides[offset - 1]?.bridge, repair }));
     }
     const slides = rendered.map(({ result }) => result);
     const collection = cadence(deck);
@@ -228,9 +232,29 @@ export async function renderDeck(deck, { outputDir, browser, sharp, fonts, repai
     const checks = [{ ...collection, status: deck.mode === 'editorial_art' && visualCoverage < 0.5 ? 'fail' : collection.status,
       observed: { ...collection.observed, declaredVisualCoverage: collection.observed.visualCoverage, visualCoverage } }];
     checks.push(await compareArtwork(sharp, rendered));
-    const artifacts = await renderArtifacts(sharp, rendered, outputDir);
-    return { profile, slides, checks, artifacts };
+    const artifacts = await renderArtifacts(sharp, rendered);
+    return {
+      profile,
+      slides: rendered.map(({ result, jpeg }) => ({ ...result, data: jpeg })),
+      altTexts: deck.slides.map(({ alt }, offset) => ({ index: offset + 1, alt })),
+      checks, artifacts, caption: deck.caption ?? '',
+    };
   } finally {
-    await context.close();
+    signal?.removeEventListener('abort', cancel);
+    await context.close().catch(error => { if (!signal?.aborted) throw error; });
   }
+}
+
+export async function renderDeck(deck, { outputDir, ...options }) {
+  const rendered = await renderDeckInMemory(deck, options);
+  if (rendered.slides.length) await mkdir(outputDir, { recursive: true, mode: 0o700 });
+  async function save({ data, ...asset }) {
+    if (data) await writeFile(join(outputDir, asset.file), data, { flag: 'wx', mode: 0o600 });
+    return asset;
+  }
+  const slides = [];
+  for (const slide of rendered.slides) slides.push(await save(slide));
+  const artifacts = [];
+  for (const artifact of rendered.artifacts) artifacts.push(await save(artifact));
+  return { profile: rendered.profile, slides, checks: rendered.checks, artifacts };
 }

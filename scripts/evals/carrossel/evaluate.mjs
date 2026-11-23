@@ -1,6 +1,7 @@
 import { join } from 'node:path';
+import { briefingKey, readJudgeCalibration } from './calibration.mjs';
 import { readCaseEvidence } from './evidence.mjs';
-import { formatVersion, requiredChecks, sha256 } from './protocol.mjs';
+import { formatVersion, requireCondition, requiredChecks, sha256 } from './protocol.mjs';
 
 const baselineNote = {
   revision: '2c96e22',
@@ -47,22 +48,23 @@ function completeAverage(cases, readValue) {
   return summary.eligible === summary.observed ? summary.value : null;
 }
 
-function pairResult(candidate, control, againstCycle) {
+function pairResult(candidate, control, againstCycle, calibration) {
   const vote = candidate.pairwise.find(pair => pair.againstCycle === againstCycle);
   if (['holdout', 'independent'].includes(candidate.split) &&
     (candidate.execution?.status !== 'pass' || control?.execution?.status !== 'pass')) return 'unavailable';
   if (!candidate.final?.assetsVerified || !control?.final?.assetsVerified || candidate.caseFingerprint !== control.caseFingerprint
     || vote?.controlManifestSha256 !== control.manifestSha256) return 'unavailable';
+  if (calibration && !calibratedVote(vote, candidate, control, calibration)) return 'unavailable';
   if (vote.candidateFirst === 'first' && vote.controlFirst === 'second') return 'win';
   if (vote.candidateFirst === 'second' && vote.controlFirst === 'first') return 'loss';
   if (vote.candidateFirst === 'tie' && vote.controlFirst === 'tie') return 'tie';
   return 'inconclusive';
 }
 
-function compare(cases, reference, againstCycle) {
+function compare(cases, reference, againstCycle, calibration) {
   const controls = new Map((reference?.cases ?? []).map(item => [item.id, item]));
   const observed = { win: 0, loss: 0, tie: 0, inconclusive: 0, unavailable: 0 };
-  for (const candidate of cases) observed[pairResult(candidate, controls.get(candidate.id), againstCycle)] += 1;
+  for (const candidate of cases) observed[pairResult(candidate, controls.get(candidate.id), againstCycle, calibration)] += 1;
   const matched = cases.map(candidate => [candidate, controls.get(candidate.id)])
     .filter(([candidate, control]) => candidate.caseFingerprint === control?.caseFingerprint
       && Number.isFinite(candidate.final?.cqs) && Number.isFinite(control.final?.cqs));
@@ -117,13 +119,13 @@ function executionCoverage(cases) {
       : cases.length && observed === cases.length ? 'pass' : 'unavailable' };
 }
 
-function promotionChecks(cycle, cases, split, references) {
+function promotionChecks(cycle, cases, split, references, calibration) {
   const selected = cycle === 4 ? cases.filter(item => item.split === 'holdout')
     : cases.filter(item => item.split === split);
   const decks = selected.filter(item => item.expected === 'deliver_deck');
   const final = key => completeAverage(decks, item => item.final?.[key]);
   const pair = (againstCycle, minimumRate) => {
-    const result = compare(decks, references.get(againstCycle), againstCycle);
+    const result = compare(decks, references.get(againstCycle), againstCycle, cycle >= 4 ? calibration : null);
     return { result, check: minimum(`pareado_c${againstCycle}`, result.rate, minimumRate) };
   };
   if (cycle === 0) {
@@ -157,10 +159,43 @@ function promotionChecks(cycle, cases, split, references) {
   }
   const allDecks = cases.filter(item => item.expected === 'deliver_deck');
   const controls = cycle === 4 ? [pair(0, 0.85), pair(3, 0.60)] : [pair(4, 0.60)];
-  return { checks: [expectedCoverage(cases), executionCoverage(selected), coverLabCoverage(allDecks), minimum('cqs', completeAverage(allDecks, item => item.final?.cqs), 85),
+  return { checks: [expectedCoverage(cases), executionCoverage(selected), coverLabCoverage(allDecks), ...calibrationChecks(allDecks, calibration),
+    minimum('cqs', completeAverage(allDecks, item => item.final?.cqs), 85),
     minimum('s_vlm', completeAverage(allDecks, item => item.final?.sVlm), 82),
     minimum('piso_dimensoes_vlm', dimensionFloor(allDecks), 3.5), ...controls.map(control => control.check)],
   comparisons: controls.map(control => control.result) };
+}
+
+function sameJudge(trace, calibration) {
+  return trace?.model === calibration?.report.model && trace?.rubricSha256 === calibration?.report.rubricSha256;
+}
+
+function calibratedVote(vote, candidate, control, calibration) {
+  const trace = vote?.judgeTrace;
+  const a = control.final.judgeInput;
+  const b = candidate.final.judgeInput;
+  return sameJudge(trace, calibration) && a && b
+    && trace.input.baselineHash === a.deckSha256 && trace.input.baselineCaptionSha256 === a.captionSha256
+    && trace.input.candidateHash === b.deckSha256 && trace.input.candidateCaptionSha256 === b.captionSha256;
+}
+
+function calibrationChecks(decks, calibration) {
+  const observed = calibration ? decks.filter(item => sameJudge(item.final?.judgeTrace, calibration)).length : 0;
+  return [
+    { name: 'calibracao_do_juiz', observed: calibration?.report.metrics.referenceAgreement ?? null,
+      target: calibration?.report.targets.referenceAgreement ?? null, status: calibration?.report.status ?? 'unavailable' },
+    { name: 'notas_do_juiz_verificadas', observed, target: decks.length,
+      status: decks.length && observed === decks.length ? 'pass' : 'unavailable' },
+  ];
+}
+
+function verifyCalibrationCohort(calibration, cohorts, cases, references) {
+  const ids = new Set(cohorts.map(item => item.id));
+  const briefings = new Set(cohorts.map(item => briefingKey(item.briefing)));
+  const decks = new Set([...cases, ...[...references.values()].flatMap(reference => reference.cases)]
+    .flatMap(item => [item.first?.judgeInput?.deckSha256, item.final?.judgeInput?.deckSha256]).filter(Boolean));
+  requireCondition(calibration.report.cases.every(item => !ids.has(item.id) && !briefings.has(item.briefingKey)
+    && item.deckSha256.every(digest => !decks.has(digest))), 'A calibração reutiliza um caso, briefing ou coleção da avaliação.');
 }
 
 async function evaluateCase(testCase, evidenceRoot, expectation) {
@@ -174,18 +209,26 @@ async function evaluateCase(testCase, evidenceRoot, expectation) {
   };
 }
 
-export async function evaluate({ cycle, tests, evidenceRoot, references, controlOnly, suiteDigests, candidateSha256 }) {
+export async function evaluate({ cycle, tests, evidenceRoot, references, controlOnly, suiteDigests, candidateSha256, judgeCalibration, cohorts = tests }) {
   const cases = [];
   for (const testCase of tests) cases.push(await evaluateCase(testCase, evidenceRoot, { cycle, suiteSha256: suiteDigests?.[testCase.split], candidateSha256, controlOnly }));
+  const calibration = judgeCalibration ? await readJudgeCalibration(judgeCalibration.directory, judgeCalibration.sha256) : null;
+  if (calibration) verifyCalibrationCohort(calibration, cohorts, cases, references);
   const split = cycle === 5 ? 'independent' : 'dev';
   const { checks, comparisons } = controlOnly ? { checks: [], comparisons: [] }
-    : promotionChecks(cycle, cases, split, references);
+    : promotionChecks(cycle, cases, split, references, calibration);
   const hardFailDecks = cases.filter(item => item.expected === 'deliver_deck' && item.final?.hardFails.length).length;
   const pass = checks.length > 0 && checks.every(check => check.status === 'pass');
   return {
     version: formatVersion, cycle, suiteDigests, controlOnly, historicalBaseline: baselineNote,
     status: controlOnly ? 'control_only' : pass ? (cycle === 0 ? 'baseline_recorded' : 'eligible_for_review') : 'insufficient_or_failed',
     checks, comparisons,
+    ...(calibration && { judgeCalibration: {
+      sha256: calibration.sha256, truthSha256: calibration.report.truthSha256, observationsSha256: calibration.report.observationsSha256,
+      model: calibration.report.model, rubricSha256: calibration.report.rubricSha256, status: calibration.report.status,
+      reference: calibration.report.reference,
+      metrics: calibration.report.metrics,
+    } }),
     coverage: {
       total: cases.length, withManifest: cases.filter(item => item.manifestSha256).length,
       accepted: cases.filter(item => item.expected === 'deliver_deck' && item.verdict === 'pass').length,

@@ -50,3 +50,9 @@ Três diagramas governados demonstram escala, contraste e hierarquia com compara
 Na réplica paga do C5 em desenvolvimento, o Lab passou com dez opções. O planejador transferiu o CTA para um campo reservado a um trecho do título, e a primeira passagem foi bloqueada. Um replay moveu o CTA literal para o corpo e corrigiu a distância entre o rótulo da capa e o diagrama. Os quatro JPEGs finais passaram os checks físicos. O adversarial com promessa de rendimento sem fonte foi recusado novamente antes da imagem.
 
 Na dupla leitura cega desse replay, o C0 continuou preferido. Os dois pareceres apontaram melhora nas comparações visuais de escala e contraste, com perda de continuidade no fechamento e menor força no gancho. Essa comparação ainda cobre um briefing de desenvolvimento. CQS, calibração e reserva seguem pendentes.
+
+## Rota de composição e calibração verificável
+
+O teste HTTP do Next com autenticação simulada e Chromium real confirmou a recusa de outro projeto, a retenção de um plano editorial reprovado e o ZIP para três lâminas válidas. Os JPEGs preservaram os hashes do manifesto e incluíam perfil sRGB, 1080 × 1350, 4:4:4 e codificação não progressiva. O ZIP levou legenda e alt text. O teste também verificou a capa de perfil em 270 × 360 e os pareceres físicos da primeira passagem e da renderização final. O compositor compartilha o pacote dos arquétipos com o laboratório. [ADR 0082](../adr/0082-renderizador-deterministico-de-carrossel.md).
+
+A CLI recalcula a calibração a partir de rótulos de referência e das duas ordens de julgamento. Na promoção de C4 e C5, as notas e os votos precisam corresponder às lâminas, ao briefing, à legenda e à rubrica utilizados. Os controles simulados passaram. A calibração observada do juiz e a comparação na reserva continuam pendentes. [Protocolo da bancada](../../scripts/evals/carrossel/README.md).

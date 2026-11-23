@@ -12,15 +12,19 @@
   "dependencies": {
     "@compor/agents-api": "file:../../packages/agents-api",
     "@compor/agile-deliberation": "file:../../packages/agile-deliberation",
+    "@compor/carousel-renderer": "file:../../packages/carousel-renderer",
     "@compor/images-api": "file:../../packages/images-api",
     "@compor/private-images": "file:../../packages/private-images",
     "@compor/remote-mcp": "file:../../packages/remote-mcp",
+    "@sparticuz/chromium": "153.0.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "markdown-to-jsx": "^7.7.17",
     "next": "16.4.6",
+    "playwright-core-carousel": "npm:playwright-core@1.63.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "sharp": "0.35.5",
     "zod": "4.6.7"
   },
   "devDependencies": {

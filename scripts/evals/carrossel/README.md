@@ -64,16 +64,40 @@ node scripts/evals/carrossel/cli.mjs evaluate \
 node scripts/evals/carrossel/cli.mjs evaluate \
   --cycle 4 --evidence "$LAB/c4" --output "$LAB/c4.json" \
   --holdout "$LAB/reserva.json" --holdout-sha256 "$RESERVA_SHA256" \
+  --judge-calibration "$LAB/calibracao" --calibration-sha256 "$CALIBRACAO_SHA256" \
   --compare "$LAB/c0-reserva.json" --compare "$LAB/c3-reserva.json"
 
 node scripts/evals/carrossel/cli.mjs evaluate \
   --cycle 5 --evidence "$LAB/c5" --output "$LAB/c5.json" \
   --holdout "$LAB/reserva.json" --holdout-sha256 "$RESERVA_SHA256" \
   --independent "$LAB/confirmacao.json" --independent-sha256 "$CONFIRMACAO_SHA256" \
+  --judge-calibration "$LAB/calibracao" --calibration-sha256 "$CALIBRACAO_SHA256" \
   --compare "$LAB/c4-confirmacao.json"
 ```
 
-Para produzir o controle do C5, use C4 com `--control-only` e a suíte `--independent` correspondente. Compare as duas versões sob o mesmo briefing, cegue revisão e autoria, e repita a avaliação com a ordem invertida. Use controles com defeito plantado e casos deliberadamente válidos para medir falsos positivos de checagens de fatos, redundância e arte. Uma calibragem do juiz exige exemplos rotulados, concordância com avaliação humana e repetição dos mesmos insumos. A CLI recebe essas observações quando presentes. A amostra de seis mede regressões nos casos selecionados. [Zheng et al., análise de vieses em juízes](https://arxiv.org/abs/2306.05685) · [NIST, intervalos de proporção](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm)
+Para produzir o controle do C5, use C4 com `--control-only` e a suíte `--independent` correspondente. Compare as duas versões sob o mesmo briefing, cegue revisão e autoria, e repita a avaliação com a ordem invertida. A amostra de seis mede regressões nos casos selecionados. [Zheng et al., análise de vieses em juízes](https://arxiv.org/abs/2306.05685) · [NIST, intervalos de proporção](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm)
+
+### Calibração do juiz visual
+
+Separe de seis a trinta pares para a calibração. Inclua ao menos dois pares sem defeitos críticos e dois com defeito crítico. Use revisão humana independente ou uma revisão independente pela rubrica com casos deliberadamente válidos e defeitos plantados. Congele o SHA-256 de `reference-labels.json` antes dos julgamentos. Mantenha a intenção do controle e os rótulos fora do contexto do juiz. O arquivo privado documenta a revisão com `{version: 1, split: "judge-calibration", reference: {kind, reviewerId, source}, cases}`. Use `human` ou `independent_rubric` em `kind`. Identifique o responsável e registre em `source` a origem verificável dos rótulos e dos defeitos.
+
+| Campo de cada caso | Conteúdo |
+| --- | --- |
+| `id`, `briefing`, `facts` | Identificador inédito, briefing sintético e lista de fatos. Use `judgeBriefing(caso)` como texto de entrada do juiz. |
+| `winner`, `reason` | Preferência de referência canônica `baseline`, `candidate` ou `tie` e evidência observável. |
+| `baseline`, `candidate` | Cada lado contém `deckSha256`, `captionSha256`, `scores` e `criticalDefects`. O hash do deck usa `judgeDeckHash` sobre a lista ordenada de hashes dos JPEGs. O hash da legenda usa seus bytes UTF-8 ou os de uma string vazia. |
+| `scores`, `criticalDefects` | Oito notas de referência de 0 a 5 nas dimensões do juiz. Para cada defeito crítico, indique `{slide, dimension, evidence}` e limite a nota da dimensão a 2. |
+
+Execute `runBlindCarouselPair` duas vezes por caso com os mesmos JPEGs, legendas e briefing. Cada chamada julga A/B e B/A em sessões próprias. Preserve os pares e seus recibos lado a lado. Em `observations.json`, registre `{version: 1, truthSha256, cases}`. Cada entrada de `cases` tem `{id, pairs}`, com dois pares de `{file, sha256}`. Um caso só conta como concordante se os quatro votos coincidirem com o veredito de referência.
+
+```sh
+node scripts/evals/carrossel/cli.mjs calibrate \
+  --bundle "$LAB/calibracao" --truth-sha256 "$ROTULOS_SHA256"
+```
+
+O relatório `judge-calibration.json` exige pelo menos 80% dos casos concordantes, zero faltas ou falsos positivos para defeitos críticos e, por dimensão, erro absoluto médio de até 0,75 ponto e desvio-padrão de repetição abaixo de 0,35 ponto. O desvio compara as duas sessões na mesma ordem para cada lado. O relatório registra divergências de preferência entre ordens. Os limiares operacionais medem essa amostra. A independência da revisão e o congelamento anterior dependem do responsável que fornece os arquivos.
+
+Para promover C4 e C5, a CLI confere o SHA-256 do relatório, recalcula as medidas e recusa a reutilização de IDs, briefings ou coleções da avaliação. Em cada `qa-assessments.json`, ligue `final.judgeEvidence` a `{file, sha256, side}`, com `side` igual a `baseline` ou `candidate`. O leitor deriva as oito notas dos dois pareceres e aplica o teto crítico à média. Nas entradas de `pairwise`, inclua `judgeEvidence: {file, sha256}` e use `judgeModel` como `evaluator`. Coloque o arquivo `*.pair.json` e seus recibos das ordens no diretório do caso. Os votos precisam corresponder às duas ordens, e o conjunto de JPEGs e a legenda precisam coincidir com os artefatos do controle e da candidata.
 
 ## Runner com serviços pagos
 

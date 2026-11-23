@@ -1,0 +1,90 @@
+import { renderDeckInMemory, validateDeck } from '@compor/carousel-renderer';
+import type { Actor } from './agent-auth.ts';
+import { readCarouselRenderRequest } from './carousel-render-request.ts';
+import { CarouselRuntimeError, withCarouselRuntime } from './carousel-runtime.ts';
+import { createStudioZip } from './studio-zip.ts';
+
+const MAX_ZIP_BYTES = 4 * 1024 * 1024;
+const privateHeaders = { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
+const reply = (body: unknown, status: number) => Response.json(body, { status, headers: privateHeaders });
+type Result = Awaited<ReturnType<typeof renderDeckInMemory>>;
+type Dependencies = {
+  appOrigin: string;
+  resolveActor: () => Promise<Actor | null>;
+  ownsProject: (actor: Actor, projectId: string) => Promise<boolean>;
+  render?: (plan: unknown, signal: AbortSignal) => Promise<Result>;
+};
+
+function renderCarousel(plan: unknown, requestSignal: AbortSignal) {
+  return withCarouselRuntime(({ signal, ...runtime }) =>
+    renderDeckInMemory(plan, { ...runtime, signal: AbortSignal.any([signal, requestSignal]) }));
+}
+
+function jsonFile(value: unknown) {
+  return new Blob([JSON.stringify(value, null, 2) + '\n'], { type: 'application/json' });
+}
+
+async function exportCarousel({ profile, slides, checks, artifacts, caption, altTexts }: Result, planSha256: string, signal: AbortSignal) {
+  const failed = [
+    ...checks.filter(check => check.status === 'fail'),
+    ...slides.flatMap(slide => slide.checks.filter(check => check.status === 'fail').map(check => ({ ...check, index: slide.index }))),
+  ];
+  const firstPass = slides.map(({ id, index, firstChecks, checks: finalChecks }) => ({ id, index, checks: firstChecks ?? finalChecks }));
+  const manifest = {
+    profile, planSha256, assessment: 'physical_only',
+    first_pass: { slides: firstPass, checks },
+    final: { slides: slides.map(({ data: _data, firstChecks: _firstChecks, ...slide }) => slide), checks },
+    first_pass_yield: slides.length > 0 && checks.every(check => check.status === 'pass') &&
+      firstPass.every(slide => slide.checks.every(check => check.status === 'pass')) ? 1 : 0,
+    repair_count: slides.reduce((count, slide) => count + (slide.repairs?.length ?? 0), 0),
+    artifacts: artifacts.map(({ data: _data, ...artifact }) => artifact),
+  };
+  if (failed.length) return reply({ error: 'quality_held', checks: failed, manifest }, 422);
+
+  const panels = slides.flatMap(({ file, data }) => file && data ? [{ name: file, file: new Blob([new Uint8Array(data)], { type: 'image/jpeg' }) }] : []);
+  if (panels.length < 3 || panels.length !== slides.length || altTexts?.length !== panels.length) {
+    return reply({ error: 'incomplete_composition' }, 503);
+  }
+  const entries = [
+    ...panels,
+    { name: 'legenda.txt', file: new Blob([caption ?? ''], { type: 'text/plain;charset=utf-8' }) },
+    { name: 'alt-text.json', file: jsonFile(altTexts) },
+    { name: 'qa-manifest.json', file: jsonFile(manifest) },
+    ...artifacts.map(({ file, data }) => ({ name: file, file: new Blob([new Uint8Array(data)]) })),
+  ];
+  if (entries.reduce((bytes, entry) => bytes + entry.file.size, 0) >= MAX_ZIP_BYTES) return reply({ error: 'archive_too_large' }, 422);
+  const archive = await createStudioZip(entries, () => !signal.aborted);
+  if (!archive) return reply({ error: 'request_aborted' }, 499);
+  if (archive.size > MAX_ZIP_BYTES) return reply({ error: 'archive_too_large' }, 422);
+  return new Response(archive, { headers: {
+    ...privateHeaders,
+    'Content-Type': 'application/zip',
+    'Content-Disposition': 'attachment; filename="carrossel.zip"',
+    'Content-Length': String(archive.size),
+  } });
+}
+
+export function createCarouselRenderRoute({ appOrigin, resolveActor, ownsProject, render = renderCarousel }: Dependencies) {
+  return async (request: Request): Promise<Response> => {
+    if (request.headers.get('origin') !== appOrigin) return reply({ error: 'invalid_origin' }, 403);
+    try {
+      const actor = await resolveActor();
+      if (!actor?.userId || !actor.token) return reply({ error: 'unauthorized' }, 401);
+      const input = await readCarouselRenderRequest(request);
+      if (!input.ok) return reply({ error: input.error }, input.status);
+      if (!await ownsProject(actor, input.projectId)) return reply({ error: 'not_found' }, 404);
+
+      const checks = validateDeck(input.plan);
+      if (checks.length) return reply({ error: 'invalid_plan', checks }, 422);
+      request.signal.throwIfAborted();
+      const result = await render(input.plan, request.signal);
+      return await exportCarousel(result, input.planSha256, request.signal);
+    } catch (error) {
+      if (request.signal.aborted) return reply({ error: 'request_aborted' }, 499);
+      if (error instanceof CarouselRuntimeError) {
+        return reply({ error: error.code }, error.code === 'carousel_renderer_busy' ? 429 : 503);
+      }
+      return reply({ error: 'unavailable' }, 503);
+    }
+  };
+}

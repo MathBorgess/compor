@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / 'scripts/stage_vercel_web.py'
-PACKAGES = ('agents-api', 'agile-deliberation', 'images-api', 'private-images', 'remote-mcp')
+PACKAGES = ('agents-api', 'agile-deliberation', 'carousel-renderer', 'images-api', 'private-images', 'remote-mcp')
 
 class StageTest(unittest.TestCase):
     def setUp(self):
@@ -106,6 +106,10 @@ class StageTest(unittest.TestCase):
             self.assertEqual((app / 'lib' / filename).read_bytes(), (self.root / 'apps/web/lib' / filename).read_bytes())
         self.assertTrue((app / 'handlers/api/studio/decision/route.ts').is_file())
         self.assertTrue((app / 'pages/api/studio/decision.ts').is_file())
+        for filename in ('pages/api/studio/carousel/render.ts', 'lib/carousel-runtime.ts',
+                         'public/studio/dm-sans-regular.ttf', 'public/studio/dm-sans-bold.ttf',
+                         'vendor/carousel-renderer/src/index.mjs', 'vendor/carousel-renderer/src/index.d.ts'):
+            self.assertTrue((app / filename).is_file())
         self.assertTrue((app / 'build/studio-schema-loader.cjs').is_file())
         self.assertFalse((output / 'prototypes').exists())
         self.assertEqual(json.loads((app / 'package.json').read_text())['scripts']['build'], 'next build')

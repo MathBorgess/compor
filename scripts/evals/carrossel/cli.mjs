@@ -2,6 +2,7 @@ import { mkdir, realpath, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { calibrationFile, measureJudgeCalibration } from './calibration.mjs';
 import { evaluate } from './evaluate.mjs';
 import { reviewNovelty } from './novelty.mjs';
 import { formatVersion, isId, readDocument, readSuite, requireCondition } from './protocol.mjs';
@@ -42,6 +43,7 @@ async function evaluateCommand(arguments_) {
     cycle: { type: 'string' }, evidence: { type: 'string' }, output: { type: 'string' },
     holdout: { type: 'string' }, 'holdout-sha256': { type: 'string' },
     independent: { type: 'string' }, 'independent-sha256': { type: 'string' }, 'candidate-sha256': { type: 'string' },
+    'judge-calibration': { type: 'string' }, 'calibration-sha256': { type: 'string' },
     compare: { type: 'string', multiple: true }, 'control-only': { type: 'boolean' }, strict: { type: 'boolean' },
   } });
   requireCondition(/^[0-5]$/.test(values.cycle ?? '') && values.evidence && values.output,
@@ -58,8 +60,17 @@ async function evaluateCommand(arguments_) {
   const holdout = readHoldout ? await privateSuite(values.holdout, 'holdout', values['holdout-sha256']) : null;
   const independent = cycle === 5 || values.independent
     ? await privateSuite(values.independent, 'independent', values['independent-sha256']) : null;
-  checkUnique([...dev.cases, ...(holdout?.cases ?? []), ...(independent?.cases ?? [])]);
-  if (holdout || independent) {
+  const cohorts = [...dev.cases, ...(holdout?.cases ?? []), ...(independent?.cases ?? [])];
+  checkUnique(cohorts);
+  requireCondition(Boolean(values['judge-calibration']) === Boolean(values['calibration-sha256']),
+    'Informe o diretório privado da calibração e o SHA-256 do relatório.');
+  let judgeCalibration;
+  if (values['judge-calibration']) {
+    const directory = await realpath(values['judge-calibration']);
+    requireOutsideRepository(directory);
+    judgeCalibration = { directory, sha256: values['calibration-sha256'] };
+  }
+  if (holdout || independent || judgeCalibration) {
     requireOutsideRepository(await realpath(values.evidence));
     requireOutsideRepository(join(await realpath(dirname(values.output)), 'report.json'));
   }
@@ -67,6 +78,7 @@ async function evaluateCommand(arguments_) {
   const references = await loadReferences(values.compare);
   const result = await evaluate({
     cycle, tests, evidenceRoot: resolve(values.evidence), references, controlOnly, candidateSha256: values['candidate-sha256'],
+    judgeCalibration, cohorts,
     suiteDigests: { dev: dev.digest, holdout: holdout?.digest ?? null, independent: independent?.digest ?? null },
   });
   await writeFile(values.output, JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
@@ -105,12 +117,27 @@ async function noveltyCommand(arguments_) {
   if (result.status !== 'pass') process.exitCode = 2;
 }
 
+async function calibrateCommand(arguments_) {
+  const { values } = parseArgs({ args: arguments_, options: {
+    bundle: { type: 'string' }, 'truth-sha256': { type: 'string' },
+  } });
+  requireCondition(values.bundle && values['truth-sha256'],
+    'Use calibrate --bundle <diretório privado> --truth-sha256 <hash congelado dos rótulos de referência>.');
+  const directory = await realpath(values.bundle);
+  requireOutsideRepository(directory);
+  const result = await measureJudgeCalibration(directory, values['truth-sha256']);
+  await writeFile(join(directory, calibrationFile), JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  console.log(JSON.stringify({ status: result.status, metrics: result.metrics }));
+  if (result.status !== 'pass') process.exitCode = 2;
+}
+
 try {
   const [command, ...arguments_] = process.argv.slice(2);
   if (command === 'evaluate') await evaluateCommand(arguments_);
   else if (command === 'render') await renderCommand(arguments_);
   else if (command === 'novelty') await noveltyCommand(arguments_);
-  else throw Error('Comandos: evaluate, render e novelty. Consulte scripts/evals/carrossel/README.md.');
+  else if (command === 'calibrate') await calibrateCommand(arguments_);
+  else throw Error('Comandos: evaluate, render, novelty e calibrate. Consulte scripts/evals/carrossel/README.md.');
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

@@ -3,11 +3,11 @@ import { createRequire } from 'node:module';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { readTurn, requestHeaders } from './live.mjs';
-import { judgeWeights, requireCondition, sha256 } from './protocol.mjs';
+import { formatVersion, requireCondition, sha256 } from './protocol.mjs';
+import { canonicalJudgeChoice, judgeDeckHash, judgeModel, judgeRubricSha256, validateJudgeResult } from './judge-evidence.mjs';
 
 const require = createRequire(new URL('../../../apps/web/package.json', import.meta.url));
 const endpoint = 'https://api.openai.com/v1/agents/sessions';
-const model = 'gpt-6.2-astra';
 
 const dimensions = {
   cover: 'Promessa específica, força da capa recortada e leitura em miniatura.',
@@ -50,27 +50,7 @@ function imagesFor(label, { first, second, cover, overview }, caption) {
   ];
 }
 
-function parseResult(text) {
-  const result = JSON.parse(text.trim().replace(/^\x60\x60\x60(?:json)?\s*|\s*\x60\x60\x60$/g, ''));
-  requireCondition(['A', 'B', 'tie', 'abstain'].includes(result.winner) && typeof result.reason === 'string' && result.reason.trim(), 'judge_verdict_invalid');
-  for (const label of ['A', 'B']) {
-    const answer = result[label];
-    requireCondition(Array.isArray(answer?.defects) && answer.defects.every(defect =>
-      Number.isInteger(defect.slide) && defect.slide >= 1 && defect.slide <= 10 && Object.hasOwn(judgeWeights, defect.dimension) &&
-      typeof defect.evidence === 'string' && defect.evidence.trim() && typeof defect.critical === 'boolean'), 'judge_defects_invalid');
-    for (const key of Object.keys(judgeWeights)) {
-      const score = answer.scores?.[key];
-      requireCondition(Number.isFinite(score?.value) && score.value >= 0 && score.value <= 5 &&
-        typeof score.evidence === 'string' && score.evidence.trim(), 'judge_score_invalid');
-      if (answer.defects.some(defect => defect.critical && defect.dimension === key)) {
-        requireCondition(score.value <= 2, 'judge_critical_cap_invalid');
-      }
-    }
-  }
-  return result;
-}
-
-async function reviewOrder({ key, fetchApi, content, receiptFile, baselineHash, candidateHash }) {
+async function reviewOrder({ key, fetchApi, content, receiptFile, input, order }) {
   const header = requestHeaders(key);
   const criteria = Object.entries(dimensions).map(([name, description]) => name + ' — ' + description).join('\n');
   const instructions = [
@@ -81,13 +61,18 @@ async function reviewOrder({ key, fetchApi, content, receiptFile, baselineHash, 
     criteria,
   ].join('\n');
   const body = {
-    agent: { model, instructions, reasoning: { effort: 'low' }, multi_agent: { enabled: false }, tools: [] },
+    agent: { model: judgeModel, instructions, reasoning: { effort: 'low' }, multi_agent: { enabled: false }, tools: [] },
     environment: { type: 'none' },
     input: [{ role: 'user', content }],
     stream: false,
   };
-  await writeFile(receiptFile, JSON.stringify({ model, state: 'submitted', baselineHash, candidateHash }), { flag: 'wx', mode: 0o600 });
-  const record = async data => writeFile(receiptFile, JSON.stringify({ model, baselineHash, candidateHash, ...data }), { mode: 0o600 });
+  const identity = { model: judgeModel, rubricSha256: judgeRubricSha256, order, input };
+  await writeFile(receiptFile, JSON.stringify({ ...identity, state: 'submitted' }), { flag: 'wx', mode: 0o600 });
+  const record = async data => {
+    const bytes = JSON.stringify({ ...identity, ...data });
+    await writeFile(receiptFile, bytes, { mode: 0o600 });
+    return sha256(bytes);
+  };
   let response;
   try {
     response = await fetchApi(endpoint, { method: 'POST', headers: header, body: JSON.stringify(body), redirect: 'error', signal: AbortSignal.timeout(30000) });
@@ -111,13 +96,13 @@ async function reviewOrder({ key, fetchApi, content, receiptFile, baselineHash, 
     let output;
     try {
       if (result.text.includes(key)) throw Error('judge_credential_in_output');
-      output = parseResult(result.text);
+      output = validateJudgeResult(JSON.parse(result.text.trim().replace(/^\x60\x60\x60(?:json)?\s*|\s*\x60\x60\x60$/g, '')));
     } catch {
       await record({ ...receipt, state: 'invalid_judge_output' });
       return { state: 'invalid_judge_output' };
     }
-    await record({ ...receipt, output });
-    return { state: 'completed', output, usage: result.usage };
+    const receiptSha256 = await record({ ...receipt, output });
+    return { state: 'completed', output, usage: result.usage, receiptSha256 };
   } catch {
     await record(receiptFor('unknown', response));
     return { state: 'unknown' };
@@ -125,9 +110,9 @@ async function reviewOrder({ key, fetchApi, content, receiptFile, baselineHash, 
 }
 
 export async function runBlindCarouselPair({ key, root, baseline, candidate, briefing, output, fetchApi = fetch }) {
-  requireCondition(/^sk-[^\s]{20,300}$/.test(key ?? '') && isAbsolute(root) && /^[a-z0-9-]+$/.test(output), 'judge_invalid_scope');
+  requireCondition(/^sk-[^\s]{20,300}$/.test(key ?? '') && isAbsolute(root) && /^[a-z0-9-]{1,80}$/.test(output), 'judge_invalid_scope');
   const reportPath = join(root, output + '.pair.json');
-  const safeSide = side => side && Array.isArray(side.files) && side.files.length >= 3 && side.files.length <= 10 &&
+  const safeSide = side => side && Array.isArray(side.files) && side.files.length >= 2 && side.files.length <= 20 &&
     side.files.every(file => typeof file === 'string' && !isAbsolute(file) && !file.split('/').includes('..')) &&
     typeof side.caption === 'string' && side.caption.length <= 2400;
   requireCondition(safeSide(baseline) && safeSide(candidate) && typeof briefing === 'string' && briefing.length <= 6000, 'judge_invalid_input');
@@ -142,16 +127,23 @@ export async function runBlindCarouselPair({ key, root, baseline, candidate, bri
     return path;
   }));
   const [a, b] = await Promise.all([baseline, candidate].map(async side => panels(sharp, await trustedFiles(side.files))));
-  const [baselineHash, candidateHash] = [a, b].map(side => sha256(JSON.stringify(side.hashes)));
+  const [baselineHash, candidateHash] = [a, b].map(side => judgeDeckHash(side.hashes));
+  const input = {
+    baselineHash, candidateHash, briefingSha256: sha256(briefing),
+    baselineCaptionSha256: sha256(baseline.caption), candidateCaptionSha256: sha256(candidate.caption),
+  };
   const preamble = { type: 'input_text', text: 'Briefing sintético e fatos: ' + briefing };
-  const forward = await reviewOrder({ key, fetchApi, content: [preamble, ...imagesFor('A', a, baseline.caption), ...imagesFor('B', b, candidate.caption)], receiptFile: join(dirname(reportPath), output + '-ab.receipt.json'), baselineHash, candidateHash });
+  const forward = await reviewOrder({ key, fetchApi, content: [preamble, ...imagesFor('A', a, baseline.caption), ...imagesFor('B', b, candidate.caption)], receiptFile: join(dirname(reportPath), output + '-ab.receipt.json'), input, order: 'ab' });
   const reverse = forward.state === 'completed'
-    ? await reviewOrder({ key, fetchApi, content: [preamble, ...imagesFor('A', b, candidate.caption), ...imagesFor('B', a, baseline.caption)], receiptFile: join(dirname(reportPath), output + '-ba.receipt.json'), baselineHash, candidateHash })
+    ? await reviewOrder({ key, fetchApi, content: [preamble, ...imagesFor('A', b, candidate.caption), ...imagesFor('B', a, baseline.caption)], receiptFile: join(dirname(reportPath), output + '-ba.receipt.json'), input, order: 'ba' })
     : { state: 'not_run' };
-  const choice = (result, baselineSlot) => result.state !== 'completed' ? 'abstain' : result.output.winner === baselineSlot ? 'baseline'
-    : ['A', 'B'].includes(result.output.winner) ? 'candidate' : result.output.winner;
+  const choice = (result, baselineSlot) => result.state !== 'completed' ? 'abstain' : canonicalJudgeChoice(result.output, baselineSlot);
   const results = [choice(forward, 'A'), choice(reverse, 'B')];
-  const report = { state: results[0] === results[1] ? results[0] : 'inconclusive', sampleCount: 1, exploratory: true, baselineHash, candidateHash, results, forward, reverse };
+  const report = {
+    version: formatVersion, model: judgeModel, rubricSha256: judgeRubricSha256, input,
+    state: results[0] === results[1] ? results[0] : 'inconclusive', sampleCount: 1, exploratory: true,
+    baselineHash, candidateHash, results, forward, reverse,
+  };
   await writeFile(reportPath, JSON.stringify(report, null, 2), { flag: 'wx', mode: 0o600 });
   return { state: report.state, results, reportPath, unknown: forward.state === 'unknown' || reverse.state === 'unknown' };
 }

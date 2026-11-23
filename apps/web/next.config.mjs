@@ -11,6 +11,16 @@ const nextConfig = {
   },
   // Browser tests run two files at once; test/next-dist-dir.mjs gives each its own dist dir.
   distDir: process.env.COMPOR_TEST_NEXT_DIST_DIR || '.next',
+  serverExternalPackages: ['playwright-core-carousel'],
+  outputFileTracingIncludes: {
+    '/api/studio/carousel/render': [
+      './node_modules/@sparticuz/chromium/bin/*.br',
+      './node_modules/@img/sharp-linux-x64/**/*',
+      './node_modules/@img/sharp-libvips-linux-x64/**/*',
+      './public/studio/dm-sans-regular.ttf',
+      './public/studio/dm-sans-bold.ttf',
+    ],
+  },
   // Project and post URLs render the single studio page; lib/studio-route.ts reads the path on the client.
   async rewrites() {
     return [

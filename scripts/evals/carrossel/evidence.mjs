@@ -4,6 +4,7 @@ import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { coverLabArtifact } from './cover-lab.mjs';
+import { judgeBriefing, judgeDeckHash, judgeSideScores, readBlindJudgePair } from './judge-evidence.mjs';
 import {
   bounded, collectionWeights, formatVersion, isDigest, judgeWeights,
   readDocument, requireCondition, requiredChecks, sha256,
@@ -79,6 +80,8 @@ export function summarizeSnapshot(snapshot) {
     assetsVerified,
     coverLab: snapshot.coverLab ?? null,
     factualTrace: snapshot.factualTrace ?? null,
+    judgeInput: snapshot.judgeInput ?? null,
+    judgeTrace: snapshot.judgeTrace ?? null,
     novelty: snapshot.novelty ?? null,
     retainedFiles: snapshot.artifacts?.map(artifact => artifact.file) ?? [],
     hardFails: [...new Set([...planFailures, ...Object.values(staged).flatMap(stage => stage.failures), ...(snapshot.coverLab?.violations ?? []), ...(snapshot.factualTrace?.issues.map(issue => issue.id) ?? []), ...(snapshot.novelty?.status === 'fail' ? ['NOVELTY'] : [])])],
@@ -100,7 +103,7 @@ async function verifiedNovelty(root, plan, reference) {
 async function verifyArtifacts(caseDir, input, facts, noveltyEvidence) {
   const artifacts = input.artifacts ?? [];
   requireCondition(Array.isArray(artifacts), 'Lista de artefatos inválida.');
-  if (artifacts.length === 0) return { assetsVerified: false, coverLab: null };
+  if (artifacts.length === 0) return { assetsVerified: false, coverLab: null, judgeInput: null };
   const root = await realpath(caseDir);
   const seen = new Set();
   const names = new Set();
@@ -145,11 +148,16 @@ async function verifyArtifacts(caseDir, input, facts, noveltyEvidence) {
     ? inspectClaimLedger(plan.value, plan.value.claims, facts)
     : null;
   const novelty = await verifiedNovelty(root, plan, noveltyEvidence);
-  if (!lab) return { assetsVerified, coverLab: null, factualTrace, novelty };
+  const slideHashes = new Map(artifacts.map(record => [record.file.split('/').at(-1), record.sha256]));
+  const judgeInput = assetsVerified ? {
+    deckSha256: judgeDeckHash(indices.map(name => slideHashes.get(name))),
+    captionSha256: sha256(plan?.value?.caption ?? ''),
+  } : null;
+  if (!lab) return { assetsVerified, coverLab: null, factualTrace, novelty, judgeInput };
   requireCondition(plan && lab.value?.inputSha256 === plan.digest, 'Lab de capas desvinculado do plano renderizado.');
   const observed = coverLabArtifact(plan.value, plan.digest);
   requireCondition(observed && isDeepStrictEqual(lab.value, observed), 'O Lab de capas diverge dos dados verificados do plano.');
-  return { assetsVerified, coverLab: observed, factualTrace, novelty };
+  return { assetsVerified, coverLab: observed, factualTrace, novelty, judgeInput };
 }
 
 function validatePair(pair) {
@@ -161,7 +169,39 @@ function validatePair(pair) {
 }
 
 const annotatableChecks = new Set(['FACT_GROUNDING', 'S2_STANDALONE', 'CTA_SINGLE', 'ART_PURITY']);
-const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr', 'noveltyEvidence']);
+const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr', 'noveltyEvidence', 'judgeEvidence']);
+
+async function caseJudgePair(directory, testCase, reference) {
+  const pair = await readBlindJudgePair(directory, reference);
+  requireCondition(pair.input.briefingSha256 === sha256(judgeBriefing(testCase)), 'O parecer cego pertence a outro briefing ou conjunto de fatos.');
+  return pair;
+}
+
+function judgeTrace({ digest, model, rubricSha256, input, runs }) {
+  return { sha256: digest, model, rubricSha256, input, receiptSha256: runs.map(run => run.receiptSha256) };
+}
+
+async function verifySnapshotJudge(directory, testCase, snapshot) {
+  const reference = snapshot.judgeEvidence;
+  if (reference === undefined) return { ...snapshot, judgeTrace: null };
+  const { side } = reference ?? {};
+  const pair = await caseJudgePair(directory, testCase, reference);
+  requireCondition(['baseline', 'candidate'].includes(side)
+    && pair.input[side + 'Hash'] === snapshot.judgeInput?.deckSha256
+    && pair.input[side + 'CaptionSha256'] === snapshot.judgeInput?.captionSha256,
+  'As notas do juiz pertencem a outro conjunto de lâminas ou legenda.');
+  return { ...snapshot, judgeScores: judgeSideScores(pair, side), judgeTrace: judgeTrace(pair) };
+}
+
+async function verifyPairwiseJudge(directory, testCase, vote) {
+  if (vote.judgeEvidence === undefined) return { ...vote, judgeTrace: null };
+  const pair = await caseJudgePair(directory, testCase, vote.judgeEvidence);
+  const orderVote = (choice, first) => ['baseline', 'candidate'].includes(choice) ? choice === first ? 'first' : 'second' : choice;
+  requireCondition(vote.controlFirst === orderVote(pair.choices[0], 'baseline')
+    && vote.candidateFirst === orderVote(pair.choices[1], 'candidate') && vote.evaluator === pair.model,
+  'Os votos anotados divergem do parecer cego.');
+  return { ...vote, judgeTrace: judgeTrace(pair) };
+}
 
 function attachAssessment(snapshot, assessment) {
   if (assessment === undefined) return snapshot;
@@ -250,17 +290,18 @@ export async function readCaseEvidence(directory, testCase, expectation) {
       'Use uma avaliação comum quando não houve reparo.');
   }
   const firstAssessment = assessments?.first_pass ?? (sameSnapshot ? assessments?.final : undefined);
-  const first = {
+  const first = await verifySnapshotJudge(directory, testCase, {
     ...attachAssessment(value.first_pass, firstAssessment),
     ...await verifyArtifacts(directory, value.first_pass, testCase.facts, firstAssessment?.noveltyEvidence),
-  };
-  const final = sameSnapshot ? first : {
+  });
+  const final = sameSnapshot ? first : await verifySnapshotJudge(directory, testCase, {
     ...attachAssessment(value.final, assessments?.final),
     ...await verifyArtifacts(directory, value.final, testCase.facts, assessments?.final?.noveltyEvidence),
-  };
+  });
   return {
     digest, assessmentSha256: assessments?.digest ?? null, repairCount: value.repair_count,
     execution: await verifySealedExecution(directory, value, testCase, expectation),
-    first: summarizeSnapshot(first), final: summarizeSnapshot(final), pairwise,
+    first: summarizeSnapshot(first), final: summarizeSnapshot(final),
+    pairwise: await Promise.all(pairwise.map(vote => verifyPairwiseJudge(directory, testCase, vote))),
   };
 }
