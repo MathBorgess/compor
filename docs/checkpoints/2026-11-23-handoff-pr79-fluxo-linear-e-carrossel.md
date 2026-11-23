@@ -6,8 +6,8 @@
 **PR associado (em draft):** [PR #79](https://github.com/MathBorgess/compor/pull/79)  
 **Dossiê completo de UX, UX Writing e Gamificação versionado na branch:** [`docs/design/2026-11-23-dossie-ux-fluxo-linear.md`](../design/2026-11-23-dossie-ux-fluxo-linear.md)
 
-> **Como usar este handoff (para o próximo agente):**  
-> As fases de descoberta, entrevista, aprovação do `/plan` e os **Milestones M1, M2, M3, M4 e M5 já foram concluídos, verificados e comitados localmente** neste worktree. **Não refaça M1–M5, não reverta as alterações atuais do worktree e não re-entreviste o usuário.** Comece diretamente pelo **Milestone M6** (`next analyze`, `quality:build`, `quality:unit`, `quality:test`, `quality:performance` e `quality:browser` completo) seguindo as especificações abaixo.
+> **Estado final (23/11/2026):**  
+> Todos os **Milestones M1, M2, M3, M4, M5, M6 e M7 foram concluídos, verificados localmente e comitados** na branch `test/carrossel-conflitos-interface` neste worktree, **sem executar `git push`, atualização do PR remoto, merge, migrations remotas ou deploy** (`AGENTS.md`). A branch está pronta para revisão humana de Matheus e push quando autorizado.
 
 ---
 
@@ -38,9 +38,26 @@
 | **M2 — Baseline Bundle, Conflito PR #79 (`StudioChat`), Disclosure Compacto e Nome do 1º Post** | **CONCLUÍDO (`874d58d`)** | Commit local `874d58d`. `npm run quality:lint` (**0 erros/warnings**), `npm run quality:typecheck` (**0 erros**), `packages/agents-api/test/studio-chat.test.mjs` (**78/78 aprovados**), e os **3 testes de navegador do PR #79** (`studio-artwork-transport-browser.test.mjs`, `governed-carousel-browser.test.mjs`, `studio-credential-source-browser.test.mjs`) **100% aprovados com `todo: 0`**. Snapshot Turbopack `before-unify` salvo em `apps/web/.next/diagnostics/analyze`. |
 | **M3 — `<StudioReview>` Unificado, `StudioAssets` Passivo, `VariantCards` e Modal (`F10`)** | **CONCLUÍDO (`ec17794`)** | Commit local `ec17794`. `<StudioReview>` unificado (checklist 3 passos, conferência silenciosa de `confirmedFacts`, `white-space: pre-wrap`, `★ Marcar como pronto para postar`, Web Share API, handoff desktop→celular e preservação integral de Carrossel/Coleção/Story), `StudioAssets` passivo (`canonicalStorageActive`), skeleton calmo em `VariantCards` e fix da cascata CSS das abas de configurações. `quality:lint`, `quality:typecheck` e 7/7 suítes de navegador (`studio-flow`, `project-settings-modal`, `post-formats`, `studio-assets`, `studio-variant-cards`) aprovados. |
 | **M4 — Estúdio Unificado (`<PostWorkspaceHeader>`), Split Legenda/Próxima Arte, Mobile `<= 800px` e `F05`** | **CONCLUÍDO (`6f6257f`)** | Commit local `6f6257f`. Estado salvo vivo `Salvo · v{N} ✓` (`disabled` em versão limpa + `previewVersions` para foto-base local), tríade de prontidão (`✓ Arte · ✓ Legenda · ✓ Salvo`), separação visual da `Legenda` e textos da próxima geração sem jargão `"pixels"`, botão mobile `"Ver arte pronta →"` no recibo de imagem, e layout mobile `<= 800px` com 100% da largura horizontal (`390px`) e controles de navegação/trilho preservados. `quality:lint`, `quality:typecheck` e 11/11 testes de navegador do M4 aprovados. |
-| **M5 — Preparação Linear com Exemplos/IA Inline, Referências (`F11`), Mural Visual (`F08`) e Refinamentos Persona** | **CONCLUÍDO (`085b07c`)** | Commit local `085b07c`. `ProjectQuestions` com placeholders concretos, 3 `CONTEXT_EXAMPLES` clicáveis, pills `✓ Oferta · ✓ Público` e atalho `"Ir direto para o 1º post →"` quando `defaultAvailable === true`; `ReferencePanel` exibindo `{selection}` direto na aba `Seus envios` e consentimento do Pinterest acima da busca; `ProjectPosts` com miniatura `4:5`, vocabulário de 3 estados (`★ Pronto para postar` / `Salvo · v{N}` / `Em criação`), resumo factual e alternador `Cartões | Grade do feed (3×)`; `POST_ANGLE_STARTERS` (`Continue sua divulgação`) para o 2º+ post; Home vazia sem CTA duplicado no topo. `quality:lint`, `quality:typecheck` e 32/32 testes de navegador do M5 aprovados. |
-| **M6 — Alinhamento de Seletores nos Testes (`R3`), `next analyze` (`after-unify`) e Gates Locais** | **PENDENTE (Próximo passo)** | Especificado na Seção 3.4 abaixo. |
-| **M7 — Revisão Final e Commits Locais Limpos (sem `git push`)** | **PENDENTE** | Especificado na Seção 3.5 abaixo. |
+| **M5 — Preparação Linear com Exemplos/IA Inline, Referências (`F11`), Mural Visual (`F08`) e Refinamentos Persona** | **CONCLUÍDO (`6b17389`)** | Commit local `6b17389`. `ProjectQuestions` com placeholders concretos, 3 `CONTEXT_EXAMPLES` clicáveis, pills `✓ Oferta · ✓ Público` e atalho `"Ir direto para o 1º post →"` quando `defaultAvailable === true`; `ReferencePanel` exibindo `{selection}` direto na aba `Seus envios` e consentimento do Pinterest acima da busca; `ProjectPosts` com miniatura `4:5`, vocabulário de 3 estados (`★ Pronto para postar` / `Salvo · v{N}` / `Em criação`), resumo factual e alternador `Cartões | Grade do feed (3×)`; `POST_ANGLE_STARTERS` (`Continue sua divulgação`) para o 2º+ post; Home vazia sem CTA duplicado no topo. |
+| **M6 — Otimização do Bundle (`next analyze`), Correções de Regressão e Gates Locais Completos** | **CONCLUÍDO (`e959a7c`)** | Commit local `e959a7c`. Extração de `packages/agents-api/src/creative-skills/format-limits.mjs` (removendo prompts exclusivos de servidor do grafo cliente), `"sideEffects": false` em `@compor/agents-api` e `@compor/agile-deliberation`, substituição de `markdown-to-jsx` pelo renderizador seguro `apps/web/studio/message-markdown.tsx` (+ teste `apps/web/test/message-markdown.test.mjs`), correção de montagem única de `{selection}` em `ReferencePanel` e restauração da guarda `if(!recovered)` em `studio-journey-controller.ts`. Todos os gates locais 100% aprovados (ver tabela de evidências abaixo). |
+| **M7 — Revisão Final, Checkpoint Atualizado e Commits Locais Limpos (sem `git push`)** | **CONCLUÍDO** | Worktree limpo, todos os 7 milestones comitados localmente em `test/carrossel-conflitos-interface`, sem `git push`, sem alteração remota de PR/merge/migrations/deploy. |
+
+### Evidências de Verificação Local (M6/M7 — macOS, commit `e959a7c`)
+
+| Gate / Verificação | Resultado | Detalhes Medidos |
+| --- | --- | --- |
+| `npm run quality:lint` | **PASS** | `0` erros, `0` warnings (`--max-warnings=0`) |
+| `npm run quality:typecheck` | **PASS** | `tsc --noEmit` (`strict: true`), `0` erros |
+| `npm run quality:unit` | **PASS** | 100% dos pacotes (`agents-api`, `agile-deliberation`, `images-api`, `private-images`, `remote-mcp`, `attempt-metrics`), `prototypes/compor-mcp`, migrações e scripts |
+| `npm run quality:test` | **PASS** | `115/115` aprovados (`0` falhas, `0` todo) |
+| `npm run quality:build` | **PASS** | Build de produção Next 16.4.6 (Turbopack) aprovado; zero vazamento de `markdown-to-jsx`, `safeZonePrompt`, `COMPOR_CIN_OPENAI` ou `SUPABASE_SERVER_KEY` em `.next/static/chunks/` |
+| `next analyze --output --snapshot after-unify` | **PASS** | Baseline `before-unify`: `298.495 B` gzip → Final `after-unify`: **`297.024 B` gzip** (**`-1.471 B`** abaixo do baseline e `2.976 B` abaixo do limite de `300.000 B`) |
+| `npm run quality:performance` | **PASS** | `0` falhas; 5/5 execuções Lighthouse aprovadas (`initialJavascriptGzipBytes = 0 / 250.000`, `totalClientJavascriptGzipBytes = 297.024 / 300.000`, mediana LCP `624,9 ms`, TBT `0 ms`, CLS `0,008`) |
+| `npm run quality:browser` | **PASS** | **`785/785` aprovados** (`0` falhas, `0` cancelados, `0` pulados, `0` todo) no Chromium (`Google Chrome 157.0.8103.80`), incluindo os 3 testes do PR #79 sem `{todo}` |
+| `apps/site` (`check` e `build`) | **PASS** | `0` erros/warnings/hints no `astro check`; build estático + `check-dist.mjs` aprovados |
+| `npm run quality:maintenance` | **DIAGNÓSTICO** | Registrado (`156` funções acima de complexidade diagnóstica 20 em `355` arquivos; não bloqueante por contrato) |
+
+> **Escopo das evidências (`AGENTS.md`):** Esta bateria comprova os gates locais no macOS sobre serviços simulados. Não substitui a execução do CI Linux (**Quality gate** no PR #79), deploy na Vercel, isolamento entre contas reais ou avaliação criativa com audiência real.
 
 ### Arquivos já modificados/criados em M1 e M2 (preservar no worktree)
 - **Documentação e ADRs (M1):**
@@ -205,16 +222,9 @@
 
 ---
 
-## 4. Prompt Pronto para o Próximo Agente Retomar Imediatamente
+## 4. Próxima Ação Humana (Revisão e Publicação Autorizada)
 
-Copie e cole para o próximo agente:
+Todos os milestones planejados (**M1 a M7**) estão concluídos localmente na branch `test/carrossel-conflitos-interface` (`/Users/matheusborges/github/.worktrees/compor-carrossel-conflitos-interface`):
 
-```text
-Continue a implementação do PR #79 na branch `test/carrossel-conflitos-interface` no worktree `/Users/matheusborges/github/.worktrees/compor-carrossel-conflitos-interface`.
-Leia primeiro:
-1. `docs/checkpoints/2026-11-23-handoff-pr79-fluxo-linear-e-carrossel.md` (este handoff com todas as decisões aprovadas por Matheus e o estado atual)
-2. `docs/design/2026-11-23-dossie-ux-fluxo-linear.md` (dossiê completo com Specs A–E, F01–F15, W01–W20 e G1–G7)
-
-M1 (5 adendos de ADR + architecture.md) e M2 (conflito StudioChat carouselPlan, ReviewDisclosureBadge, nome do 1º post e baseline next analyze) já estão implementados e passando em quality:lint, quality:typecheck e studio-chat.test.mjs.
-Retome diretamente a partir do Milestone M3 -> M4 -> M5 -> M6 -> M7, valide todos os checks locais (incluindo os 3 testes do carrossel e o orçamento de 300.000 bytes gzip do bundle) e finalize em commits locais na branch sem fazer git push.
-```
+1. Revisar o diff consolidado (`git log origin/test/carrossel-conflitos-interface..HEAD`) e inspecionar visualmente o fluxo no navegador local, se desejado.
+2. Quando Matheus autorizar explicitamente o envio ao remoto, executar `git push` da branch `test/carrossel-conflitos-interface`, atualizar a descrição do [PR #79](https://github.com/MathBorgess/compor/pull/79) e acompanhar o check **Quality gate** no runner Linux do GitHub Actions antes de tirar o PR de draft.
