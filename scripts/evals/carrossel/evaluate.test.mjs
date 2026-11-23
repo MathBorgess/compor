@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { readCaseEvidence, summarizeSnapshot } from './evidence.mjs';
 import { evaluate } from './evaluate.mjs';
+import { judgeBriefing, judgeDeckHash } from './judge-evidence.mjs';
 import { writePlanArtifacts } from './render-evidence.mjs';
 import { collectionWeights, judgeWeights, readSuite, requiredChecks, sha256 } from './protocol.mjs';
 
@@ -382,6 +383,7 @@ test('a promoção C3 exige foco conclusivo e uma colisão vinculada vence a pon
   await writeReview();
   const rejected = await evaluateCase(3);
   assert.equal(focusCheck(rejected).status, 'fail');
+  assert.equal(rejected.checks.find(check => check.name === 'desfecho_esperado').status, 'fail');
   assert.equal(rejected.cases[0].verdict, 'fail');
   assert.equal(rejected.cases[0].final.cqs, 88);
   assert.deepEqual(rejected.cases[0].final.hardFails, ['FACE_TEXT_COLLISION']);
@@ -398,6 +400,64 @@ test('a promoção C3 exige foco conclusivo e uma colisão vinculada vence a pon
   await assert.rejects(evaluateCase(3), /parecer de face e foco da arte diverge dos hashes/);
 });
 
+test('C3 exige parecer de coleção vinculado e aplica DDR a editorial_art', async t => {
+  for (const mode of ['editorial_art', 'native_serial']) {
+    const { root, directory, testCase, manifest, writeManifest } = await example(t, { mode });
+    const snapshot = manifest.first_pass;
+    const run = async () => {
+      const report = await evaluate({ cycle: 3, tests: [testCase], evidenceRoot: root, references: new Map() });
+      return { report, check: name => report.checks.find(item => item.name === name) };
+    };
+    const legacy = await run();
+    assert.equal(legacy.report.cases[0].final.cqs, 88);
+    assert.equal(legacy.check('notas_colecao_verificadas').status, 'unavailable');
+    assert.equal(legacy.check('s_col').status, 'unavailable');
+    assert.equal(legacy.check('ddr')?.status, mode === 'editorial_art' ? 'unavailable' : undefined);
+
+    const slides = [{ id: 'capa', layout: 'typo_breather' }, { id: 'conteudo', layout: 'typo_breather' }];
+    const plan = JSON.stringify({ mode, slides });
+    const putArtifact = async (name, bytes) => {
+      const file = `first-pass/${name}`;
+      const sha = sha256(bytes);
+      await writeFile(join(directory, file), bytes);
+      snapshot.artifacts.push({ file, sha256: sha });
+      return sha;
+    };
+    snapshot.inputSha256 = await putArtifact('plan.json', plan);
+    const sheet = snapshot.artifacts.find(item => item.file.endsWith('/contact-sheet.png')).sha256;
+    const hashes = snapshot.artifacts.filter(item => /\/slide-\d{2}\.jpg$/.test(item.file)).map(item => item.sha256);
+    const renderedSlides = slides.map(({ id }, offset) => ({
+      id, index: offset + 1, file: `slide-0${offset + 1}.jpg`, sha256: hashes[offset], artAreaFraction: 0,
+    }));
+    const renderChecksSha256 = await putArtifact('render-checks.json', JSON.stringify({
+      slides: renderedSlides, artifacts: [{ file: 'contact-sheet.png', sha256: sheet }],
+    }));
+    manifest.final = structuredClone(snapshot);
+    await writeManifest();
+    const collection = JSON.stringify({
+      version: 1, scope: 'collection', mode, planSha256: snapshot.inputSha256, renderChecksSha256,
+      contactSheetSha256: sheet, deckSha256: judgeDeckHash(hashes), briefingSha256: sha256(judgeBriefing(testCase)),
+      noveltySha256: null, reviewer: { method: 'human', identity: 'observador sintético' },
+      scores: Object.fromEntries(Object.keys(collectionWeights).map(name => [name, {
+        status: 'observed', score: 86, slides: [1, 2], evidence,
+      }])),
+      slides: renderedSlides.map(({ id, index, sha256: digest }) => ({ id, index, sha256: digest, evidence, visual: 'none' })),
+    });
+    const file = 'collection-final.json';
+    await writeFile(join(directory, file), collection);
+    await writeFile(join(directory, 'qa-assessments.json'), JSON.stringify({
+      version: 1, manifestSha256: sha256(JSON.stringify(manifest)), final: { collectionEvidence: { file, sha256: sha256(collection) } },
+    }));
+    const reviewed = await run();
+    assert.equal(reviewed.check('notas_colecao_verificadas').status, 'pass');
+    assert.equal(reviewed.check('s_col').status, 'pass');
+    assert.equal(reviewed.check('s_col').observed, 86);
+    assert.equal(reviewed.report.cases[0].final.collectionEvidence.legacy.ddr, 0.76);
+    assert.equal(reviewed.report.cases[0].final.ddr, 0);
+    assert.equal(reviewed.check('ddr')?.status, mode === 'editorial_art' ? 'fail' : undefined);
+  }
+});
+
 
 test('C4/C5 exigem shortlist verificada e vinculada ao título renderizado', async t => {
   const { root, directory, testCase, manifest, writeManifest } = await example(t);
@@ -409,6 +469,12 @@ test('C4/C5 exigem shortlist verificada e vinculada ao título renderizado', asy
   await writeManifest();
   assert.equal(findCover(await run(4)).status, 'unavailable');
   assert.equal(findCover(await run(5)).status, 'unavailable');
+  for (const cycle of [4, 5]) {
+    const report = await run(cycle);
+    assert.equal(report.cases[0].final.cqs, 88);
+    assert.equal(report.checks.find(item => item.name === 'notas_colecao_verificadas').status, 'unavailable');
+    assert.equal(report.checks.find(item => item.name === 'cqs').observed, null);
+  }
 
   const headline = 'Como comparar uma escolha';
   const options = [headline, ...Array.from({ length: 8 }, (_, index) => `Outra abertura ${index + 1}`),

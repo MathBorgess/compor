@@ -61,15 +61,19 @@ function pairResult(candidate, control, againstCycle, calibration) {
   return 'inconclusive';
 }
 
-function compare(cases, reference, againstCycle, calibration) {
+function compare(cases, reference, againstCycle, calibration, scoreFor = snapshot => snapshot?.cqs) {
   const controls = new Map((reference?.cases ?? []).map(item => [item.id, item]));
   const observed = { win: 0, loss: 0, tie: 0, inconclusive: 0, unavailable: 0 };
   for (const candidate of cases) observed[pairResult(candidate, controls.get(candidate.id), againstCycle, calibration)] += 1;
-  const matched = cases.map(candidate => [candidate, controls.get(candidate.id)])
-    .filter(([candidate, control]) => candidate.caseFingerprint === control?.caseFingerprint
-      && Number.isFinite(candidate.final?.cqs) && Number.isFinite(control.final?.cqs));
+  const matched = cases.flatMap(candidate => {
+    const control = controls.get(candidate.id);
+    const candidateScore = scoreFor(candidate.final);
+    const controlScore = scoreFor(control?.final);
+    return candidate.caseFingerprint === control?.caseFingerprint && Number.isFinite(candidateScore) && Number.isFinite(controlScore)
+      ? [candidateScore - controlScore] : [];
+  });
   const delta = matched.length && matched.length === cases.length
-    ? matched.reduce((sum, [candidate, control]) => sum + candidate.final.cqs - control.final.cqs, 0) / matched.length
+    ? matched.reduce((sum, value) => sum + value, 0) / matched.length
     : null;
   return { againstCycle, eligible: cases.length, ...observed, delta,
     rate: cases.length && observed.unavailable === 0 ? observed.win / cases.length : null };
@@ -126,13 +130,26 @@ function rasterReviewCoverage(cases, field, name) {
     status: art.some(item => item.final[field].status === 'fail') ? 'fail' : pass === art.length ? 'pass' : 'unavailable' };
 }
 
+function hasVerifiedCollection(snapshot) {
+  return snapshot?.assetsVerified === true && snapshot.collectionEvidence?.status === 'verified';
+}
+
+function collectionReviewCoverage(decks) {
+  const observed = decks.filter(item => hasVerifiedCollection(item.final)).length;
+  return { name: 'notas_colecao_verificadas', observed, target: decks.length,
+    status: decks.length && observed === decks.length ? 'pass' : 'unavailable' };
+}
+
+const verifiedCqs = snapshot => hasVerifiedCollection(snapshot) ? snapshot.cqs : null;
+
 function promotionChecks(cycle, cases, split, references, calibration) {
   const selected = cycle === 4 ? cases.filter(item => item.split === 'holdout')
     : cases.filter(item => item.split === split);
   const decks = selected.filter(item => item.expected === 'deliver_deck');
   const final = key => completeAverage(decks, item => item.final?.[key]);
   const pair = (againstCycle, minimumRate) => {
-    const result = compare(decks, references.get(againstCycle), againstCycle, cycle >= 4 ? calibration : null);
+    const result = compare(decks, references.get(againstCycle), againstCycle, cycle >= 4 ? calibration : null,
+      cycle >= 3 ? verifiedCqs : undefined);
     return { result, check: minimum(`pareado_c${againstCycle}`, result.rate, minimumRate) };
   };
   if (cycle === 0) {
@@ -160,14 +177,18 @@ function promotionChecks(cycle, cases, split, references, calibration) {
       if (item.final?.staged.collection.failures.includes('ART_PURITY')) return 0;
       return item.final?.staged.collection.passed.includes('ART_PURITY') ? 1 : null;
     });
-    return { checks: [minimum('s_col', final('sCol'), 85), minimum('ddr', final('ddr'), 0.75),
+    const editorialDecks = decks.filter(item => item.mode === 'editorial_art');
+    const ddr = editorialDecks.length ? [minimum('ddr', completeAverage(editorialDecks, item =>
+      hasVerifiedCollection(item.final) ? item.final.ddr : null), 0.75)] : [];
+    return { checks: [expectedCoverage(selected), collectionReviewCoverage(decks),
+      minimum('s_col', completeAverage(decks, item => hasVerifiedCollection(item.final) ? item.final.sCol : null), 85), ...ddr,
       minimum('arte_mensagem', completeAverage(decks, item => item.final?.dimensions.artMessage), 4),
       minimum('arte_limpa', artPurity, 1), minimum('delta_cqs', c2.result.delta, 4), c2.check], comparisons: [c2.result] };
   }
   const allDecks = cases.filter(item => item.expected === 'deliver_deck');
   const controls = cycle === 4 ? [pair(0, 0.85), pair(3, 0.60)] : [pair(4, 0.60)];
   return { checks: [expectedCoverage(cases), executionCoverage(selected), coverLabCoverage(allDecks), ...calibrationChecks(allDecks, calibration),
-    minimum('cqs', completeAverage(allDecks, item => item.final?.cqs), 85),
+    collectionReviewCoverage(allDecks), minimum('cqs', completeAverage(allDecks, item => verifiedCqs(item.final)), 85),
     minimum('s_vlm', completeAverage(allDecks, item => item.final?.sVlm), 82),
     minimum('piso_dimensoes_vlm', dimensionFloor(allDecks), 3.5), ...controls.map(control => control.check)],
   comparisons: controls.map(control => control.result) };

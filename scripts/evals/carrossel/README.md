@@ -44,6 +44,34 @@ Para anexar uma avaliação independente sem editar o manifesto original, grave 
 
 A camada física conta os sete checks definidos em `protocol.mjs` e exige cobertura de todos para publicar `S_det`. A CLI verifica os hashes dos arquivos e conserva os checks do renderer como evidência à parte. As notas de coleção e de juiz usam todas as dimensões com os pesos publicados no protocolo. `CQS = 0,25 S_det + 0,30 S_col + 0,45 S_vlm` exige as três parcelas e uma entrega visual verificada. Os vetos factuais e físicos são registrados independentemente do CQS.
 
+### Parecer de coleção, cobertura e DDR
+
+Associe `collectionEvidence: {file, sha256}` ao snapshot avaliado em `qa-assessments.json`. Use `collection-first-pass.json` ou `collection-final.json`. O parecer é produzido após a leitura do briefing, do plano, da folha e dos JPEGs em ordem. Cada nota observada cita de uma a vinte posições e descreve a observação. A escala usa 0–100. Use `unknown` quando faltar base para a nota e registre o motivo.
+
+Use 0 quando a entrega daquela dimensão estiver ausente, 25 quando houver um obstáculo grave, 50 quando a entrega for parcial, 75 quando a entrega estiver clara com uma limitação concreta e 100 quando cumprir o que o briefing pede sem limitação relevante. Interpole pela extensão do efeito observado nas lâminas citadas.
+
+| Campo | Conteúdo |
+| --- | --- |
+| `version`, `scope`, `mode` | `1`, `collection` e o modo do briefing e do plano. |
+| `briefingSha256`, `planSha256`, `renderChecksSha256` | SHA-256 do briefing serializado por `judgeBriefing`, do plano e de `render-checks.json`. |
+| `contactSheetSha256`, `deckSha256` | SHA-256 da folha e `judgeDeckHash` sobre os hashes dos JPEGs sequenciais. |
+| `noveltySha256` | SHA-256 da observação ligada em `noveltyEvidence` no mesmo snapshot. Use `null` quando não houver observação ligada. |
+| `reviewer` | `{method, identity}` com `human` ou `vlm` e identificação do revisor. |
+| `scores` | `visualDelivery`, `diversity`, `progression` e `cohesion`. Cada entrada tem `{status, evidence, slides}` e a chave numérica `score` em `observed`. |
+| `slides` | Uma observação em ordem para cada JPEG com `{id, index, sha256, visual, evidence}`. Use `novel` para uma mídia que amplia a função cognitiva da lâmina, `reused` quando reaproveita uma mídia já observada, `none` para ausência ou mídia decorativa e `unknown` quando o revisor não consegue decidir. |
+
+Em `editorial_art`, avalie a contribuição da mídia para ler ou entender cada lâmina em `visualDelivery`. Em `diversity`, avalie se a mudança de composição serve às tarefas da coleção. Em `progression`, aponte o que se pode fazer ou distinguir a cada etapa. Em `cohesion`, cite o que mantém a leitura conectada, como eixos, alinhamento ou hierarquia.
+
+Em `native_serial`, a tipografia pode cumprir a entrega visual. Observe em `visualDelivery` a legibilidade e a hierarquia entre identificador, instrução e detalhe. Avalie em `diversity` a diferença funcional entre as tarefas e o uso deliberado da repetição quando o formato pede pareamento. Para `progression`, descreva a ação ou critério que avança entre as notas. Para `cohesion`, confira se o alinhamento, a escala e as relações entre rótulos e notas sustentam a série. Registre mudanças observadas na ordem, nos eixos ou na função de cada lâmina.
+
+O leitor deriva VAC da fração de lâminas com área visível de mídia ≥ 12% no recibo de render. Para DDR, o denominador contém as lâminas de conteúdo. A capa, o resumo indicado na medição de novidade e o fechamento apenas com CTA ficam fora. Um fechamento demonstrativo entra pela demonstração. Cada lâmina conta como entrega dupla se o parecer observou mídia inédita com área ≥ 12% e a evidência de novidade vinculada mediu ganho ≥ 0,70. Um denominador sem observação completa mantém DDR indisponível. Uma série nativa com lâminas de conteúdo e sem mídia tem DDR igual a zero e `applicable: false` para o piso editorial.
+
+O relatório marca `collectionEvidence.status` como `verified` quando as quatro notas estão observadas e valida a proveniência mesmo quando há dimensão desconhecida. Os valores antigos permanecem visíveis em `collectionEvidence.legacy`, com status `unavailable` na ausência de parecer vinculado. Um parecer incompleto conserva suas lacunas no cálculo. Execute a CLI `evaluate` para os casos com pareceres ligados. Os testes do leitor usam arquivos locais.
+
+```sh
+node --test scripts/evals/carrossel/collection-review.test.mjs scripts/evals/carrossel/evaluate.test.mjs
+```
+
 ### Revisão de texto na arte raster
 
 Para cada snapshot com raster, anexe `artPurityEvidence: {file, sha256}` em `qa-assessments.json`. Salve o parecer como `art-purity-first-pass.json` ou `art-purity-final.json` no diretório do caso. Use uma avaliação comum se os snapshots forem iguais. O parecer usa os seguintes campos.
