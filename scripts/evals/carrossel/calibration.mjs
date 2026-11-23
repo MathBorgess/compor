@@ -57,6 +57,27 @@ function readLabels({ value, digest }, truthSha256) {
   return labels;
 }
 
+export async function readCalibrationLabels(directory, truthSha256) {
+  const document = await readJudgeDocument(directory, 'reference-labels.json');
+  return { cases: readLabels(document, truthSha256), reference: document.value.reference, digest: document.digest };
+}
+
+export function judgeInputForLabel(label) {
+  return {
+    baselineHash: label.baseline.deckSha256, candidateHash: label.candidate.deckSha256,
+    briefingSha256: sha256(judgeBriefing(label)),
+    baselineCaptionSha256: label.baseline.captionSha256, candidateCaptionSha256: label.candidate.captionSha256,
+  };
+}
+
+export function registerCalibrationRuns(pair, sessions, turns) {
+  for (const { sessionId, turnId } of pair.runs) {
+    requireCondition(!sessions.has(sessionId) && !turns.has(turnId), 'Uma sessão ou turno do juiz foi reutilizado na calibração.');
+    sessions.add(sessionId);
+    turns.add(turnId);
+  }
+}
+
 async function readObservations(directory, value, labels, truthSha256) {
   requireCondition(value?.version === formatVersion && value.truthSha256 === truthSha256
     && Array.isArray(value.cases) && value.cases.length === labels.length, 'Observações desvinculadas dos rótulos de referência.');
@@ -67,22 +88,12 @@ async function readObservations(directory, value, labels, truthSha256) {
     requireCondition(isId(item?.id) && !observations.has(item.id) && Array.isArray(item.pairs)
       && item.pairs.length === targets.repetitions, 'Forneça duas repetições, com duas ordens cada, por caso de calibração.');
     const pairs = await Promise.all(item.pairs.map(pair => readBlindJudgePair(directory, pair)));
-    for (const { runs } of pairs) {
-      for (const { sessionId, turnId } of runs) {
-        requireCondition(!sessions.has(sessionId) && !turns.has(turnId), 'Uma sessão ou turno do juiz foi reutilizado na calibração.');
-        sessions.add(sessionId);
-        turns.add(turnId);
-      }
-    }
+    for (const pair of pairs) registerCalibrationRuns(pair, sessions, turns);
     observations.set(item.id, pairs);
   }
   return labels.map(label => {
     const pairs = observations.get(label.id);
-    const expectedInput = {
-      baselineHash: label.baseline.deckSha256, candidateHash: label.candidate.deckSha256,
-      briefingSha256: sha256(judgeBriefing(label)),
-      baselineCaptionSha256: label.baseline.captionSha256, candidateCaptionSha256: label.candidate.captionSha256,
-    };
+    const expectedInput = judgeInputForLabel(label);
     requireCondition(pairs?.every(pair => isDeepStrictEqual(pair.input, expectedInput)),
       'As repetições precisam avaliar o mesmo briefing, legendas e coleções da revisão de referência.');
     return { label, pairs };
@@ -134,11 +145,10 @@ function summarizeMeasurements(cases) {
 
 export async function measureJudgeCalibration(directory, truthSha256) {
   const [truth, observations] = await Promise.all([
-    readJudgeDocument(directory, 'reference-labels.json'), readJudgeDocument(directory, 'observations.json'),
+    readCalibrationLabels(directory, truthSha256), readJudgeDocument(directory, 'observations.json'),
   ]);
-  const labels = readLabels(truth, truthSha256);
-  const cases = await readObservations(directory, observations.value, labels, truthSha256);
-  const { kind, reviewerId, source } = truth.value.reference;
+  const cases = await readObservations(directory, observations.value, truth.cases, truthSha256);
+  const { kind, reviewerId, source } = truth.reference;
   return {
     version: formatVersion, split: cohort, model: judgeModel, rubricSha256: judgeRubricSha256,
     truthSha256: truth.digest, observationsSha256: observations.digest, reference: { kind, reviewerId, source },

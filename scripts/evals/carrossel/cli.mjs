@@ -5,7 +5,7 @@ import { parseArgs } from 'node:util';
 import { calibrationFile, measureJudgeCalibration } from './calibration.mjs';
 import { evaluate } from './evaluate.mjs';
 import { reviewNovelty } from './novelty.mjs';
-import { formatVersion, isId, readDocument, readSuite, requireCondition } from './protocol.mjs';
+import { formatVersion, isDigest, isId, readDocument, readSuite, requireCondition } from './protocol.mjs';
 
 const repository = fileURLToPath(new URL('../../../', import.meta.url));
 
@@ -131,6 +131,24 @@ async function calibrateCommand(arguments_) {
   if (result.status !== 'pass') process.exitCode = 2;
 }
 
+async function calibrationRunCommand(arguments_) {
+  const { values } = parseArgs({ args: arguments_, options: {
+    bundle: { type: 'string' }, 'truth-sha256': { type: 'string' }, execute: { type: 'boolean' },
+    'max-new-pairs': { type: 'string' },
+  } });
+  const requested = values['max-new-pairs'];
+  requireCondition(values.bundle && isDigest(values['truth-sha256'])
+    && (requested === undefined ? !values.execute : /^\d{1,2}$/.test(requested)),
+  'Use calibration-run --bundle <diretório> --truth-sha256 <hash> [--execute --max-new-pairs <teto>].');
+  const { runJudgeCalibration } = await import('./calibration-run.mjs');
+  const maxNewPairs = requested === undefined ? undefined : Number(requested);
+  const result = await runJudgeCalibration({
+    directory: resolve(values.bundle), truthSha256: values['truth-sha256'], execute: values.execute, maxNewPairs,
+    key: values.execute && maxNewPairs > 0 ? process.env.OPENAI_API_KEY : undefined,
+  });
+  console.log(JSON.stringify(result));
+}
+
 async function artBatchCommand(arguments_) {
   const { values } = parseArgs({ args: arguments_, options: {
     cycle: { type: 'string' }, case: { type: 'string' }, evidence: { type: 'string' }, 'max-images': { type: 'string' },
@@ -158,8 +176,9 @@ try {
   else if (command === 'render') await renderCommand(arguments_);
   else if (command === 'novelty') await noveltyCommand(arguments_);
   else if (command === 'calibrate') await calibrateCommand(arguments_);
+  else if (command === 'calibration-run') await calibrationRunCommand(arguments_);
   else if (command === 'art-batch') await artBatchCommand(arguments_);
-  else throw Error('Comandos: evaluate, render, novelty, calibrate e art-batch. Consulte scripts/evals/carrossel/README.md.');
+  else throw Error('Comandos: evaluate, render, novelty, calibrate, calibration-run e art-batch. Consulte scripts/evals/carrossel/README.md.');
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

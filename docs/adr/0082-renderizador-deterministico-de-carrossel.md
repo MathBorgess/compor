@@ -17,3 +17,5 @@ Os artefatos de uma versão seguem o contrato canônico que os gravou. Estender 
 ## Evidência para habilitação
 
 Executar o fluxo autenticado da rota em Linux no Preview da Vercel. Verificar o fechamento do Chromium em falha, os arquivos presentes no trace, o orçamento de tamanho do ZIP e o comportamento para planos recusados. Vínculo à versão e recuperação em outro navegador exigem mais uma verificação depois que o estúdio consumir esse contrato.
+
+Em 23/11/2026, uma prévia de diagnóstico compilou o código de render de `1a2e261` com um `postbuild` restrito à sua branch. O log registrou Linux x64, Node 24.22.3, 556 entradas no trace da rota e dez arquivos conferidos, incluindo Chromium Brotli, bibliotecas do Sharp e as fontes. Passaram nove testes, incluindo extração a frio, captura Chromium em 2× com Sharp e fechamento do navegador. A chamada autenticada da Function publicada e seu comportamento sob os limites de runtime ainda precisam de evidência. [Commit do canário](https://github.com/MathBorgess/compor/commit/c4e3bd1bc5a6c72c86a46d12dc2529788009de15) · [Build de diagnóstico](https://vercel.com/math-ai2/compor/9m7wWFxyQaaoMuCh7dGFGLrTqcP8)

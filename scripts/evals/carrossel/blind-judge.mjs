@@ -2,6 +2,7 @@ import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { isDeepStrictEqual } from 'node:util';
 import { readTurn, requestHeaders } from './live.mjs';
 import { formatVersion, requireCondition, sha256 } from './protocol.mjs';
 import { canonicalJudgeChoice, judgeDeckHash, judgeInstructions, judgeModel, judgeRubricSha256, validateJudgeResult } from './judge-evidence.mjs';
@@ -90,7 +91,7 @@ async function reviewOrder({ key, fetchApi, content, receiptFile, input, order }
   }
 }
 
-export async function runBlindCarouselPair({ key, root, baseline, candidate, briefing, output, fetchApi = fetch }) {
+export async function runBlindCarouselPair({ key, root, baseline, candidate, briefing, output, expectedInput, fetchApi = fetch }) {
   requireCondition(/^sk-[^\s]{20,300}$/.test(key ?? '') && isAbsolute(root) && /^[a-z0-9-]{1,80}$/.test(output), 'judge_invalid_scope');
   const reportPath = join(root, output + '.pair.json');
   const safeSide = side => side && Array.isArray(side.files) && side.files.length >= 2 && side.files.length <= 20 &&
@@ -113,6 +114,8 @@ export async function runBlindCarouselPair({ key, root, baseline, candidate, bri
     baselineHash, candidateHash, briefingSha256: sha256(briefing),
     baselineCaptionSha256: sha256(baseline.caption), candidateCaptionSha256: sha256(candidate.caption),
   };
+  requireCondition(expectedInput === undefined || isDeepStrictEqual(input, expectedInput),
+    'Os insumos do juiz mudaram desde o congelamento.');
   const preamble = { type: 'input_text', text: 'Briefing sintético e fatos: ' + briefing };
   const forward = await reviewOrder({ key, fetchApi, content: [preamble, ...imagesFor('A', a, baseline.caption), ...imagesFor('B', b, candidate.caption)], receiptFile: join(dirname(reportPath), output + '-ab.receipt.json'), input, order: 'ab' });
   const reverse = forward.state === 'completed'

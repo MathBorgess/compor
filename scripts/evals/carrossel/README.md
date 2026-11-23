@@ -114,6 +114,15 @@ Separe de seis a trinta pares para a calibração. Inclua ao menos dois pares se
 
 Execute `runBlindCarouselPair` duas vezes por caso com os mesmos JPEGs, legendas e briefing. Cada chamada julga A/B e B/A em sessões próprias. Preserve os pares e seus recibos lado a lado. Em `observations.json`, registre `{version: 1, truthSha256, cases}`. Cada entrada de `cases` tem `{id, pairs}`, com dois pares de `{file, sha256}`. Um caso só conta como concordante se os quatro votos coincidirem com o veredito de referência.
 
+Para usar o executor da CLI, coloque em `<id>/baseline/` e `<id>/candidate/` os arquivos `slide-01.jpg` até a última lâmina e `legenda.txt` em UTF-8. Uma legenda vazia usa um arquivo vazio. A pré-verificação confere o SHA-256 dos rótulos, a sequência e os hashes dos JPEGs e legendas, os recibos existentes e o total de sessões novas no teto selecionado.
+
+```sh
+node scripts/evals/carrossel/cli.mjs calibration-run \
+  --bundle "$LAB/calibracao" --truth-sha256 "$ROTULOS_SHA256" --max-new-pairs 1
+```
+
+Acrescente `--execute` quando houver autorização de uso e `OPENAI_API_KEY` estiver disponível no ambiente. O teto vale por invocação e cada par novo pode abrir duas sessões. Use `--execute --max-new-pairs 0` para materializar observações de recibos já concluídos. Os nomes dos pares são `<id>-r1` e `<id>-r2`. Para IDs acima de 77 caracteres, o nome usa `cal-<SHA-256 do id>` no lugar do id. O executor reaproveita pares verificados e interrompe diante de evidência parcial ou incerta. Reconcilie o recibo antes de qualquer nova submissão. O arquivo `observations.json` é gravado uma vez quando houver dois pares válidos para todos os casos.
+
 ```sh
 node scripts/evals/carrossel/cli.mjs calibrate \
   --bundle "$LAB/calibracao" --truth-sha256 "$ROTULOS_SHA256"
