@@ -1736,61 +1736,62 @@ function ProjectStudio({
         )
       }
       onRemoveMark={(id) => local.change((value) => removeMark(value, id))}
-      onApprove={async () => {
-        const selected = getCurrentDraft(local.get());
-        const version = versionRef.current.find(
-          (v) =>
-            v.piece_id === selected?.pieceId &&
-            v.version === selected?.baseVersion,
-        );
-        if (!selected || selected.dirty || !version) {
-          setNotice("Salve a versão antes de aprovar.");
-          return;
-        }
-        try {
-          const response = await fetch("/api/pieces", {
-            method: "PATCH",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              operation: "approve",
-              projectId: project.id,
-              pieceId: selected.pieceId,
-              version: selected.baseVersion,
-              expectedRevision: version.metadata?.revision ?? 0,
-              references:(selected.creationContext?.references??[]).flatMap((reference):ApprovedReference[]=>{
-                const source=reference.source;
-                if(!source)return [];
-                return 'kind' in source ? source.kind==='generated'?[{kind:'generated',projectId:source.projectId,imageId:source.imageId}]:[] : [{kind:'pinterest',originUrl:source.originUrl,board:source.board}];
-              }),
-            }),
-          });
-          const data = approvedVersionSchema.parse(await response.json());
-          if (!response.ok) throw Error();
-          versionsReadSequence.current++;
-          await refreshVersions();
-          const current = getCurrentDraft(local.get());
-          if (
-            current?.pieceId === selected.pieceId &&
-            current.baseVersion === selected.baseVersion &&
-            !current.dirty
-          )
-            local.change((value) =>
-              approveDraft(value, {
-                at:
-                  (data.version.metadata?.approval.status === "approved" ? data.version.metadata.approval.at : undefined) ??
-                  new Date().toISOString(),
-                eventId: crypto.randomUUID(),
-              }),
-            );
-          setNotice("Aprovação salva nesta versão.");
-        } catch {
-          setNotice(
-            "Não foi possível confirmar a aprovação. Consulte as versões antes de repetir.",
-          );
-        }
-      }}
+      onApprove={() => { void approveCurrentDraft(); }}
     />
   );
+  async function approveCurrentDraft() {
+    const selected = getCurrentDraft(local.get());
+    const version = versionRef.current.find(
+      (v) =>
+        v.piece_id === selected?.pieceId &&
+        v.version === selected?.baseVersion,
+    );
+    if (!selected || selected.dirty || !version) {
+      setNotice("Salve a versão antes de aprovar.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/pieces", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          operation: "approve",
+          projectId: project.id,
+          pieceId: selected.pieceId,
+          version: selected.baseVersion,
+          expectedRevision: version.metadata?.revision ?? 0,
+          references:(selected.creationContext?.references??[]).flatMap((reference):ApprovedReference[]=>{
+            const source=reference.source;
+            if(!source)return [];
+            return 'kind' in source ? source.kind==='generated'?[{kind:'generated',projectId:source.projectId,imageId:source.imageId}]:[] : [{kind:'pinterest',originUrl:source.originUrl,board:source.board}];
+          }),
+        }),
+      });
+      const data = approvedVersionSchema.parse(await response.json());
+      if (!response.ok) throw Error();
+      versionsReadSequence.current++;
+      await refreshVersions();
+      const current = getCurrentDraft(local.get());
+      if (
+        current?.pieceId === selected.pieceId &&
+        current.baseVersion === selected.baseVersion &&
+        !current.dirty
+      )
+        local.change((value) =>
+          approveDraft(value, {
+            at:
+              (data.version.metadata?.approval.status === "approved" ? data.version.metadata.approval.at : undefined) ??
+              new Date().toISOString(),
+            eventId: crypto.randomUUID(),
+          }),
+        );
+      setNotice("Aprovação salva nesta versão.");
+    } catch {
+      setNotice(
+        "Não foi possível confirmar a aprovação. Consulte as versões antes de repetir.",
+      );
+    }
+  }
   const parallelRecovery=referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery {...(referenceAuthorityEnabled?{createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={!referenceUploading&&usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={async (...args)=>{await onExplorationCompleted(...args);if(active.current)setRecoveredCompletions(value=>value+1);}} onContinuePlan={!pendingTurn&&!referenceUploading&&canUseProjectAI&&usingParallel&&!parallel.running&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>;
   const explorationRecovery=<>{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
@@ -1861,6 +1862,7 @@ function ProjectStudio({
               pieceId={draft.pieceId}
               version={draft.baseVersion}
               canSave={draft.baseVersion > 0 && !draft.dirty}
+              canonicalStorageActive={draft.baseVersion > 0 && !draft.dirty}
               preview={base}
               onUseImage={useBase}
             />}
@@ -2168,10 +2170,11 @@ function ProjectStudio({
           }
           description="Confira arte, fatos e legenda antes de usar."
         >
-          <p className="studio-hint">{postTitle}</p>
           <StudioReview
             title={projectDetails.title}
             downloadTitle={postTitle}
+            postUrl={typeof window !== 'undefined' && openPieceId ? `${window.location.origin}/projetos/${encodeURIComponent(project.id)}/posts/${encodeURIComponent(openPieceId)}` : undefined}
+            confirmedFacts={(s.offerFacts ?? []).filter(fact => fact.status === 'confirmed' && fact.value.trim().length > 0)}
             draft={draft}
             base={base}
             format={activeFormat}
@@ -2184,8 +2187,9 @@ function ProjectStudio({
             onSave={() => {
               void saveCurrent().catch(() => setNotice('Não foi possível iniciar o salvamento desta versão.'));
             }}
+            onApprove={() => { void approveCurrentDraft(); }}
           />
-          <button onClick={() => nextStage("studio")}>
+          <button type="button" className="studio-button-secondary" onClick={() => nextStage("studio")}>
             Pedir ajuste no estúdio
           </button>
         </StudioPanel>

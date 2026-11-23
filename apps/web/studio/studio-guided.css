@@ -19,7 +19,19 @@
 .studio-modal .guided-options button.studio-project-card[aria-pressed='true'] { border-color:var(--studio-cobalt);background:var(--studio-blue-tint); }
 .guided-posts,.guided-references { display:grid;gap:18px; }
 .guided-settings-tabs { margin:16px 0 24px; }
-.guided-settings-tabs [aria-pressed='true'] { background:var(--studio-cobalt);color:white; }
+.guided-settings-tabs [aria-pressed='true'],
+.compor-studio .studio-modal .guided-settings-tabs button.studio-button-secondary[aria-pressed='true'] { border-color:var(--studio-cobalt);background:var(--studio-cobalt);color:white; }
+.studio-review-kit,.studio-assets,.studio-assets-recovery { display:grid;gap:14px; }
+.studio-review-head { display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px; }
+.studio-review-checklist,.studio-review-facts-list { display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0; }
+.studio-review-checklist li,.studio-review-fact-item { display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--studio-line);border-radius:999px;background:var(--studio-cream);font-size:12px; }
+.studio-review-checklist li[data-done='true'],.studio-review-fact-item:has(input:checked) { border-color:#165c36;background:#e7f4ec;color:#165c36;font-weight:600; }
+.studio-review-caption { white-space:pre-wrap;overflow-wrap:anywhere;padding:12px 14px;border:1px solid var(--studio-line);border-radius:10px;background:white;line-height:1.55; }
+.studio-review-actions { display:flex;flex-wrap:wrap;align-items:center;gap:10px; }
+.studio-review-actions button[data-downloaded='true'],.studio-review-actions button[data-copied='true'] { box-shadow:0 0 0 2px #165c36; }
+.studio-review-handoff,.studio-assets-recovery { padding:10px 14px;border:1px solid var(--studio-line);border-radius:10px;background:#faf8f2; }
+.studio-review-handoff summary,.studio-assets-recovery summary { cursor:pointer;font-weight:600;color:var(--studio-cobalt); }
+.studio-review-handoff-body { display:grid;gap:8px;margin-top:8px; }
 .compor-studio[data-guided='true'] .studio-canvas-column { padding:24px; }
 .compor-studio[data-guided='true']:has(.studio-workspace-view[data-active='true']) { width:100%;height:100dvh;min-height:0; }
 .compor-studio[data-guided='true'] .studio-canvas-column:has(.studio-workspace-view[data-active='true']) { padding:0;overflow:hidden; }
