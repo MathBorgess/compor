@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -93,7 +94,10 @@ export type CarouselRuntime = {
 let rendering = false;
 
 async function launchBrowser(): Promise<Browser> {
-  const { chromium } = await runtimeStage('chromium_module', () => import('playwright-core'));
+  // Playwright resolves sibling modules and assets against its npm package.
+  // Load the traced package with Node's resolver so its layout stays intact.
+  const { chromium } = await runtimeStage('chromium_module', async () =>
+    createRequire(join(process.cwd(), 'package.json'))('playwright-core') as typeof import('playwright-core'));
   const options = { headless: true, timeout: BROWSER_LAUNCH_TIMEOUT_MS };
   const localBrowser = process.env.BROWSER_EXECUTABLE_PATH;
   const usePackagedChromium = process.env.VERCEL === '1'

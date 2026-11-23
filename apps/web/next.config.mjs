@@ -15,6 +15,7 @@ const nextConfig = {
   distDir: process.env.COMPOR_TEST_NEXT_DIST_DIR || '.next',
   outputFileTracingIncludes: {
     '/api/studio/carousel/render': [
+      './node_modules/playwright-core/**/*',
       './node_modules/@sparticuz/chromium/bin/*.br',
       './node_modules/@img/sharp-linux-x64/**/*',
       './node_modules/@img/sharp-libvips-linux-x64/**/*',
