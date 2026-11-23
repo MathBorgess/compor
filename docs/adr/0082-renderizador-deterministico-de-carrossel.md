@@ -14,6 +14,12 @@ O compositor e a rota são a primeira etapa da integração. A conversa ainda se
 
 Os artefatos de uma versão seguem o contrato canônico que os gravou. Estender o salvamento para JPEGs requer um contrato de leitura e escrita que preserve seus bytes e a recuperação em outra sessão, incluindo resultado parcial e repetição idempotente. Dados e permissões dos projetos continuam sob a autoridade do servidor e das políticas existentes.
 
+## Diagramas de categorias e orientação
+
+O plano aceita `category_split` para duas categorias independentes, cada uma com seu exemplo em uma placa de igual destaque. `orientation` mostra a mesma amostra em duas placas, com a da direita girada em 180° e as duas legendas na posição de leitura. Os dois arquétipos de demonstração usam texto da composição sujeito aos gates de contraste, piso e geometria. O planejador escolhe a demonstração pela relação que a lâmina precisa comunicar.
+
+A migração `20261123000050` admite as duas formas no plano salvo e mantém a validação dos formatos anteriores. Alterar os exemplos de categoria ou o texto da amostra exige nova composição antes de salvar os JPEGs. Os testes locais passaram pelo plano do estúdio, a rota autenticada com Chromium, o salvamento simulado e a recuperação do ZIP em um navegador sem cache. Os testes em PGlite verificaram a migração e o vínculo entre o diagrama salvo e o digest do plano.
+
 ## Evidência para habilitação
 
 Executar o fluxo autenticado da rota em Linux no Preview da Vercel. Verificar o fechamento do Chromium em falha, os arquivos presentes no trace, o orçamento de tamanho do ZIP e o comportamento para planos recusados. Vínculo à versão e recuperação em outro navegador exigem mais uma verificação depois que o estúdio consumir esse contrato.

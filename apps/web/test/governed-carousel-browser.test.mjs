@@ -18,14 +18,15 @@ const alice = id(1), project = id(3);
 const title = 'Carrossel de luz natural';
 const caption = 'À luz da manhã.\nSalve para testar.';
 const sha256 = input => createHash('sha256').update(input).digest('hex');
+const lightDiagram = {type: 'category_split', labels: ['Luz direta', 'Luz difusa'], items: ['Sol', 'Cortina']};
 
 const planFrames = [
   {headline: 'Fotografe com luz de janela', role: 'abertura', layout: 'framed_plate', alt: 'Uma manchete sobre luz de janela.'},
-  {headline: 'Afaste a mesa da janela', role: 'orientação', layout: 'svg_diagram', alt: 'Um diagrama explica a distância da janela.'},
+  {headline: 'Diferencie luz direta e difusa', role: 'orientação', layout: 'comparison_dual', alt: 'A luz direta vem do sol e a difusa atravessa a cortina.'},
   {headline: 'Salve para a próxima foto', role: 'fechamento', layout: 'cta_closing', alt: 'Um pedido para salvar a orientação.'},
 ].map(({headline, role, layout, alt}, index) => ({
   id: id(20 + index), position: index + 1, role, headline, body: '', visualCue: '',
-  composition: {layout, alt, ...(layout === 'svg_diagram' && {diagram: {type: 'flow', labels: ['Janela', 'Mesa']}})},
+  composition: {layout, alt, ...(layout === 'comparison_dual' && {diagram: lightDiagram})},
 }));
 
 async function mockComposition(plan) {
@@ -200,6 +201,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
       const {projectId, plan} = form ? JSON.parse(form.get('request')) : request.postDataJSON();
       assert.equal(projectId, project);
       assert.deepEqual(plan.slides.map(slide => slide.id), planFrames.map(frame => frame.id));
+      assert.deepEqual(plan.slides[1].diagram, lightDiagram);
       if (form) {
         const [{id,artSha256}]=plan.slides;
         assert.deepEqual([...form.keys()],['request','art:'+id]);
@@ -344,6 +346,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   assert.equal(saved.piece_id, pieceId);
   assert.equal(saved.content.carouselRender.planSha256, render.planSha256);
   assert.equal(saved.content.carouselPlan.slides[0].artSha256,artSha256);
+  assert.deepEqual(saved.content.carouselPlan.slides[1].diagram, lightDiagram);
   const chatCopy=carouselCopyForChat(saved.content);
   assert.equal(chatCopy.carouselPlan.slides[0].artSha256,undefined);
   assert.equal(saved.content.carouselPlan.slides[0].artSha256,artSha256);

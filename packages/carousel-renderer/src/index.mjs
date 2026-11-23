@@ -139,10 +139,16 @@ function gradeGeometry(geometry, { index, fontCount, hasArt }) {
   const headline = geometry.regions.find(region => region.name === 'headline');
   const body = geometry.regions.find(region => region.name === 'body');
   const figure = geometry.regions.find(region => region.name === 'figure');
+  const diagramSamples = geometry.regions.filter(region => region.name === 'diagram-sample');
+  const diagramLabels = geometry.regions.filter(region => region.name === 'diagram-label');
+  const diagramTypePass = diagramSamples.length === 0 || (
+    diagramSamples.length === 2 && diagramLabels.length === 2 &&
+    [...diagramSamples, ...diagramLabels].every(region => region.size >= 32 && region.snippets.length > 0)
+  );
   const typePass = Boolean(headline && headline.size >= (index === 1 ? hasArt ? 88 : 100 : 64) &&
     (index === 1 || headline.lineCount <= 3) &&
     (!body || (body.size >= 40 && headline.size / body.size >= 1.35)) &&
-    (!figure || figure.size >= 160));
+    (!figure || figure.size >= 160) && diagramTypePass);
   return [
     check('LAYOUT_OVERFLOW', geometry.scrollWidth <= WIDTH && geometry.scrollHeight <= HEIGHT, [geometry.scrollWidth, geometry.scrollHeight]),
     check('TEXT_COLLISION', collisions.length === 0, collisions),

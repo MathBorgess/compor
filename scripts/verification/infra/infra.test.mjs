@@ -10,7 +10,7 @@ import { FIXTURE_USERS, FIXTURE_OPENAI_KEY } from './stack.mjs';
 
 test('manifest refuses a changed migration instead of reporting the pinned schema', async t => {
   const expected = await verifyMigrations();
-  assert.equal(expected.migrations.length, 49);
+  assert.equal(expected.migrations.length, 50);
   const root = await mkdtemp(join(tmpdir(), 'compor-infra-migration-negative-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'supabase/migrations'), { recursive: true });

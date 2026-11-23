@@ -56,6 +56,41 @@ test('enforces the JSON content type, UTF-8 and request shape', async () => {
   ]) assert.deepEqual(await readCarouselRenderRequest(request(bad)), invalid);
 });
 
+
+test('preserva os slots semânticos canônicos e rejeita versões fora da receita', async () => {
+  const category = {type: 'category_split', labels: ['Pedidos', 'Dúvidas'], items: ['Trocar a câmara', 'Medida do pneu']};
+  const orientation = {type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Leia em voz alta'};
+  const read = async (diagram, fields = {}) => readCarouselRenderRequest(request(JSON.stringify({
+    ...input, plan: {...plan, slides: [{...slide, diagram, ...fields}]},
+  })));
+
+  const parsed = await read(category);
+  const reordered = await read({items: category.items, type: category.type, labels: category.labels});
+  const changed = await read({...category, items: [...category.items].reverse()});
+  assert.ok(parsed.ok && reordered.ok && changed.ok);
+  assert.deepEqual(parsed.plan.slides[0].diagram, category);
+  assert.equal(parsed.planSha256, reordered.planSha256);
+  assert.notEqual(parsed.planSha256, changed.planSha256);
+
+  const rotated = await read(orientation);
+  assert.ok(rotated.ok);
+  assert.deepEqual(rotated.plan.slides[0].diagram, orientation);
+  for (const bad of [
+    'orientation',
+    {...orientation, labels: [...orientation.labels].reverse()},
+    {...orientation, sample: 'Um texto é muito longo'},
+    {...category, labels: ['Dúvidas', 'DÚVIDAS']},
+    {...category, items: ['Trocar', 'Trocar']},
+    {...category, items: ['Trocar', 'Medir', 'Montar']},
+    {...category, sample: 'Trocar'},
+  ]) assert.deepEqual(await read(bad), invalid);
+  assert.deepEqual(await read(category, {layout: 'cta_closing'}), invalid);
+  const rasterPlan = {...plan, slides: [{...artSlide, diagram: category}]};
+  assert.deepEqual(await readCarouselRenderRequest(multipart([
+    ['request', JSON.stringify({projectId, plan: rasterPlan})], ['art:arte', new Blob([raster], {type: 'image/png'})],
+  ])), invalid);
+});
+
 test('enforces the inclusive 32 KiB body limit even without a length header', async () => {
   const body = JSON.stringify(input);
   const byteLimit = 32 * 1024;

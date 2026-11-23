@@ -9,7 +9,7 @@ export const layouts = Object.freeze([
 
 export const modes = Object.freeze(['editorial_art', 'native_serial']);
 export const diagrams = Object.freeze(['flow', 'balance', 'steps', 'focus']);
-export const demonstrationDiagrams = Object.freeze(['contrast', 'type_scale', 'hierarchy']);
+export const demonstrationDiagrams = Object.freeze(['contrast', 'type_scale', 'hierarchy', 'category_split', 'orientation']);
 export const demonstrationLayouts = Object.freeze(['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual']);
 
 const MODE_POLARITY = ['base', 'inverted'];
@@ -78,12 +78,23 @@ function distinctText(values, count, limit, maxWords) {
 }
 
 function isDemonstration(spec) {
+  const keys = Object.keys(spec);
+  if (spec.type === 'orientation') {
+    return keys.length === 3 && keys.every(key => ['type', 'labels', 'sample'].includes(key)) &&
+      Array.isArray(spec.labels) && spec.labels.length === 2 &&
+      spec.labels[0] === 'Em pé' && spec.labels[1] === 'De cabeça para baixo' &&
+      demonstrationText(spec.sample, 18, 4);
+  }
   if (!distinctText(spec.labels, 2, 30, 3)) return false;
+  if (spec.type === 'category_split') {
+    return keys.length === 3 && keys.every(key => ['type', 'labels', 'items'].includes(key)) &&
+      distinctText(spec.items, 2, 18, 4);
+  }
   if (spec.type === 'hierarchy') {
-    return Object.keys(spec).every(key => ['type', 'labels', 'items'].includes(key)) &&
+    return keys.every(key => ['type', 'labels', 'items'].includes(key)) &&
       distinctText(spec.items, 3, 10, 2);
   }
-  return Object.keys(spec).every(key => ['type', 'labels', 'sample'].includes(key)) &&
+  return keys.every(key => ['type', 'labels', 'sample'].includes(key)) &&
     demonstrationText(spec.sample, 18, 4);
 }
 

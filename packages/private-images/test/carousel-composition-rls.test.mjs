@@ -237,6 +237,60 @@ test('associa o SHA do raster ao plano sem alterar versões gravadas antes da mi
   assert.deepEqual(rows.map(row => row.content), [original, rendered]);
 });
 
+test('preserva diagramas anteriores e vincula os diagramas semânticos ao recibo JPEG', async t => {
+  const db = await fixture(t);
+  await migrate(db, ['20261122000048_carousel_composition', '20261123000049_carousel_art_source']);
+  const legacyRendered = renderedContent(governedContent());
+  const categories = governedContent();
+  categories.carouselPlan.slides[1].diagram = {
+    type: 'category_split', labels: ['Até 1,5 mm', 'Acima disso'], items: ['Folha fina', 'Papel reforçado'],
+  };
+  const orientation = governedContent();
+  orientation.carouselPlan.slides[1].diagram = {
+    type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Margem de 1,5 mm',
+  };
+  await identify(db, alice);
+  assert.equal((await save(db, 0, 0, legacyRendered)).status, 'saved');
+  await assert.rejects(save(db, 1, 1, categories), { code: '22023' });
+
+  await db.exec('reset role');
+  await migrate(db, ['20261123000050_carousel_semantic_diagrams']);
+  await identify(db, alice);
+  const categoriesRendered = renderedContent(categories);
+  const orientationRendered = renderedContent(orientation);
+  const malformed = [
+    [categories, { items: ['Trocar plantão'] }],
+    [categories, { items: ['Sim', ' sim '] }],
+    [categories, { items: ['A B C D E', 'Onde anotar?'] }],
+    [categories, { labels: ['Um A B C', 'Dúvida'] }],
+    [categories, { labels: ['Dúvida', ' dúvida '] }],
+    [categories, { labels: ['Dúvida', 'Du\u0301vida'] }],
+    [categories, { sample: 'Outro' }],
+    [orientation, { labels: ['De cabeça para baixo', 'Em pé'] }],
+    [orientation, { labels: ['Esquerda', 'Direita'] }],
+    [orientation, { sample: 'Este A B C D' }],
+    [orientation, { sample: 'A'.repeat(19) }],
+    [orientation, { sample: 'Página <br>' }],
+    [orientation, { items: ['Página 7', 'Página 9'] }],
+  ];
+  for (const [plan, fields] of malformed) {
+    const invalid = structuredClone(plan);
+    Object.assign(invalid.carouselPlan.slides[1].diagram, fields);
+    await assert.rejects(save(db, 1, 1, invalid), { code: '22023' }, JSON.stringify(fields));
+  }
+  const incompatibleLayout = structuredClone(orientation);
+  incompatibleLayout.carouselPlan.slides[1].layout = 'bento_grid';
+  await assert.rejects(save(db, 1, 1, incompatibleLayout), { code: '22023' });
+  const stale = structuredClone(categoriesRendered);
+  stale.carouselPlan.slides[1].diagram.items[1] = 'Onde guardar?';
+  await assert.rejects(save(db, 1, 1, stale), { code: '22023' });
+
+  assert.deepEqual((await save(db, 1, 1, categoriesRendered)).version.content, categoriesRendered);
+  assert.deepEqual((await save(db, 2, 2, orientationRendered)).version.content, orientationRendered);
+  const { rows } = await db.query('select content from public.piece_versions where project_id=$1 order by version', [project]);
+  assert.deepEqual(rows.map(row => row.content), [legacyRendered, categoriesRendered, orientationRendered]);
+});
+
 test('JSONB inválido em composição ou marcador retorna invalid_request sem criar versões', async t => {
   const db = await fixture(t);
   await migrate(db, ['20261122000048_carousel_composition']);

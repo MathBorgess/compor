@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseStudioAction,AGENT_STUDIO_TOOLS,SHORT_PROJECT_TITLE_LENGTH} from '../src/studio-chat-tools.mjs';
+import {parseStudioAction,AGENT_STUDIO_TOOLS,SHORT_PROJECT_TITLE_LENGTH,isCarouselSlideComposition} from '../src/studio-chat-tools.mjs';
 const scope={projectId:'11111111-1111-4111-8111-111111111111',requestId:'22222222-2222-4222-8222-222222222222'};
 test('contexto permite descobrir revisão; mutações exigem revisão e campos próprios',()=>{
  assert.deepEqual(parseStudioAction('compor_contexto',scope),scope);
@@ -121,4 +121,49 @@ test('contrato de composição rejeita receitas parciais, slots inválidos e seg
 
   const proof = foreground({ layout: 'stat_monument', figure: '70%', source: 'Pesquisa citada no briefing.', alt: 'Percentual da pesquisa.' });
   assert.deepEqual(parsePlan(proof), proof);
+});
+
+test('planejador e rascunho aplicam o mesmo contrato dos diagramas semânticos', () => {
+  const plan = compositionPlan();
+  const frame = plan.frames[1];
+  const category = { type: 'category_split', labels: ['Pedido de reparo', 'Dúvida'], items: ['Trocar a câmara', 'Medida do pneu'] };
+  const orientation = { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Cara ou coroa?' };
+  const schema = AGENT_STUDIO_TOOLS.find(tool => tool.name === 'compor_definir_plano_laminas').parameters;
+  const variants = schema.properties.frames.items.properties.composition.properties.diagram.anyOf;
+  const categorySchema = variants.find(variant => variant.properties?.type.enum.includes('category_split'));
+  const orientationSchema = variants.find(variant => variant.properties?.type.enum.includes('orientation'));
+  assert.deepEqual(categorySchema.required, ['type', 'labels', 'items']);
+  assert.equal(categorySchema.properties.items.items.maxLength, 18);
+  assert.equal(categorySchema.properties.items.maxItems, 2);
+  assert.deepEqual(orientationSchema.required, ['type', 'labels', 'sample']);
+  assert.deepEqual(orientationSchema.properties.labels.items.enum, orientation.labels);
+
+  for (const diagram of [category, orientation]) {
+    const composition = { ...frame.composition, diagram };
+    const input = { ...plan, frames: [plan.frames[0], { ...frame, composition }, plan.frames[2]] };
+    assert.equal(isCarouselSlideComposition(composition), true);
+    assert.deepEqual(parseStudioAction('compor_definir_plano_laminas', input), input);
+  }
+
+  for (const composition of [
+    { ...frame.composition, diagram: { ...category, labels: ['Dúvida', 'DÚVIDA'] } },
+    { ...frame.composition, diagram: { ...category, labels: ['Em pé no mural', 'Dúvida'] } },
+    { ...frame.composition, diagram: { ...category, items: ['Medida', 'MEDIDA'] } },
+    { ...frame.composition, diagram: { ...category, items: ['Um de a b c', 'Troca'] } },
+    { ...frame.composition, diagram: { ...category, items: ['Ó'.repeat(19), 'Troca'] } },
+    { ...frame.composition, diagram: { ...category, items: ['<svg>', 'Troca'] } },
+    { ...frame.composition, diagram: { ...category, items: ['Troca'] } },
+    { ...frame.composition, diagram: { ...category, sample: 'Outra' } },
+    { ...frame.composition, diagram: { ...orientation, labels: [...orientation.labels].reverse() } },
+    { ...frame.composition, diagram: { ...orientation, labels: ['Orientação certa', 'Orientação errada'] } },
+    { ...frame.composition, diagram: { ...orientation, sample: 'Um de a b c' } },
+    { ...frame.composition, diagram: { ...orientation, sample: 'À'.repeat(19) } },
+    { ...frame.composition, diagram: { ...orientation, items: ['Uma', 'Duas'] } },
+    { ...frame.composition, layout: 'hero_bleed', diagram: orientation },
+    { ...frame.composition, diagram: 'category_split' },
+  ]) {
+    const input = { ...plan, frames: [plan.frames[0], { ...frame, composition }, plan.frames[2]] };
+    assert.equal(isCarouselSlideComposition(composition), false);
+    assert.throws(() => parseStudioAction('compor_definir_plano_laminas', input), /invalid_action/);
+  }
 });

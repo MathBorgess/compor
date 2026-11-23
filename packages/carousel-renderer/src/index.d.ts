@@ -58,6 +58,15 @@ type Palette = {
   accentOnDark: string | null;
 };
 
+type DiagramSymbol = 'flow' | 'balance' | 'steps' | 'focus';
+export type CarouselDiagram =
+  | DiagramSymbol
+  | { type: DiagramSymbol; labels: [string, string?, string?] }
+  | { type: 'contrast' | 'type_scale'; labels: [string, string]; sample: string }
+  | { type: 'hierarchy'; labels: [string, string]; items: [string, string, string] }
+  | { type: 'category_split'; labels: [string, string]; items: [string, string] }
+  | { type: 'orientation'; labels: ['Em pé', 'De cabeça para baixo']; sample: string };
+
 export const layouts: readonly string[];
 export const modes: readonly string[];
 export const diagrams: readonly string[];

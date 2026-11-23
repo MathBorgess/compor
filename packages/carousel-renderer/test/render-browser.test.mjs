@@ -241,6 +241,14 @@ const demonstrationSlides = [
     body: 'Dê peso ao título e use preço e selo como apoio.',
     diagram: { type: 'hierarchy', labels: ['Peso igual', 'Título dominante'], items: ['Título', 'Preço', 'Selo'] },
   }),
+  slide('framed_plate', 'Separe condições de observações', {
+    body: 'Registre a luz da cena e o efeito que ela produz na foto.',
+    diagram: { type: 'category_split', labels: ['Condição do teste', 'Padrão observado'], items: ['Luz lateral', 'Sombra longa'] },
+  }),
+  slide('svg_diagram', 'Vire o texto para revisar', {
+    id: 'orientation', polarity: 'inverted', body: 'Observe a forma das letras quando a leitura não é automática.',
+    diagram: { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Um café com leite' },
+  }),
   slide('cta_closing', 'Salve para revisar seu anúncio'),
 ];
 
@@ -270,7 +278,7 @@ test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { s
   assert.equal(result.slides.length, demonstrationSlides.length, JSON.stringify(result.checks));
   const failures = [...result.checks, ...result.slides.flatMap(item => item.checks)].filter(check => check.status !== 'pass');
   assert.deepEqual(failures, []);
-  assert.ok(result.slides.slice(1, 4).every(item => item.artAreaFraction >= 0.12));
+  assert.ok(result.slides.slice(1, -1).every(item => item.artAreaFraction >= 0.12));
   await verifyAssets(result, directory, sharp, ['contact-sheet.png', 'cover-grid.png']);
 
   const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
@@ -279,6 +287,29 @@ test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { s
       if (!item.diagram) continue;
       await page.setContent(slideDocument(item, { index: index + 1, palette: paletteFor(tokens), fonts }));
       await page.evaluate(() => document.fonts.ready);
+      if (item.diagram.type === 'category_split' || item.diagram.type === 'orientation') {
+        const panels = await page.locator('.diagram-panel').evaluateAll(figures => figures.map(figure => {
+          const sample = figure.querySelector('[data-region="diagram-sample"]');
+          const caption = figure.querySelector('figcaption');
+          const sampleStyle = getComputedStyle(sample);
+          const frame = getComputedStyle(sample.parentElement);
+          const { width, height } = sample.parentElement.getBoundingClientRect();
+          return {
+            label: caption.textContent, text: sample.textContent, rotation: sampleStyle.transform,
+            captionTransform: getComputedStyle(caption).transform,
+            appearance: { color: sampleStyle.color, background: frame.backgroundColor, border: frame.borderColor, width, height },
+            children: Array.from(figure.children, child => child.tagName),
+          };
+        }));
+        const values = item.diagram.items ?? [item.diagram.sample, item.diagram.sample];
+        assert.deepEqual(panels.map(panel => panel.text), values);
+        assert.deepEqual(panels.map(panel => panel.label), item.diagram.labels);
+        assert.deepEqual(panels.map(panel => panel.rotation), ['none', item.diagram.type === 'orientation' ? 'matrix(-1, 0, 0, -1, 0, 0)' : 'none']);
+        assert.deepEqual(panels.map(panel => panel.captionTransform), ['none', 'none']);
+        assert.deepEqual(panels.map(panel => panel.children), [['DIV', 'FIGCAPTION'], ['DIV', 'FIGCAPTION']]);
+        assert.deepEqual(panels[0].appearance, panels[1].appearance);
+        continue;
+      }
       const panels = await page.locator('.diagram-panel').evaluateAll(figures => figures.map(figure => {
         const svg = figure.querySelector('svg');
         return {

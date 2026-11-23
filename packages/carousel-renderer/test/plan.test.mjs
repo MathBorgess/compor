@@ -47,7 +47,7 @@ test('escapa copy e não interpreta HTML vindo do plano', () => {
 
 test('comparações governam a mesma amostra e dois rótulos distintos', () => {
   const sample = { type: 'type_scale', labels: ['Menor', 'Maior'], sample: 'Seu anúncio' };
-  assert.deepEqual(demonstrationDiagrams, ['contrast', 'type_scale', 'hierarchy']);
+  assert.deepEqual(demonstrationDiagrams, ['contrast', 'type_scale', 'hierarchy', 'category_split', 'orientation']);
   assert.ok(isDiagram(sample));
   assert.ok(isDiagram({ ...sample, type: 'contrast' }));
   assert.ok(isDiagram({ type: 'hierarchy', labels: ['Peso igual', 'Título primeiro'], items: ['Título', 'Preço', 'Selo'] }));
@@ -66,17 +66,46 @@ test('comparações governam a mesma amostra e dois rótulos distintos', () => {
   ]) assert.equal(isDiagram(invalid), false, JSON.stringify(invalid));
 });
 
+const categories = { type: 'category_split', labels: ['Antes da prévia', 'Na prévia'], items: ['Peça editável', 'Imagem da peça'] };
+const orientation = { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Um café com leite' };
+
+test('categorias e orientação aceitam somente campos, rótulos e amostras do contrato', () => {
+  assert.ok(isDiagram(categories));
+  assert.ok(isDiagram(orientation));
+  for (const invalid of [
+    'category_split',
+    'orientation',
+    { ...categories, labels: ['Prévia', 'Pre\u0301via'] },
+    { ...categories, labels: ['Frase com quatro palavras', 'Na prévia'] },
+    { ...categories, items: ['Peça editável', 'peça editável'] },
+    { ...categories, items: ['A imagem longa demais', 'Imagem da peça'] },
+    { ...categories, items: ['Peça editável'] },
+    { ...categories, items: ['Oi Oi Oi Oi Oi', 'Imagem da peça'] },
+    { ...categories, sample: 'Imagem da peça' },
+    { ...orientation, labels: [...orientation.labels].reverse() },
+    { ...orientation, labels: ['Em pé', 'Invertido'] },
+    { ...orientation, labels: [...orientation.labels, 'Outra'] },
+    { ...orientation, sample: 'Uma expressão longa' },
+    { ...orientation, sample: 'Café\ncom leite' },
+    { ...orientation, sample: '<text>Oi</text>' },
+    { ...orientation, items: ['Em pé', 'Invertido'] },
+    { ...orientation, rotation: 90 },
+  ]) assert.equal(isDiagram(invalid), false, JSON.stringify(invalid));
+});
+
 test('comparação exige um painel largo com espaço dedicado', () => {
   const valid = deck();
-  const diagram = { type: 'type_scale', labels: ['Menor', 'Maior'], sample: 'Seu anúncio' };
-  for (const layout of demonstrationLayouts) {
-    valid.slides[1] = makeSlide('two', layout, 'A escala muda a leitura', { diagram });
-    assert.deepEqual(validateDeck(valid), []);
+  const typeScale = { type: 'type_scale', labels: ['Menor', 'Maior'], sample: 'Seu anúncio' };
+  for (const diagram of [typeScale, categories, orientation]) {
+    for (const layout of demonstrationLayouts) {
+      valid.slides[1] = makeSlide('two', layout, 'Compare as duas opções', { diagram });
+      assert.deepEqual(validateDeck(valid), []);
+    }
+    valid.slides[1] = makeSlide('two', 'split_vertical', 'Compare as duas opções', { diagram });
+    assert.deepEqual(validateDeck(valid).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+    valid.slides[1] = makeSlide('two', 'split_horizontal', 'Compare as duas opções', { diagram, art: 'data:image/png;base64,AA==' });
+    assert.deepEqual(validateDeck(valid).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
   }
-  valid.slides[1] = makeSlide('two', 'split_vertical', 'A escala muda a leitura', { diagram });
-  assert.deepEqual(validateDeck(valid).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
-  valid.slides[1] = makeSlide('two', 'split_horizontal', 'A escala muda a leitura', { diagram, art: 'data:image/png;base64,AA==' });
-  assert.deepEqual(validateDeck(valid).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
 });
 
 test('arte raster não pode ocultar um diagrama nem ficar oculta no fechamento', () => {

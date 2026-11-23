@@ -161,6 +161,28 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
     assert.equal(createHash('sha256').update(Buffer.from(await image.arrayBuffer())).digest('hex'),panel.sha256);
   }
 
+  const semanticPlan = {
+    mode: 'editorial_art',
+    caption: 'Duas decisões antes de imprimir um zine. #Zine',
+    slides: [
+      { id: 'capa', layout: 'hero_bleed', headline: 'Revise o zine no papel', alt: 'Capa sobre a prova de um zine.' },
+      { id: 'categorias', layout: 'split_horizontal', headline: 'Separe texto de imagem', alt: 'Duas categorias independentes, texto e imagem.',
+        diagram: { type: 'category_split', labels: ['Texto', 'Imagem'], items: ['Título', 'Desenho'] } },
+      { id: 'orientacao', layout: 'comparison_dual', headline: 'Confira a orientação da página', alt: 'A palavra Página aparece em pé e de cabeça para baixo.',
+        diagram: { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Página' } },
+      { id: 'final', layout: 'cta_closing', headline: 'Salve para a próxima impressão', alt: 'Convite para salvar a sequência.' },
+    ],
+  };
+  const semanticResponse = await post({ projectId, plan: semanticPlan });
+  assert.equal(semanticResponse.status, 200, semanticResponse.ok ? undefined : await semanticResponse.text());
+  const semanticFiles = storedMembers(Buffer.from(await semanticResponse.arrayBuffer()));
+  const semanticManifest = JSON.parse(semanticFiles.get('qa-manifest.json'));
+  assert.deepEqual(semanticManifest.final.slides.map(slide => slide.id), semanticPlan.slides.map(slide => slide.id));
+  for (const slide of semanticManifest.final.slides.slice(1, 3)) {
+    assert.ok(slide.checks.every(check => check.status === 'pass'));
+    assert.equal(createHash('sha256').update(semanticFiles.get(slide.file)).digest('hex'), slide.sha256);
+  }
+
   const source = await sharp({create:{width:320,height:240,channels:3,background:'#87815b'}}).jpeg().toBuffer();
   const artSha256 = createHash('sha256').update(source).digest('hex');
   const rasterPlan = {

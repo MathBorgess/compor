@@ -310,7 +310,7 @@ test('congela partições, conserva recibos e só envia o caso selecionado', asy
   const [submitted] = submissions;
   assert.match(submitted.agent.instructions, /exatamente dez strings diferentes/);
   assert.doesNotMatch(submitted.agent.instructions, /"coverOptions":\[\]/);
-  assert.match(submitted.agent.instructions, /hierarchy.*split_horizontal/);
+  assert.match(submitted.agent.instructions, /diagramas demonstrativos.*split_horizontal.*hierarchy/);
   const { coverLab } = JSON.parse(await readFile(first.planPath, 'utf8'));
   assert.equal(coverLab.options.length, 10);
   assert.equal(coverLab.ranking.order[0], 1);
@@ -371,6 +371,36 @@ test('Lab C4/C5 bloqueia a falha de primeira passagem e mantém suas opções ve
       assert.equal(JSON.parse(labFile).status, 'fail');
     });
   }
+});
+
+test('preserva demonstrações de categorias e orientação e pede o artefato na capa', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'compor-demonstration-plan-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const headline = 'Monte seu zine em papel';
+  const categories = { type: 'category_split', labels: ['Ações', 'Materiais'], items: ['Dobrar papel', 'Cartolina'] };
+  const orientation = { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Página de zine' };
+  const deck = { mode: 'editorial_art', slides: [
+    { id: 'zine', layout: 'typo_breather', headline, alt: 'Capa sobre a montagem de um zine.' },
+    { id: 'categorias', layout: 'split_horizontal', headline: 'O zine separa ações e materiais', diagram: categories, alt: 'Dois exemplos em painéis paralelos.' },
+    { id: 'orientacao', layout: 'comparison_dual', headline: 'A dobradura muda a orientação', diagram: orientation, alt: 'A mesma página aparece nas duas orientações.' },
+    { id: 'fecho', layout: 'cta_closing', headline: 'Salve para dobrar seu zine', alt: 'Convite para salvar.' },
+  ] };
+  const { submissions, fetchApi } = scenario(cover => ({
+    ...cover, deck, coverOptions: [headline, ...cover.coverOptions.slice(1)],
+  }));
+  const result = await runLiveCarousel({
+    key: fakeKey, root, cycle: 4, caseId: 'dev-amarelo-papel', render: false, generateCover: false, fetchApi,
+  });
+  assert.equal(result.state, 'planned');
+  const instructions = submissions[0].agent.instructions;
+  assert.match(instructions, /artefato específico.*manchete visível da capa/);
+  assert.match(instructions, /category_split em vez de balance/);
+  assert.match(instructions, /orientation em vez de balance/);
+  assert.match(instructions, /"labels":\["Em pé","De cabeça para baixo"\]/);
+  const materialized = JSON.parse(await readFile(result.planPath, 'utf8'));
+  assert.equal(materialized.slides[0].headline, headline);
+  assert.deepEqual(materialized.slides[1].diagram, categories);
+  assert.deepEqual(materialized.slides[2].diagram, orientation);
 });
 
 test('marca uma promessa numérica sem fonte no manifesto antes de solicitar a capa', async t => {

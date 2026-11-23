@@ -49,12 +49,19 @@ function hierarchyExample(items, improved) {
     secondary.map((label, index) => tile(label, { x: 14 + index * 203, y: 126, width: 189, height: 51, size: 26, textWidth: 160 })).join('');
 }
 
+function demonstrationSample(type, index, { items, sample }) {
+  if (type === 'category_split' || type === 'orientation') {
+    const value = type === 'category_split' ? items[index] : sample;
+    const rotated = type === 'orientation' && index === 1 ? ' rotated' : '';
+    return `<div class="diagram-sample-panel"><div class="diagram-sample${rotated}" data-region="diagram-sample">${escape(value)}</div></div>`;
+  }
+  const improved = index === 1;
+  const drawing = type === 'hierarchy' ? hierarchyExample(items, improved) : comparisonExample(type, sample, improved);
+  return `<svg viewBox="0 0 420 192" aria-hidden="true"><rect x="1.5" y="1.5" width="417" height="189" rx="20" fill="var(--bg)" stroke="var(--ink)" stroke-width="3"/>${drawing}</svg>`;
+}
+
 function demonstration({ type, labels, sample, items }) {
-  const panels = labels.map((label, index) => {
-    const improved = index === 1;
-    const drawing = type === 'hierarchy' ? hierarchyExample(items, improved) : comparisonExample(type, sample, improved);
-    return `<figure class="diagram-panel"><svg viewBox="0 0 420 192" aria-hidden="true"><rect x="1.5" y="1.5" width="417" height="189" rx="20" fill="var(--bg)" stroke="var(--ink)" stroke-width="3"/>${drawing}</svg><figcaption data-region="diagram-label">${escape(label)}</figcaption></figure>`;
-  });
+  const panels = labels.map((label, index) => `<figure class="diagram-panel">${demonstrationSample(type, index, { items, sample })}<figcaption data-region="diagram-label">${escape(label)}</figcaption></figure>`);
   return `<div class="media diagram diagram-demonstration" data-demonstration="${type}">${panels.join('')}</div>`;
 }
 
@@ -93,6 +100,9 @@ em{font-style:normal;color:var(--ink)}
 .diagram-panel{display:grid;gap:12px;min-width:0;margin:0}
 .diagram-panel svg{display:block}
 .diagram-panel figcaption{padding:0 8px;color:var(--fg);font-size:32px;line-height:1.23;text-align:center;overflow-wrap:anywhere}
+.diagram-sample-panel{aspect-ratio:420/192;display:grid;align-items:center;min-width:0;padding:16px;border:3px solid color-mix(in srgb,var(--fg) 45%,var(--bg));border-radius:20px}
+.diagram-sample{min-width:0;color:var(--fg);font-size:38px;line-height:1.22;font-weight:700;text-align:center;overflow-wrap:anywhere}
+.diagram-sample.rotated{transform:rotate(180deg)}
 .hero_bleed .diagram ul{margin-top:12px}
 .split_vertical .diagram ul{flex-direction:column}
 .hero_bleed .media{position:absolute;z-index:-2;inset:0}

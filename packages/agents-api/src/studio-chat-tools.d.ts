@@ -7,7 +7,9 @@ type DiagramShape = 'flow' | 'balance' | 'steps' | 'focus';
 type CompositionDiagram = DiagramShape
   | { type: DiagramShape; labels: string[] }
   | { type: 'contrast' | 'type_scale'; labels: string[]; sample: string }
-  | { type: 'hierarchy'; labels: string[]; items: string[] };
+  | { type: 'hierarchy'; labels: string[]; items: string[] }
+  | { type: 'category_split'; labels: [string, string]; items: [string, string] }
+  | { type: 'orientation'; labels: ['Em pé', 'De cabeça para baixo']; sample: string };
 export interface CarouselSlideComposition {
   layout: 'hero_bleed' | 'split_horizontal' | 'split_vertical' | 'framed_plate' | 'stat_monument'
     | 'svg_diagram' | 'comparison_dual' | 'bento_grid' | 'artifact_proof' | 'typo_breather' | 'native_serial' | 'cta_closing';
@@ -23,6 +25,7 @@ export interface CarouselSlideComposition {
 }
 export interface FramePlanInput {id?:string;position:number;role:string;headline:string;body:string;visualCue:string;composition?:CarouselSlideComposition}
 export function isCarouselSlideComposition(value:unknown):value is CarouselSlideComposition;
+export function allowsCarouselSemanticDiagram(diagram:unknown,layout:unknown,hasRaster?:boolean):boolean;
 export function isCarouselCompositionTokens(value:unknown):value is CarouselCompositionTokens;
 export interface ActionInputByName {
  compor_contexto: Omit<Scope,'revision'> & {revision?:number};

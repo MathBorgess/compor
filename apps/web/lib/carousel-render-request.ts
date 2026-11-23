@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {allowsCarouselSemanticDiagram} from '@compor/agents-api/studio-chat-tools';
 import {sha256Hex} from './browser-bytes.ts';
 import {carouselPlanJson} from './carousel-plan-json.ts';
 
@@ -30,7 +31,7 @@ const slide = z.strictObject({
   figure: z.string().optional(),
   bridge: z.string().optional(),
   artSha256: z.string().length(64).regex(/^[a-f0-9]{64}$/).optional(),
-});
+}).refine(slide => allowsCarouselSemanticDiagram(slide.diagram, slide.layout, slide.artSha256 !== undefined));
 const requestSchema = z.strictObject({
   projectId: z.uuid(),
   plan: z.strictObject({

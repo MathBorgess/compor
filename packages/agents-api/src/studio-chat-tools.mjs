@@ -15,11 +15,21 @@ const compositionLayouts = [
 const diagramShapes = ['flow', 'balance', 'steps', 'focus'];
 const demonstrationLayouts = ['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual'];
 const textList = (maxLength, minItems, maxItems) => ({ type: 'array', minItems, maxItems, items: string(maxLength) });
+const orientationLabels = ['Em pé', 'De cabeça para baixo'];
+const semanticDiagramSchemas = {
+  category_split: fields({ type: { enum: ['category_split'] }, labels: textList(30, 2, 2), items: textList(18, 2, 2) }),
+  orientation: fields({
+    type: { enum: ['orientation'] },
+    labels: { ...textList(30, 2, 2), items: { enum: orientationLabels } },
+    sample: string(18),
+  }),
+};
 const compositionDiagramSchema = { anyOf: [
   { enum: diagramShapes },
   fields({ type: { enum: diagramShapes }, labels: textList(30, 1, 3) }),
   fields({ type: { enum: ['contrast', 'type_scale'] }, labels: textList(30, 2, 2), sample: string(18) }),
   fields({ type: { enum: ['hierarchy'] }, labels: textList(30, 2, 2), items: textList(10, 3, 3) }),
+  ...Object.values(semanticDiagramSchemas),
 ] };
 const compositionSchema = fields({
   layout: { enum: compositionLayouts },
@@ -131,7 +141,10 @@ function matchesCompositionSchema(value, schema) {
     Object.entries(value).every(([key, item]) => Object.hasOwn(schema.properties, key) &&
       matchesCompositionSchema(item, schema.properties[key])));
 }
-export const isCarouselSlideComposition = value=>matchesCompositionSchema(value,compositionSchema);
+export function isCarouselSlideComposition(value) {
+  return matchesCompositionSchema(value, compositionSchema)
+    && allowsCarouselSemanticDiagram(value.diagram, value.layout);
+}
 export const isCarouselCompositionTokens = value=>matchesCompositionSchema(value,compositionTokensSchema);
 
 const wordSegments = new Intl.Segmenter('pt-BR', { granularity: 'word' });
@@ -147,6 +160,22 @@ function distinctDemonstrationText(labels) {
     new Set(labels.map(label => label.normalize('NFC').toLocaleLowerCase('pt-BR'))).size === labels.length;
 }
 
+function isSemanticDiagramType(type) {
+  return type === 'category_split' || type === 'orientation';
+}
+
+export function allowsCarouselSemanticDiagram(diagram, layout, hasRaster = false) {
+  const type = typeof diagram === 'string' ? diagram : diagram?.type;
+  if (!isSemanticDiagramType(type)) return true;
+  if (hasRaster || !demonstrationLayouts.includes(layout) || !matchesCompositionSchema(diagram, semanticDiagramSchemas[type])) return false;
+  if (type === 'orientation') {
+    return orientationLabels.every((label, index) => diagram.labels[index] === label)
+      && cleanDemonstrationText(diagram.sample) && wordCount(diagram.sample) <= 4;
+  }
+  return distinctDemonstrationText(diagram.labels) && diagram.labels.every(label => wordCount(label) <= 3)
+    && distinctDemonstrationText(diagram.items) && diagram.items.every(item => wordCount(item) <= 4);
+}
+
 function validateComposedFrame({ composition, position, headline, body }) {
   if (!isCarouselSlideComposition(composition)) throw Error('invalid_action');
   const { layout, diagram, source, figure, listItems, kicker, accentPhrase } = composition;
@@ -160,6 +189,7 @@ function validateComposedFrame({ composition, position, headline, body }) {
       (layout === 'bento_grid' && listItems?.length > 4) ||
       (accentPhrase && (!headline.includes(accentPhrase) || wordCount(accentPhrase) > 3)) ||
       (isDemonstration && !demonstrationLayouts.includes(layout))) throw Error('invalid_action');
+  if (isSemanticDiagramType(diagram?.type)) return;
   if (isDemonstration && (!distinctDemonstrationText(diagram.labels) ||
       (diagram.items && !distinctDemonstrationText(diagram.items)) ||
       (diagram.sample && !cleanDemonstrationText(diagram.sample)))) throw Error('invalid_action');
