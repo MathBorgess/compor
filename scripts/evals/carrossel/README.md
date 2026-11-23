@@ -44,6 +44,20 @@ Para anexar uma avaliação independente sem editar o manifesto original, grave 
 
 A camada física conta os sete checks definidos em `protocol.mjs` e exige cobertura de todos para publicar `S_det`. A CLI verifica os hashes dos arquivos e conserva os checks do renderer como evidência à parte. As notas de coleção e de juiz usam todas as dimensões com os pesos publicados no protocolo. `CQS = 0,25 S_det + 0,30 S_col + 0,45 S_vlm` exige as três parcelas e uma entrega visual verificada. Os vetos factuais e físicos são registrados independentemente do CQS.
 
+### Revisão de texto na arte raster
+
+Para cada snapshot com raster, anexe `artPurityEvidence: {file, sha256}` em `qa-assessments.json`. Salve o parecer como `art-purity-first-pass.json` ou `art-purity-final.json` no diretório do caso. Use uma avaliação comum se os snapshots forem iguais. O parecer usa os seguintes campos.
+
+| Campo | Conteúdo |
+| --- | --- |
+| `version`, `scope` | `1` e `raster-text`. Inspeção dos recortes da arte raster exibidos em `art-sheet.jpg`, antes das camadas de texto e scrim. |
+| `planSha256`, `artSheetSha256`, `renderChecksSha256` | SHA-256 do plano, da folha de arte e do recibo `render-checks.json` do mesmo snapshot. |
+| `reviewer` | `{method, identity}`. Use `human`, `local_detector` ou `vlm`. Identifique a pessoa ou a versão do método. |
+| `observations` | Uma observação por recorte do recibo com `{slideIndex, slideId, embeddedSha256, verdict, evidence, findings}`. Use `pass`, `fail` ou `unknown`. Se a resolução ou a fonte impedir uma decisão, registre `unknown`. |
+| `findings` | Vazio para `pass` e `unknown`. Para `fail`, forneça regiões com `{code: "TEXT_IN_ART_LAYER", box: {left, top, right, bottom}}`. As coordenadas são de 0 a 1, relativas ao recorte da folha. |
+
+O leitor confere a identidade de cada lâmina e o hash do raster incorporado. Um `TEXT_IN_ART_LAYER` localizado é veto mesmo quando o CQS é alto. A promoção de uma entrega raster exige parecer conclusivo vinculado. O `ART_PURITY` histórico permanece disponível para diagnóstico. Este parecer descreve a inspeção de texto na folha. Autorização de seleção, procedência, sobreposição com faces e qualidade editorial da imagem têm evidências próprias.
+
 O FPY usa como denominador os casos de entrega previstos na suíte. O numerador conta os casos que passaram a etapa na primeira passagem. Reporte também casos com falha observada e casos indisponíveis. A recusa correta conta no desfecho esperado do caso adversarial. Ela fica fora do denominador físico. Comparações com a baseline histórica do Marco 5 podem partir dos dois carrosséis arquivados. A avaliação histórica usou outra rubrica e expôs o conjunto reservado. [Marco 5](../../../docs/evals/pr61/05-post.md)
 
 ## Lab de dez capas

@@ -11,6 +11,7 @@ export { accentAgainst, contrast, paletteFor } from './color.mjs';
 
 const WIDTH = 1080;
 const HEIGHT = 1350;
+const SHEET_COLUMNS = 4;
 const JPEG = { quality: 92, chromaSubsampling: '4:4:4', progressive: false };
 const REPAIRABLE = new Set(['LAYOUT_OVERFLOW', 'TEXT_COLLISION', 'SAFE_ZONE', 'TYPOGRAPHY']);
 
@@ -123,15 +124,21 @@ function fitFor(slide, index) {
 
 async function imageFor(sharp, art) {
   if (!art) return null;
-  const bytes = Buffer.from(art.slice(art.indexOf(',') + 1), 'base64');
-  const image = sharp(bytes, { limitInputPixels: 16_000_000, failOn: 'error' });
-  const metadata = await image.metadata();
-  if (!['png', 'jpeg', 'webp'].includes(metadata.format) || (metadata.pages ?? 1) !== 1) throw Error('unsupported_art');
-  return image.autoOrient().resize({ width: WIDTH, height: HEIGHT, fit: 'inside', withoutEnlargement: true }).png().toBuffer();
+  const [declared, payload] = art.split(',');
+  const bytes = Buffer.from(payload, 'base64');
+  const image = sharp(bytes, { limitInputPixels: 16_000_000, failOn: 'warning' });
+  const { format, width, height, pages } = await image.metadata();
+  if (declared !== `data:image/${format};base64` || (pages ?? 1) !== 1) throw Error('unsupported_art');
+  const embedded = await image.autoOrient().resize({ width: WIDTH, height: HEIGHT, fit: 'inside', withoutEnlargement: true }).png().toBuffer();
+  return { embedded, source: { sha256: digest(bytes), bytes: bytes.length, format, width, height, embeddedSha256: digest(embedded) } };
+}
+
+function digest(data) {
+  return createHash('sha256').update(data).digest('hex');
 }
 
 function describeAsset(file, data) {
-  return { file, sha256: createHash('sha256').update(data).digest('hex'), bytes: data.length };
+  return { file, sha256: digest(data), bytes: data.length };
 }
 
 async function inspect(page, slide, options) {
@@ -142,10 +149,11 @@ async function inspect(page, slide, options) {
 }
 
 async function renderSlide({ page, sharp, slide, index, fonts, palette, incoming, repair }) {
-  const sourceArt = await imageFor(sharp, slide.art).catch(() => false);
-  if (sourceArt === false) {
+  const raster = await imageFor(sharp, slide.art).catch(() => false);
+  if (raster === false) {
     return { result: { id: slide.id, index, checks: [check('ASSET_DECODE', false, 'Imagem raster inválida.')] } };
   }
+  const sourceArt = raster?.embedded;
   const input = sourceArt ? { ...slide, art: 'data:image/png;base64,' + sourceArt.toString('base64') } : slide;
   const options = { index, palette, fonts, incoming };
   let { geometry, checks } = await inspect(page, input, options);
@@ -176,31 +184,41 @@ async function renderSlide({ page, sharp, slide, index, fonts, palette, incoming
   { width: meta.width, height: meta.height, bytes: jpeg.length, chroma: meta.chromaSubsampling, smallFile: jpeg.length < 15_000 });
   checks.push(jpegCheck);
   const asset = describeAsset('slide-' + String(index).padStart(2, '0') + '.jpg', jpeg);
-  return { result: { id: slide.id, index, ...asset, checks, firstChecks, repairs, artAreaFraction: geometry.mediaArea / (WIDTH * HEIGHT) }, jpeg, sourceArt };
+  const result = { id: slide.id, index, ...asset, checks, firstChecks, repairs, artAreaFraction: geometry.mediaArea / (WIDTH * HEIGHT) };
+  if (raster) result.artSource = raster.source;
+  return { result, jpeg, sourceArt };
 }
 
-async function sheet(sharp, images, { width = 216, height = 270, format = 'png' } = {}) {
-  const columns = Math.min(images.length, 4);
+async function sheet(sharp, images, { width = 216, height = 270, format = 'png', fit = 'cover' } = {}) {
+  const columns = Math.min(images.length, SHEET_COLUMNS);
   const rows = Math.ceil(images.length / columns);
+  const background = '#e4e0da';
   const tiles = await Promise.all(images.map(async (image, index) => ({
-    input: await sharp(image).resize(width, height, { fit: 'cover' }).png().toBuffer(),
+    input: await sharp(image).resize(width, height, { fit, background }).png().toBuffer(),
     left: (index % columns) * width, top: Math.floor(index / columns) * height,
   })));
-  const canvas = sharp({ create: { width: width * columns, height: height * rows, channels: 3, background: '#e4e0da' } }).composite(tiles);
+  const canvas = sharp({ create: { width: width * columns, height: height * rows, channels: 3, background } }).composite(tiles);
   return format === 'jpeg' ? canvas.withIccProfile('srgb').jpeg(JPEG).toBuffer() : canvas.png().toBuffer();
 }
 
 async function renderArtifacts(sharp, rendered) {
   const artifacts = [];
-  const add = (file, data) => artifacts.push({ ...describeAsset(file, data), data });
+  const add = (file, data, details) => artifacts.push({ ...describeAsset(file, data), data, ...details });
   const slides = rendered.flatMap(slide => slide.jpeg ? [slide.jpeg] : []);
-  const art = rendered.flatMap(slide => slide.sourceArt ? [slide.sourceArt] : []);
+  const art = rendered.filter(slide => slide.sourceArt);
   if (slides.length) add('contact-sheet.png', await sheet(sharp, slides));
   if (rendered[0]?.jpeg) {
     const cover = await sharp(rendered[0].jpeg).extract({ left: 34, top: 0, width: 1012, height: HEIGHT }).resize(270, 360).png().toBuffer();
     add('cover-grid.png', cover);
   }
-  if (art.length) add('art-sheet.jpg', await sheet(sharp, art, { format: 'jpeg' }));
+  if (art.length) {
+    const columns = Math.min(art.length, SHEET_COLUMNS);
+    const tiles = art.map(({ result }, index) => ({
+      slideIndex: result.index, slideId: result.id, column: index % columns, row: Math.floor(index / columns),
+    }));
+    const data = await sheet(sharp, art.map(slide => slide.sourceArt), { width: 360, height: 450, format: 'jpeg', fit: 'contain' });
+    add('art-sheet.jpg', data, { tiles });
+  }
   return artifacts;
 }
 

@@ -4,6 +4,7 @@ import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { coverLabArtifact } from './cover-lab.mjs';
+import { verifyArtPurity } from './art-purity.mjs';
 import { judgeBriefing, judgeDeckHash, judgeSideScores, readBlindJudgePair } from './judge-evidence.mjs';
 import {
   bounded, collectionWeights, formatVersion, isDigest, judgeWeights,
@@ -47,6 +48,12 @@ export function summarizeSnapshot(snapshot) {
   if (!snapshot) return null;
   requireCondition(outcomes.includes(snapshot.outcome), 'Desfecho de avaliação inválido.');
   const checks = { ...(snapshot.checks ?? {}) };
+  const artPurity = snapshot.artPurity;
+  if (artPurity?.sha256) {
+    checks.ART_PURITY = artPurity.status === 'unavailable'
+      ? { status: 'unknown' }
+      : { status: artPurity.status, evidence: 'Parecer da folha de arte vinculado ao recibo do renderer.' };
+  }
   if (snapshot.factualTrace?.status === 'fail') {
     checks.FACT_GROUNDING = { status: 'fail', evidence: 'O plano tem citações inexistentes ou resultados sem fonte verificável no briefing.' };
   }
@@ -80,11 +87,12 @@ export function summarizeSnapshot(snapshot) {
     assetsVerified,
     coverLab: snapshot.coverLab ?? null,
     factualTrace: snapshot.factualTrace ?? null,
+    artPurity: artPurity ?? null,
     judgeInput: snapshot.judgeInput ?? null,
     judgeTrace: snapshot.judgeTrace ?? null,
     novelty: snapshot.novelty ?? null,
     retainedFiles: snapshot.artifacts?.map(artifact => artifact.file) ?? [],
-    hardFails: [...new Set([...planFailures, ...Object.values(staged).flatMap(stage => stage.failures), ...(snapshot.coverLab?.violations ?? []), ...(snapshot.factualTrace?.issues.map(issue => issue.id) ?? []), ...(snapshot.novelty?.status === 'fail' ? ['NOVELTY'] : [])])],
+    hardFails: [...new Set([...planFailures, ...Object.values(staged).flatMap(stage => stage.failures), ...(snapshot.coverLab?.violations ?? []), ...(snapshot.factualTrace?.issues.map(issue => issue.id) ?? []), ...(snapshot.novelty?.status === 'fail' ? ['NOVELTY'] : []), ...(artPurity?.status === 'fail' ? ['TEXT_IN_ART_LAYER'] : [])])],
   };
 }
 
@@ -100,10 +108,13 @@ async function verifiedNovelty(root, plan, reference) {
   return reviewNovelty(plan, assessment);
 }
 
-async function verifyArtifacts(caseDir, input, facts, noveltyEvidence) {
+async function verifyArtifacts(caseDir, input, facts, assessment) {
   const artifacts = input.artifacts ?? [];
   requireCondition(Array.isArray(artifacts), 'Lista de artefatos inválida.');
-  if (artifacts.length === 0) return { assetsVerified: false, coverLab: null, judgeInput: null };
+  if (artifacts.length === 0) {
+    const artPurity = await verifyArtPurity(caseDir, assessment?.artPurityEvidence, { rasterDeclared: input.artSheetApplicable === true });
+    return { assetsVerified: false, coverLab: null, judgeInput: null, artPurity };
+  }
   const root = await realpath(caseDir);
   const seen = new Set();
   const names = new Set();
@@ -130,34 +141,42 @@ async function verifyArtifacts(caseDir, input, facts, noveltyEvidence) {
     const name = parts.at(-1);
     sets.add(parts.slice(0, -1).join('/'));
     names.add(name);
-    if (name === 'plan.json' || name === 'cover-lab.json') {
-      requireCondition(!documents.has(name), 'Documento do Lab de capas duplicado no snapshot.');
+    if (name === 'plan.json' || name === 'cover-lab.json' || name === 'render-checks.json') {
+      requireCondition(!documents.has(name), 'Documento de evidência duplicado no snapshot.');
       documents.set(name, { value: JSON.parse(bytes), digest: record.sha256 });
     }
   }
   const indices = [...names].filter(name => /^slide-\d{2}\.jpg$/.test(name)).sort();
+  const plan = documents.get('plan.json');
+  const lab = documents.get('cover-lab.json');
+  const renderChecks = documents.get('render-checks.json');
+  const rasterDeclared = input.artSheetApplicable === true
+    || (Array.isArray(plan?.value?.slides) && plan.value.slides.some(slide => Boolean(slide?.art)))
+    || (Array.isArray(renderChecks?.value?.slides) && renderChecks.value.slides.some(slide => Boolean(slide?.artSource)))
+    || (Array.isArray(renderChecks?.value?.artifacts) && renderChecks.value.artifacts.some(artifact => artifact?.file === 'art-sheet.jpg'));
   const assetsVerified = sets.size === 1 && indices.length >= 2 && indices.length <= 20
     && indices.every((name, index) => name === `slide-${String(index + 1).padStart(2, '0')}.jpg`)
     && (input.slideCount === undefined || indices.length === input.slideCount)
     && requiredVisualArtifacts.every(name => names.has(name))
-    && (names.has('art-sheet.jpg') || (input.artSheetApplicable === false && input.checks?.ART_PURITY?.status === 'not_applicable'));
-  const plan = documents.get('plan.json');
-  const lab = documents.get('cover-lab.json');
+    && (names.has('art-sheet.jpg') || (!rasterDeclared && input.artSheetApplicable === false && input.checks?.ART_PURITY?.status === 'not_applicable'));
   if (plan) requireCondition(sets.size === 1 && plan.digest === input.inputSha256, 'Evidência desvinculada do plano renderizado.');
   const factualTrace = plan && Object.hasOwn(plan.value ?? {}, 'claims')
     ? inspectClaimLedger(plan.value, plan.value.claims, facts)
     : null;
-  const novelty = await verifiedNovelty(root, plan, noveltyEvidence);
+  const novelty = await verifiedNovelty(root, plan, assessment?.noveltyEvidence);
   const slideHashes = new Map(artifacts.map(record => [record.file.split('/').at(-1), record.sha256]));
+  const artPurity = await verifyArtPurity(root, assessment?.artPurityEvidence, {
+    planSha256: input.inputSha256, artSheetSha256: slideHashes.get('art-sheet.jpg'), renderChecks, rasterDeclared,
+  });
   const judgeInput = assetsVerified ? {
     deckSha256: judgeDeckHash(indices.map(name => slideHashes.get(name))),
     captionSha256: sha256(plan?.value?.caption ?? ''),
   } : null;
-  if (!lab) return { assetsVerified, coverLab: null, factualTrace, novelty, judgeInput };
+  if (!lab) return { assetsVerified, coverLab: null, factualTrace, novelty, judgeInput, artPurity };
   requireCondition(plan && lab.value?.inputSha256 === plan.digest, 'Lab de capas desvinculado do plano renderizado.');
   const observed = coverLabArtifact(plan.value, plan.digest);
   requireCondition(observed && isDeepStrictEqual(lab.value, observed), 'O Lab de capas diverge dos dados verificados do plano.');
-  return { assetsVerified, coverLab: observed, factualTrace, novelty, judgeInput };
+  return { assetsVerified, coverLab: observed, factualTrace, novelty, judgeInput, artPurity };
 }
 
 function validatePair(pair) {
@@ -169,7 +188,7 @@ function validatePair(pair) {
 }
 
 const annotatableChecks = new Set(['FACT_GROUNDING', 'S2_STANDALONE', 'CTA_SINGLE', 'ART_PURITY']);
-const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr', 'noveltyEvidence', 'judgeEvidence']);
+const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr', 'noveltyEvidence', 'judgeEvidence', 'artPurityEvidence']);
 
 async function caseJudgePair(directory, testCase, reference) {
   const pair = await readBlindJudgePair(directory, reference);
@@ -292,11 +311,11 @@ export async function readCaseEvidence(directory, testCase, expectation) {
   const firstAssessment = assessments?.first_pass ?? (sameSnapshot ? assessments?.final : undefined);
   const first = await verifySnapshotJudge(directory, testCase, {
     ...attachAssessment(value.first_pass, firstAssessment),
-    ...await verifyArtifacts(directory, value.first_pass, testCase.facts, firstAssessment?.noveltyEvidence),
+    ...await verifyArtifacts(directory, value.first_pass, testCase.facts, firstAssessment),
   });
   const final = sameSnapshot ? first : await verifySnapshotJudge(directory, testCase, {
     ...attachAssessment(value.final, assessments?.final),
-    ...await verifyArtifacts(directory, value.final, testCase.facts, assessments?.final?.noveltyEvidence),
+    ...await verifyArtifacts(directory, value.final, testCase.facts, assessments?.final),
   });
   return {
     digest, assessmentSha256: assessments?.digest ?? null, repairCount: value.repair_count,

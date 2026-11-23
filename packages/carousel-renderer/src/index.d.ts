@@ -11,6 +11,8 @@ export type CarouselFinding = {
 };
 
 type Asset = { file: string; bytes: number; sha256: string };
+type ArtworkTile = { slideIndex: number; slideId: string; column: number; row: number };
+type Artifact = Asset & { tiles?: ArtworkTile[] };
 type RenderedSlide = {
   id: string;
   index: number;
@@ -18,6 +20,14 @@ type RenderedSlide = {
   firstChecks?: CarouselFinding[];
   repairs?: string[];
   artAreaFraction?: number;
+  artSource?: {
+    sha256: string;
+    bytes: number;
+    format: 'png' | 'jpeg' | 'webp';
+    width: number;
+    height: number;
+    embeddedSha256: string;
+  };
 };
 type SlideAsset = RenderedSlide & (Asset | { file?: undefined; bytes?: undefined; sha256?: undefined });
 type MemorySlide = RenderedSlide & (
@@ -52,7 +62,7 @@ export function renderDeckInMemory(plan: unknown, options: RenderOptions): Promi
   profile: string;
   slides: MemorySlide[];
   checks: CarouselFinding[];
-  artifacts: (Asset & { data: Buffer })[];
+  artifacts: (Artifact & { data: Buffer })[];
   caption?: string;
   altTexts?: { index: number; alt: string }[];
 }>;
@@ -60,5 +70,5 @@ export function renderDeck(plan: unknown, options: RenderOptions & { outputDir: 
   profile: string;
   slides: SlideAsset[];
   checks: CarouselFinding[];
-  artifacts: Asset[];
+  artifacts: Artifact[];
 }>;

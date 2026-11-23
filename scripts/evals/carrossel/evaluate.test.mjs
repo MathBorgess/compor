@@ -148,6 +148,16 @@ test('julgamento pareado usa uma unidade por briefing, vínculo a controle e dua
   assert.deepEqual([disagreement.eligible, disagreement.inconclusive, disagreement.win], [1, 1, 0]);
   paired.controlFirst = 'second';
   await candidate.writeManifest();
+  const legacy = await run();
+  assert.equal(legacy.status, 'insufficient_or_failed');
+  assert.equal(legacy.cases[0].final.cqs, 88);
+  assert.equal(legacy.checks.find(check => check.name === 'arte_raster_verificada').status, 'unavailable');
+  for (const snapshot of [candidate.manifest.first_pass, candidate.manifest.final]) {
+    snapshot.artifacts = snapshot.artifacts.filter(artifact => !artifact.file.endsWith('art-sheet.jpg'));
+    snapshot.artSheetApplicable = false;
+    snapshot.checks.ART_PURITY = { status: 'not_applicable', evidence };
+  }
+  await candidate.writeManifest();
   assert.equal((await run()).status, 'eligible_for_review');
   paired.controlManifestSha256 = 'a'.repeat(64);
   await candidate.writeManifest();
@@ -224,6 +234,75 @@ test('CQS exige conjunto visual completo, com exceção explícita para a folha 
   snapshot.slideCount = 3;
   assert.equal((await readUpdated()).sVlm, null);
   assert.equal((await readUpdated()).cqs, null);
+});
+
+test('a revisão do raster vincula folha, recorte e versão renderizada ao veredito de promoção', async t => {
+  const { root, directory, testCase, manifest, writeManifest } = await example(t);
+  const snapshot = manifest.first_pass;
+  snapshot.inputSha256 = sha256('plano da avaliação');
+  const artSheet = snapshot.artifacts.find(artifact => artifact.file.endsWith('art-sheet.jpg'));
+  const artSource = {
+    sha256: sha256('fonte raster'), embeddedSha256: sha256('raster normalizado'),
+    bytes: 1024, format: 'png', width: 900, height: 600,
+  };
+  const renderChecks = JSON.stringify({
+    artifacts: [{
+      file: 'art-sheet.jpg', sha256: artSheet.sha256,
+      tiles: [{ slideIndex: 2, slideId: 'segunda', column: 0, row: 0 }],
+    }],
+    slides: [{ id: 'capa', index: 1 }, { id: 'segunda', index: 2, artSource }],
+  });
+  const renderFile = 'first-pass/render-checks.json';
+  await writeFile(join(directory, renderFile), renderChecks);
+  snapshot.artifacts.push({ file: renderFile, sha256: sha256(renderChecks) });
+  manifest.final = structuredClone(snapshot);
+  await writeManifest();
+  const manifestSha256 = sha256(JSON.stringify(manifest));
+  const file = 'art-purity-final.json';
+  const review = {
+    version: 1, scope: 'raster-text', planSha256: snapshot.inputSha256,
+    artSheetSha256: artSheet.sha256, renderChecksSha256: sha256(renderChecks),
+    reviewer: { method: 'human', identity: 'inspeção sintética independente' },
+    observations: [{ slideIndex: 2, slideId: 'segunda', embeddedSha256: artSource.embeddedSha256,
+      verdict: 'pass', evidence, findings: [],
+    }],
+  };
+  const writeReview = async () => {
+    const bytes = JSON.stringify(review);
+    await writeFile(join(directory, file), bytes);
+    await writeFile(join(directory, 'qa-assessments.json'), JSON.stringify({
+      version: 1, manifestSha256, final: { artPurityEvidence: { file, sha256: sha256(bytes) } },
+    }));
+  };
+  const evaluateCase = () => evaluate({ cycle: 3, tests: [testCase], evidenceRoot: root, references: new Map() });
+  await writeReview();
+  const accepted = await evaluateCase();
+  assert.equal(accepted.checks.find(check => check.name === 'arte_raster_verificada').status, 'pass');
+  assert.deepEqual(accepted.cases[0].final.artPurity.results[0], {
+    slideIndex: 2, slideId: 'segunda', column: 0, row: 0, verdict: 'pass', findings: [],
+  });
+  review.observations[0].verdict = 'unknown';
+  await writeReview();
+  assert.equal((await evaluateCase()).checks.find(check => check.name === 'arte_raster_verificada').status, 'unavailable');
+
+  const box = { left: 0.75, top: 0.86, right: 0.93, bottom: 0.95 };
+  review.observations[0].verdict = 'fail';
+  review.observations[0].findings = [{ code: 'TEXT_IN_ART_LAYER', box }];
+  await writeReview();
+  const rejected = await evaluateCase();
+  assert.equal(rejected.checks.find(check => check.name === 'arte_raster_verificada').status, 'fail');
+  assert.deepEqual(rejected.cases[0].final.hardFails, ['ART_PURITY', 'TEXT_IN_ART_LAYER']);
+  assert.equal(rejected.cases[0].final.cqs, 88);
+  box.right = 1.1;
+  await writeReview();
+  await assert.rejects(evaluateCase(), /região verificável/);
+  box.right = 0.93;
+  review.observations[0].embeddedSha256 = sha256('replay de outro raster');
+  await writeReview();
+  await assert.rejects(evaluateCase(), /Observação raster sem vínculo/);
+  review.artSheetSha256 = sha256('outra folha');
+  await writeReview();
+  await assert.rejects(evaluateCase(), /parecer de pureza diverge dos hashes/);
 });
 
 test('replay com recusa de plano retém primeira passagem sem pontuação visual', async t => {

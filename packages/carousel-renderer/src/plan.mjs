@@ -98,9 +98,12 @@ function slideIssues(slide, index) {
   }
   const validDiagram = isDiagram(slide.diagram);
   if (slide.diagram !== undefined && !validDiagram) findings.push(issue('DIAGRAM', index, 'Diagrama não permitido.'));
-  if (validDiagram && demonstrationDiagrams.includes(slide.diagram?.type) &&
-    (!demonstrationLayouts.includes(slide.layout) || slide.art !== undefined)) {
+  const demonstration = validDiagram && demonstrationDiagrams.includes(slide.diagram?.type);
+  if (demonstration && (!demonstrationLayouts.includes(slide.layout) || slide.art !== undefined)) {
     findings.push(issue('DEMONSTRATION_LAYOUT', index, 'A comparação exige painel largo e arte exclusiva do diagrama.'));
+  }
+  if (slide.art !== undefined && ((validDiagram && !demonstration) || slide.layout === 'cta_closing')) {
+    findings.push(issue('ART_SLOT', index, 'A lâmina precisa de um slot de mídia exclusivo para exibir a arte raster.'));
   }
   if (slide.figure !== undefined && !validText(slide.figure, 18, true)) findings.push(issue('FIGURE', index, 'Número ou marcador excede o slot.'));
   if (slide.layout === 'stat_monument' && (!validText(slide.figure, 18, true) || !validText(slide.source, 110, true))) {

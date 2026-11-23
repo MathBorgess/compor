@@ -78,3 +78,12 @@ test('comparação exige um painel largo com espaço dedicado', () => {
   valid.slides[1] = makeSlide('two', 'split_horizontal', 'A escala muda a leitura', { diagram, art: 'data:image/png;base64,AA==' });
   assert.deepEqual(validateDeck(valid).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
 });
+
+test('arte raster não pode ocultar um diagrama nem ficar oculta no fechamento', () => {
+  const valid = deck();
+  const art = 'data:image/png;base64,AA==';
+  valid.slides[1] = makeSlide('two', 'split_horizontal', 'A escala muda a leitura', { diagram: 'flow', art });
+  assert.deepEqual(validateDeck(valid).map(check => check.id), ['ART_SLOT']);
+  valid.slides[1] = makeSlide('two', 'cta_closing', 'Salve para praticar', { art });
+  assert.deepEqual(validateDeck(valid).map(check => check.id), ['ART_SLOT']);
+});

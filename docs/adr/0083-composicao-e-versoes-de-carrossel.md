@@ -21,3 +21,11 @@ Um fluxo em Chromium a 390 px registrou o plano pelo WebMCP, compôs a prévia p
 O analyzer capturou as 52 rotas entre o commit `74b8ecb` e a primeira integração. O gzip de todos os JS emitidos subiu de 298.436 para 303.807 bytes. A resposta multipart, o contrato de slots compartilhado e o filtro de App Router desabilitado reduziram o total para 302.535 bytes. O orçamento continua em 300.000. A execução do Chromium Linux x64 sob QEMU confirmou o hash e a versão do binário. A sessão de render perdeu o processo por memória na primeira tentativa e por `SIGSEGV` na segunda. O Linux nativo do Preview continua pendente de validação.
 
 Em 23/11/2026, agrupar composição, assets por lâmina e ZIP no chunk do estúdio sob demanda reduziu o gzip para 301.052 bytes. A preparação do ZIP continua no clique. Os metadados estáticos passaram a ser emitidos no documento e a aplicação adotou páginas de erro pequenas. O build preservou o status, o título, a mensagem e a geração estática da 404. O bundle completo ficou em **298.934 bytes gzip** em macOS com Node 24. Os testes HTTP conferiram os caminhos públicos de autenticação e OAuth e a recusa de acesso direto à rota interna. O experimento de mover rewrites para o Proxy retornou 404 em OAuth e foi descartado.
+
+## Evidência da camada de arte
+
+No laboratório, o renderer confere o formato declarado ao decodificar cada raster de uma página. Ele registra as dimensões e o SHA-256 da fonte e o SHA-256 do PNG normalizado que entrou na composição. A folha `art-sheet.jpg` mostra cada imagem antes do scrim, com proporção preservada e sem recorte. O diagnóstico associa cada tile ao ID e à posição da lâmina.
+
+A bancada exige um parecer vinculado aos hashes do plano, da folha e do recibo do renderer para promover um deck com raster. Um canário local em Chromium exibiu duas palavras nas extremidades de uma imagem larga. O Tesseract 5.5.0 leu as duas na folha, e o parecer registrou `TEXT_IN_ART_LAYER` com as respectivas regiões na lâmina 2. A revisão de rostos e a calibração do juiz visual seguem pendentes.
+
+A rota do estúdio recebe apenas os slots do plano editorial. O artefato de diagnóstico prepara a revisão das fontes raster do laboratório. A adoção de raster pelo estúdio requer uma origem autorizada por lâmina e vínculo com o plano e a versão.

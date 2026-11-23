@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { contrast, layouts, paletteFor, renderDeck } from '../src/index.mjs';
+import { contrast, layouts, paletteFor, renderDeck, renderDeckInMemory } from '../src/index.mjs';
 import { slideDocument } from '../src/layouts.mjs';
 
 const web = new URL('../../../apps/web/', import.meta.url);
@@ -106,6 +106,50 @@ test('Chromium renderiza os doze arquétipos em JPEG sRGB e registra o fit', {sk
   assert.ok(fit, 'o texto longo na coluna exerce a recuperação de fit');
   assert.ok(fit.firstChecks.some(check => check.status === 'fail'));
   assert.ok(fit.checks.every(check => check.status === 'pass'));
+});
+
+test('folha raster preserva bordas e vincula os pixels à lâmina correta', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  const stripe = background => ({ create: { width: 48, height: 120, channels: 3, background } });
+  const image = await sharp({ create: { width: 480, height: 120, channels: 3, background: '#eeeeee' } })
+    .composite([{ input: stripe('#ff0000'), left: 0, top: 0 }, { input: stripe('#0000ff'), left: 432, top: 0 }])
+    .png().toBuffer();
+  const encoded = image.toString('base64');
+  const result = await renderDeckInMemory({ mode: 'editorial_art', slides: [
+    slide('hero_bleed', 'Dê forma ao contraste'),
+    slide('split_horizontal', 'Duas cores ocupam as bordas', { art: 'data:image/png;base64,' + encoded }),
+    slide('framed_plate', 'O painel guarda o registro', { art: 'data:image/jpeg;base64,' + encoded }),
+    slide('svg_diagram', 'Compare antes de fechar', { diagram: 'flow' }),
+    slide('cta_closing', 'Salve para praticar'),
+  ] }, { browser, sharp, fonts: { 400: regular, 700: bold } });
+  const { embeddedSha256, ...source } = result.slides[1].artSource;
+  assert.deepEqual(source, {
+    sha256: createHash('sha256').update(image).digest('hex'), bytes: image.length,
+    format: 'png', width: 480, height: 120,
+  });
+  const normalized = await sharp(image).autoOrient().resize({
+    width: 1080, height: 1350, fit: 'inside', withoutEnlargement: true,
+  }).png().toBuffer();
+  assert.equal(embeddedSha256, createHash('sha256').update(normalized).digest('hex'));
+  assert.equal(result.slides[2].file, undefined);
+  assert.equal(result.slides[2].checks[0].id, 'ASSET_DECODE');
+  assert.equal(result.slides[2].checks[0].status, 'fail');
+  const sheet = result.artifacts.find(item => item.file === 'art-sheet.jpg');
+  assert.deepEqual(sheet.tiles, [{ slideIndex: 2, slideId: 'split_horizontal', column: 0, row: 0 }]);
+  const { data, info } = await sharp(sheet.data).raw().toBuffer({ resolveWithObject: true });
+  assert.deepEqual([info.width, info.height], [360, 450]);
+  const pixel = x => [...data.subarray((225 * info.width + x) * 3, (225 * info.width + x) * 3 + 3)];
+  const [redLeft, , blueLeft] = pixel(8);
+  const [redRight, , blueRight] = pixel(352);
+  assert.ok(redLeft > 220 && blueLeft < 35, 'a borda esquerda permanece na folha');
+  assert.ok(blueRight > 220 && redRight < 35, 'a borda direita permanece na folha');
 });
 
 const demonstrationSlides = [

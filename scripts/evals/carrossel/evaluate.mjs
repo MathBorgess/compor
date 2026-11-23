@@ -119,6 +119,13 @@ function executionCoverage(cases) {
       : cases.length && observed === cases.length ? 'pass' : 'unavailable' };
 }
 
+function rasterArtCoverage(cases) {
+  const art = cases.filter(item => item.final?.outcome === 'delivered' && item.final.artPurity?.required);
+  const pass = art.filter(item => item.final.assetsVerified && item.final.artPurity.status === 'pass').length;
+  return { name: 'arte_raster_verificada', observed: pass, target: art.length,
+    status: art.some(item => item.final.artPurity.status === 'fail') ? 'fail' : pass === art.length ? 'pass' : 'unavailable' };
+}
+
 function promotionChecks(cycle, cases, split, references, calibration) {
   const selected = cycle === 4 ? cases.filter(item => item.split === 'holdout')
     : cases.filter(item => item.split === split);
@@ -217,6 +224,7 @@ export async function evaluate({ cycle, tests, evidenceRoot, references, control
   const split = cycle === 5 ? 'independent' : 'dev';
   const { checks, comparisons } = controlOnly ? { checks: [], comparisons: [] }
     : promotionChecks(cycle, cases, split, references, calibration);
+  if (!controlOnly && cycle > 0) checks.push(rasterArtCoverage(cases));
   const hardFailDecks = cases.filter(item => item.expected === 'deliver_deck' && item.final?.hardFails.length).length;
   const pass = checks.length > 0 && checks.every(check => check.status === 'pass');
   return {
