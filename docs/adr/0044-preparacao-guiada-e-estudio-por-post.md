@@ -27,3 +27,23 @@ Preserva os contratos de credenciais do ADR 0038: disponibilidade e recarga não
 Usar o roteiro do plano de usabilidade com fornecedores simulados e navegador real. Verificar zero geração na preparação/conexão/recarga, exploração somente por pedido explícito, retorno das configurações sem perda e teclado/compacto. Resultados de gates e avaliação humana serão registrados ao concluir a implementação; este ADR não afirma CI ou deployment aprovado.
 
 Os resultados e limites da verificação local estão no [registro de usabilidade](../quality/frontend-usability-2026-11-15.md). A avaliação manual ainda está pendente e o gate agregado de contratos não foi aprovado no Windows.
+
+## Adendo (23/11/2026) — Funil ultralinear de 2 telas com IA padrão disponível
+
+Por decisão de Matheus no plano aprovado em 23/11/2026 (Bloco 2, item 1, em conjunto com os adendos dos [ADRs 0058](0058-referencias-focadas-e-aprendizados-do-perfil.md) e [0073](0073-referencias-e-primeiro-pedido.md)):
+
+### O que muda ou é substituído
+
+- Na seção *Decisão* (1º parágrafo), a exigência de percorrer etapas separadas (`"O novo projeto passa por contexto progressivo, escolha de IA e referências opcionais antes do pedido específico do primeiro post"`) e a parada intermediária obrigatória (`prepare-post` / estado inicial `intro` no estúdio que ocultava a criação) são substituídas **quando `defaultAvailable === true`** em `GET /api/ai/credential-status` ([ADR 0038](0038-chave-padrao-openai-no-vault.md)) pelo **funil ultralinear de 2 telas** sob `<JourneyStepper>` de 3 macro-fases (`1. Projeto e contexto` → `2. Criar no estúdio` → `3. Salvar e postar`):
+  - **Tela 1 (`Projeto e contexto`)**: reúne o contexto unificado em `<ProjectContextUnified>` e a barra inline de IA (`"IA do Compor pronta · incluída"`, alternativa `"Usar minha chave OpenAI"` e `<ReviewDisclosureBadge compact />` do [ADR 0075](0075-revisao-de-candidatas-a-imagem.md)), mantendo Referências opcionais e o botão `"Ir para o primeiro post →"`, que confirma o 1º post em `/api/posts` (com nome organizacional distinto do título do projeto, conforme o [ADR 0073](0073-referencias-e-primeiro-pedido.md)) e conduz diretamente à **Tela 2 (`Estúdio`)** com conversa e criação visíveis.
+
+### O que permanece inalterado
+
+- **Zero geração automática** de imagem ou IA ao criar projeto, editar contexto, receber `defaultAvailable === true`, conectar/escolher IA, abrir referências, recarregar a página, escolher sugestões em `POST_ANGLE_STARTERS` ou entrar na Tela 2 (`Estúdio`); qualquer geração exige pedido explícito.
+- **Fallback explícito quando `defaultAvailable === false`**: permanece o fluxo explícito de escolha e conexão de IA (BYOK) antes da geração.
+- **Credenciais e preferência de IA**: conexão explícita de BYOK mantém prioridade e **nenhum fallback** para a chave padrão em caso de chave inválida ou falha ([ADR 0038](0038-chave-padrao-openai-no-vault.md)); novos projetos continuam inicializando `workflow.aiPreference='default'` sem armazenar chave nem autorizar geração ([ADR 0052](0052-ia-inicial-e-jornada-unica-no-estudio.md)).
+- Navegação guiada por estado validado, preservação de preenchimento em voltar/recarregar, divisão conversa/criação e alternância compacta sem descarte de rascunho, zoom, Configurações em modal, contratos distintos de salvar/aprovar/revisar/exportar, isolamento de conversas por post ([ADR 0045](0045-conversas-isoladas-por-post.md)) e lotes/intervalos/pausas/recuperação.
+
+### Verificação
+
+- Conferir em testes de navegador os dois caminhos (`defaultAvailable === true` em funil de 2 telas e `defaultAvailable === false` no fallback explícito de IA), atestando ausência de geração automática na entrada, na edição de contexto, na abertura de referências e na recarga (implementação da UI em curso na etapa correspondente).

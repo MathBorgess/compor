@@ -33,3 +33,21 @@ Em 19/11/2026, Matheus autorizou publicar e ligar o revisor após receber o resu
 Após a primeira retenção, desligar a revisão requer publicar a versão que reconhece `quality_held` com `COMPOR_IMAGE_QUALITY_REVIEW=off`. Os recibos e migrações permanecem legíveis. A versão anterior à migração desconhece o estado de retenção.
 
 Este ADR complementa os [ADRs 0025](0025-prova-de-desfecho-da-exploracao.md), [0061](0061-lotes-paralelos-e-recibos-de-planejamento.md), [0069](0069-retomada-de-imagem-com-versao-fixa.md) e [0072](0072-triagem-visual-no-post-e-lote.md). A triagem do ADR 0072 continua a orientar referências e prompts de entrada.
+
+## Adendo (23/11/2026) — `<ReviewDisclosureBadge compact />` expansível no compositor e em Referências
+
+Por decisão de Matheus no plano aprovado em 23/11/2026 (Bloco 2, item 4), ajusta-se apenas a apresentação do aviso de transparência da revisão automática nas superfícies contínuas do estúdio:
+
+### O que muda
+
+- No compositor do chat (`StudioChat`) e na área de Referências (`ReferencePanel`) — bem como na barra inline de IA da Tela 1 (`Projeto e contexto`, [ADR 0044](0044-preparacao-guiada-e-estudio-por-post.md)) — o parágrafo integral permanente é substituído pelo selo expansível `<ReviewDisclosureBadge compact />`, renderizado como `<details>` recolhido por padrão com o resumo `"ⓘ Revisão automática de qualidade ativa · Como funciona"`.
+- Um único clique expande o texto integral de transparência (informando o envio do PNG gerado e do prompt à OpenAI com a credencial de revisão do Compor e a possível retenção antes da entrega).
+
+### O que permanece inalterado
+
+- A exibição integral do aviso diretamente na configuração dedicada de escolha/conexão de IA e BYOK.
+- Todo o contrato técnico e de privacidade da revisão: credencial dedicada no servidor (`COMPOR_IMAGE_REVIEW_OPENAI_API_KEY`) distinta da chave de geração (BYOK ou padrão), `store: false` sujeito às condições de retenção da conta, validação estrutural local do PNG, limite de 15 segundos por revisão, desfecho `quality_held` (`image_quality_rejected` / `image_quality_inconclusive`), bloqueio de repetição automática e ausência de autoridade do revisor para criar, alterar, salvar ou aprovar versões.
+
+### Verificação
+
+- Confirmar em testes de componente e navegador que `<ReviewDisclosureBadge compact />` inicia recolhido em `StudioChat` e `ReferencePanel`, expande em 1 clique revelando o texto integral e mantém o aviso completo na configuração de IA (implementação em curso na etapa correspondente).
