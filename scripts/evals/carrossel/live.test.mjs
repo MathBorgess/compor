@@ -396,6 +396,7 @@ test('preserva demonstrações de categorias e orientação e pede o artefato na
   assert.match(instructions, /artefato específico.*manchete visível da capa/);
   assert.match(instructions, /category_split em vez de balance/);
   assert.match(instructions, /orientation em vez de balance/);
+  assert.match(instructions, /mesmo critério de decisão do briefing e da cópia/);
   assert.match(instructions, /"labels":\["Em pé","De cabeça para baixo"\]/);
   const materialized = JSON.parse(await readFile(result.planPath, 'utf8'));
   assert.equal(materialized.slides[0].headline, headline);

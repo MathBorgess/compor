@@ -50,3 +50,24 @@ O Chromium renderizou as correções do mural e do zine com o código de `6084f6
 | Prova do zine | A capa mostra uma ilustração da folha de rascunho. A lâmina 3 compara a mesma amostra em pé e girada em 180°. | Preferiu a correção nas duas ordens e citou as mudanças na capa e na orientação. Arte–mensagem recebeu 2 e 2 no original, 4 e 5 na correção. |
 
 A Agents API produziu quatro recibos distintos de `gpt-6.2-astra` com a rubrica da calibração anterior. Os relatórios pareados do mural e do zine têm SHA-256 `68cc6b1de571d42b94d72cd95f45b891501b04c51bbebb04409a4e3b1852a73d` e `0ea597dbaea90c9c5ffd6a6d5c08d692d6015e83ebe9c34b91c36e0ef3d9705c`. A coorte de calibração anterior segue reprovada. Uma nova coorte calibrada ainda é necessária para abrir os casos reservados. [Diagramas governados](../adr/0082-renderizador-deterministico-de-carrossel.md#diagramas-de-categorias-e-orientação)
+
+## Segunda calibração
+
+A análise das notas da primeira coorte encontrou desvios médios assinados de +0,917 em hierarquia, +1,000 em ritmo e +0,792 em voz. Em ritmo, 48 notas do juiz foram 5 frente a uma referência uniforme de 4. A rubrica de `703e8aa` descreve que evidência diferencia 4 de 5 em cada dimensão e pede um efeito concreto para sustentar a preferência num par. O leitor de recibos exige a escala inteira usada pelas instruções. [Rubrica](../../scripts/evals/carrossel/judge-evidence.mjs)
+
+Dois autores prepararam seis pares inéditos com 52 JPEGs. A coorte incluiu dois pares válidos e quatro com um defeito crítico. Os quatro defeitos foram corte de título no perfil, resultado incompatível com a ficha, três pedidos de interação no fechamento e destinos trocados em um diagrama. O desvio da capa foi introduzido antes da captura em Chromium. A referência revisou JPEGs, recortes e legendas com a autoria e a intenção dos controles ocultas, registrou evidência para as oito notas por lado e congelou o SHA-256 `4fc4a85f1a0d11f20582339125d1eada53801791d66330b53138ebe4d8c43f5c` antes da primeira sessão. A execução usa a rubrica `d9a28c9e95394a12a1d53c6984bc9af872500fa37459f5f4939a46504f104d27`. Os casos de reserva e confirmação ficaram fora da coorte.
+
+As 24 sessões distintas completaram os doze pares. Dezesseis recibos trouxeram dados de uso. A calibração reprovou na comparação com os rótulos congelados.
+
+| Medida | Observado | Limite |
+| --- | ---: | ---: |
+| Concordância com o veredito nas quatro sessões | 5/6 (83,3%) | ≥ 80% |
+| Defeitos críticos omitidos | 0 | 0 |
+| Classificações críticas fora da referência | 8 | 0 |
+| Maior desvio-padrão entre repetições | 0,228 em editorial e arte–mensagem | < 0,35 |
+| Erro médio em arte–mensagem e ritmo | 0,979 / 0,833 | ≤ 0,75 em cada dimensão |
+| Erro médio em hierarquia e voz | 0,042 / 0,250 | ≤ 0,75 em cada dimensão |
+
+As oito classificações extras recaíram no mesmo comparativo da lâmina 3 de um guia de bordado. O diagrama dos dois lados contrapôs “Cobre o furo” a “Sai do bastidor”, sugerindo que a sombra devia sair do bastidor. O teste do briefing verifica se o próximo furo está visível. As quatro sessões apontaram essa diferença nos dois lados. O outro desacordo foi de preferência no guia de cartazes, com dois empates e dois votos no mesmo lado, diferente da referência. Os valores de erro das duas calibrações vêm de coortes distintas. O relatório desta coorte tem SHA-256 `1c2e8a4707448bb90e141e63d522b8271162ffd7690f757d499c555a3deacb37`.
+
+Um replay de desenvolvimento substituiu as placas do guia por “Furo encoberto” e “Furo visível” e passou nos sete checks da lâmina e nos dois checks de coleção. O diff de pixels ficou restrito à região do diagrama. O relatório da calibração continua baseado nos JPEGs congelados. O planejador do estúdio e da bancada passou a conferir se os exemplos aplicam o mesmo critério de decisão que o briefing e a lâmina. O SHA-256 do diagnóstico do replay é `7971047e9534f1dfe6d04053e5078bdb706ba20c546646975e06ff7f2e91d01c`.
