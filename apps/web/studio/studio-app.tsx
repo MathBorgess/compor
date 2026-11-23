@@ -23,6 +23,8 @@ import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import { StudioStorageError } from '../lib/studio-storage.ts';
+import {readSavedFrameImage,prepareSavedFrameImages,publishSavedFrameImage} from '../lib/piece-version-frame-assets';
+import {carouselPreviewId,carouselPlanFor,composeCarousel} from '../lib/studio-carousel-client';
 import {sha256Hex} from '../lib/browser-bytes.ts';
 import {setDraftCarouselRender} from '../lib/studio-state.ts';
 import {bindVersionImage, lookupVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
@@ -826,13 +828,11 @@ function ProjectStudio({
     if(content?.carouselPlan){
       const panel=content.carouselRender?.frames.find(item=>item.frameId===frame.id);
       if(!panel)return null;
-      const {carouselPreviewId}=await import('../lib/studio-carousel-client');
       const address={pieceId,baseVersion,kind:'preview' as const,frameId:await carouselPreviewId(frame.id,panel.sha256)};
       const scope={userId,projectId:project.id};
       const preview=await storage.getDraftAsset(scope,address);
       if(preview?.file.type==='image/jpeg' && await sha256Hex(await preview.file.arrayBuffer())===panel.sha256)return preview.file;
       if(baseVersion<1||!frame.assetId)return null;
-      const {readSavedFrameImage}=await import('../lib/piece-version-frame-assets');
       return readSavedFrameImage({projectId:project.id,pieceId,version:baseVersion,frameId:frame.id,assetId:frame.assetId,expectedSha256:panel.sha256});
     }
     const stored=await storage.getDraftAsset({userId,projectId:project.id}, {
@@ -840,7 +840,6 @@ function ProjectStudio({
     });
     if(stored)return stored.file;
     if(baseVersion<1||!frame.assetId)return null;
-    const {readSavedFrameImage}=await import('../lib/piece-version-frame-assets');
     const file=await readSavedFrameImage({projectId:project.id,pieceId,version:baseVersion,frameId:frame.id,assetId:frame.assetId});
     if(file)await cacheSavedImage(pieceId,baseVersion,file,frame.id).catch(()=>{});
     return file;
@@ -852,7 +851,6 @@ function ProjectStudio({
     carouselRequest.current=controller;
     setComposingCarousel(true);setNotice('');
     try{
-      const {carouselPlanFor,composeCarousel,carouselPreviewId}=await import('../lib/studio-carousel-client');
       const plan=carouselPlanFor(source.content);
       if(!plan)throw Error('carousel_plan_invalid');
       const {receipt,images}=await composeCarousel(project.id,plan,controller.signal);
@@ -1137,7 +1135,6 @@ function ProjectStudio({
             : null;
           if(frameLookup?.status==='unknown'||(governed&&frameLookup?.status!=='enabled'))return {status:'unknown'};
           if(frameLookup?.status==='enabled'){
-            const {prepareSavedFrameImages,publishSavedFrameImage}=await import('../lib/piece-version-frame-assets');
             const baseVersion=input.source.baseVersion;
             const prepared=await prepareSavedFrameImages({
               version:{projectId,pieceId,version},

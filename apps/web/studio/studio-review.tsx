@@ -2,6 +2,7 @@
 
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { PieceFrame, PostFormat, StudioDraft } from "../lib/studio-domain";
+import { createStudioZip } from '../lib/studio-zip';
 import { composeStudioPng } from "../lib/studio-compose";
 import { postFormatOption } from "../lib/studio-post-formats";
 import { errorMessage } from "./studio-ui-types";
@@ -193,7 +194,6 @@ export default function StudioReview({
     setBusy(true);
     setNotice('Preparando ZIP…');
     try {
-      const {createStudioZip} = await import('../lib/studio-zip');
       const entries = [];
       for (const {frame, blob} of availableFrames) {
         if (!isCurrent()) return;

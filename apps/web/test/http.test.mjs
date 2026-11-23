@@ -52,6 +52,10 @@ test("a entrada exige Google e mantém serviços indisponíveis sem configuraç�
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Bom ter você por aqui/);
+  const head=html.match(/<head(?: |>)[\s\S]*?<\/head>/i)?.[0]??'';
+  assert.equal((head.match(/<title>Compor<\/title>/g)??[]).length,1);
+  assert.match(head,/name="description"[^>]*content="Crie uma direção para sua próxima divulgação\."/);
+  assert.match(head,/rel="icon"[^>]*href="\/studio\/compor-avatar\.svg"/);
   assert.match(html, /<button[^>]*disabled[^>]*>Entrar com Google<\/button>/);
   assert.doesNotMatch(html, /<textarea|type="password"|Continuar sem conta/);
   assert.doesNotMatch(html, /Projeto salvo/);
@@ -60,6 +64,12 @@ test("a entrada exige Google e mantém serviços indisponíveis sem configuraç�
   assert.equal(login.status, 503, 'login sem Supabase configurado deve falhar de forma explícita');
   assert.equal((await fetch(`http://127.0.0.1:${port}/.well-known/oauth-protected-resource/api/mcp`)).status, 503);
   assert.equal((await fetch(`http://127.0.0.1:${port}/oauth/consent?authorization_id=example-id`)).status, 503);
+  for (const path of ['/pagina-ausente', '/api/__compor_bridge/auth/session']) {
+    const missing=await fetch(`http://127.0.0.1:${port}${path}`);
+    assert.equal(missing.status,404);
+    const errorHead=(await missing.text()).match(/<head(?: |>)[\s\S]*?<\/head>/i)?.[0]??'';
+    assert.match(errorHead,/<title>404: This page could not be found<\/title>/);
+  }
   const agent = await fetch(`http://127.0.0.1:${port}/api/agent`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
   assert.equal(agent.status, 503, 'geração permanece indisponível sem autorização e registro duráveis');
 });
