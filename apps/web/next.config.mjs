@@ -13,7 +13,6 @@ const nextConfig = {
   },
   // Browser tests run two files at once; test/next-dist-dir.mjs gives each its own dist dir.
   distDir: process.env.COMPOR_TEST_NEXT_DIST_DIR || '.next',
-  serverExternalPackages: ['playwright-core-carousel'],
   outputFileTracingIncludes: {
     '/api/studio/carousel/render': [
       './node_modules/@sparticuz/chromium/bin/*.br',

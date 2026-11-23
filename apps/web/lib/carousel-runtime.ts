@@ -3,12 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import type { Browser } from 'playwright-core-carousel';
+import type { Browser } from 'playwright-core';
 import type sharp from 'sharp';
 
 const BROWSER_LAUNCH_TIMEOUT_MS = 15_000;
 const RENDER_TIMEOUT_MS = 75_000;
-const diagnosticsEnd = Date.parse('2026-11-23T06:18:00Z');
+const diagnosticsEnd = Date.parse('2026-11-23T06:25:00Z');
 
 type DiagnosticStage = 'fonts' | 'sharp' | 'chromium_module' | 'br_extraction' | 'browser_launch';
 type StageFailure = { stage: DiagnosticStage; code: string; asset?: string };
@@ -21,7 +21,7 @@ const diagnosticCodes = new Set([
 const diagnosticAssets = [
   'dm-sans-regular.ttf', 'dm-sans-bold.ttf', 'chromium.br', 'al2023.tar.br', 'fonts.tar.br',
   'swiftshader.tar.br', 'libGLESv2.so', 'libEGL.so', 'sharp-linux-x64', 'sharp-libvips-linux-x64',
-  'libvips-cpp.so', '@sparticuz/chromium', 'playwright-core-carousel',
+  'libvips-cpp.so', '@sparticuz/chromium', 'playwright-core',
   'libnss3.so', 'libnspr4.so', 'libatk-1.0.so.0', 'libatk-bridge-2.0.so.0', 'libgobject-2.0.so.0',
   'libglib-2.0.so.0', 'libX11.so.6', 'libXcomposite.so.1', 'libXdamage.so.1', 'libXfixes.so.3',
   'libxkbcommon.so.0', 'libgbm.so.1', 'libasound.so.2', 'libcairo.so.2',
@@ -47,6 +47,9 @@ function knownStageFailure(stage: DiagnosticStage, cause: unknown): StageFailure
   const asset = diagnosticAssets.find(name => path.includes(name) || message.includes(name));
   // Report only allowlisted literals. Browser output and filesystem paths stay private.
   if (diagnosticCodes.has(code)) return { stage, code, asset };
+  if (message.includes('Cannot find module') || message.includes('Cannot find package') || message.includes('Cannot resolve')) {
+    return { stage, code: 'MODULE_NOT_FOUND', asset };
+  }
   if (message.includes('error while loading shared libraries')) return { stage, code: 'MISSING_SHARED_LIBRARY', asset };
   if (message.includes('cannot open shared object file')) return { stage, code: 'MISSING_SHARED_LIBRARY', asset };
   if (message.includes('Could not load the "sharp" module')) return { stage, code: 'SHARP_PLATFORM_MODULE_UNAVAILABLE', asset };
@@ -90,7 +93,7 @@ export type CarouselRuntime = {
 let rendering = false;
 
 async function launchBrowser(): Promise<Browser> {
-  const { chromium } = await runtimeStage('chromium_module', () => import('playwright-core-carousel'));
+  const { chromium } = await runtimeStage('chromium_module', () => import('playwright-core'));
   const options = { headless: true, timeout: BROWSER_LAUNCH_TIMEOUT_MS };
   const localBrowser = process.env.BROWSER_EXECUTABLE_PATH;
   const usePackagedChromium = process.env.VERCEL === '1'
