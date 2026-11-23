@@ -3,6 +3,7 @@ import { crc32 } from 'node:zlib';
 import { resolveSupabaseActor, ownsSupabaseProject } from '../../../../../lib/agent-auth.ts';
 import { resolveAppOrigin } from '../../../../../lib/auth-config.ts';
 import { createCarouselRenderRoute } from '../../../../../lib/carousel-render-route.ts';
+import { allowsCarouselRuntimeDiagnostic, observeCarouselRuntime } from '../../../../../lib/carousel-runtime.ts';
 import { authClient, authConfig } from '../../../../../lib/supabase.ts';
 
 export const maxDuration = 90;
@@ -38,7 +39,6 @@ const requiredFiles = new Set([
 const rendererErrors = new Set([
   'carousel_renderer_unavailable', 'carousel_renderer_timeout', 'carousel_renderer_busy', 'unavailable',
 ]);
-const diagnosticsEnd = Date.parse('2026-11-23T06:18:00Z');
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 const response = (data: unknown, status: number) => Response.json(data, { status, headers: {
   'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
@@ -92,10 +92,7 @@ function describeArchive(archive: Buffer) {
 }
 
 export async function GET(request: Request) {
-  const now = Date.now();
-  if (request.method !== 'GET' || now >= diagnosticsEnd || process.env.VERCEL !== '1' ||
-    process.env.VERCEL_ENV !== 'preview' || process.env.VERCEL_PROJECT_ID !== 'prj_48C8lO4W6WdEMScyAfZRSnkvN6QS' ||
-    process.env.VERCEL_GIT_COMMIT_REF !== 'diagnostico/carrossel-function-e867f00') return response({ error: 'not_found' }, 404);
+  if (request.method !== 'GET' || !allowsCarouselRuntimeDiagnostic()) return response({ error: 'not_found' }, 404);
   const appOrigin = resolveAppOrigin();
   const url = new URL(request.url);
   if (!appOrigin || url.origin !== appOrigin || url.pathname !== '/api/studio/carousel/render' ||
@@ -124,11 +121,11 @@ export async function GET(request: Request) {
   if (origin.status !== 403 || auth.status !== 401 || scope.status !== 404) {
     return response({ status: 'precheck_failed', prechecks, runtime: runtime() }, 500);
   }
-  const rendered = await invoke(appOrigin, actor.token, projectId, false);
+  const { value: rendered, failure: runtimeFailure } = await observeCarouselRuntime(() => invoke(appOrigin, actor.token, projectId, false));
   if (rendered.status !== 200 || rendered.headers.get('content-type') !== 'application/zip') {
     const result = await rendered.json().catch(() => null) as { error?: unknown } | null;
     const renderError = typeof result?.error === 'string' && rendererErrors.has(result.error) ? result.error : undefined;
-    return response({ status: 'render_failed', renderStatus: rendered.status, renderError, prechecks, runtime: runtime() }, 503);
+    return response({ status: 'render_failed', renderStatus: rendered.status, renderError, runtimeFailure, prechecks, runtime: runtime() }, 503);
   }
   try {
     const zip = await rendered.arrayBuffer();
