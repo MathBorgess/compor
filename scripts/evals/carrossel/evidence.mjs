@@ -7,6 +7,7 @@ import { coverLabArtifact } from './cover-lab.mjs';
 import { verifyArtFocus } from './art-focus.mjs';
 import { verifyArtPurity } from './art-purity.mjs';
 import { judgeBriefing, judgeDeckHash, judgeSideScores, readBlindJudgePair } from './judge-evidence.mjs';
+import { verifyIntegralControlEvidence } from './integral-control.mjs';
 import {
   bounded, collectionWeights, formatVersion, isDigest, judgeWeights,
   readDocument, requireCondition, requiredChecks, sha256,
@@ -284,6 +285,9 @@ async function verifySealedExecution(directory, manifest, testCase, expectation)
     if (!['delivered', 'rejected_claim', 'blocked_plan'].includes(receipt.state)) return { status: 'unavailable' };
     if (receipt.planner?.state !== 'completed' || !/^sess_[\w-]+$/.test(receipt.planner.sessionId ?? '') ||
       !/^turn_[\w-]+$/.test(receipt.planner.turnId ?? '') || !isDigest(receipt.planner.promptSha256)) return { status: 'fail' };
+    if (expectation.cycle === 0 && testCase.split === 'holdout') {
+      await verifyIntegralControlEvidence(directory, manifest, testCase, receipt);
+    }
     return { status: 'pass', receiptSha256: digest, candidateSha256: receipt.candidateSha256 };
   } catch (error) {
     if (error.code === 'ENOENT') return { status: 'unavailable' };

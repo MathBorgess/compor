@@ -108,20 +108,21 @@ em{font-style:normal;color:var(--ink)}
 .hero_bleed .media{position:absolute;z-index:-2;inset:0}
 .hero_bleed.has-art::before{position:absolute;z-index:-1;inset:0;content:"";background:linear-gradient(180deg,transparent 3%,var(--scrim-low) 27%,var(--scrim-high) 46%,var(--bg) 91%)}
 .hero_bleed .content{justify-content:end;padding-bottom:88px}
-.split_horizontal{grid-template-rows:minmax(0,510px) minmax(0,1fr);gap:48px}
+.split_horizontal{--media-row:510px;grid-template-rows:minmax(0,var(--media-row)) minmax(0,1fr);gap:48px}
+.split_horizontal:has(>.diagram-demonstration){--media-row:360px;grid-template-rows:auto minmax(0,1fr)}
 .split_horizontal .content{justify-content:start}
 .split_vertical{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:42px}
 .split_vertical .content{grid-column:1;grid-row:1}
 .split_vertical .media{grid-column:2;grid-row:1;height:760px;align-self:center}
 .split_vertical h1,.comparison_dual h1{font-size:var(--head,72px)}
-.framed_plate{grid-template-rows:minmax(0,460px) minmax(0,1fr);gap:44px}
+.framed_plate{--media-row:460px;grid-template-rows:minmax(0,var(--media-row)) minmax(0,1fr);gap:44px}
 .framed_plate .media{border:4px solid var(--ink);padding:12px}
 .framed_plate .content{justify-content:start}
 .stat_monument .content{border-top:6px solid var(--ink);margin-top:36px}
 .stat_monument .media{height:244px;width:46%;position:absolute;right:88px;bottom:200px;opacity:.18}
-.svg_diagram{grid-template-rows:minmax(0,380px) minmax(0,1fr);gap:40px}
+.svg_diagram{--media-row:380px;grid-template-rows:minmax(0,var(--media-row)) minmax(0,1fr);gap:40px}
 .svg_diagram .content{justify-content:start}
-.comparison_dual{grid-template-rows:minmax(0,400px) minmax(0,1fr);gap:38px}
+.comparison_dual{--media-row:400px;grid-template-rows:minmax(0,var(--media-row)) minmax(0,1fr);gap:38px}
 .comparison_dual .content{justify-content:start}
 .bento_grid .content{justify-content:start}
 .bento_grid .media{position:absolute;width:220px;height:180px;right:88px;bottom:180px}
@@ -137,6 +138,13 @@ em{font-style:normal;color:var(--ink)}
 .cta_closing .media{display:none}
 .cta_closing:has(>.diagram-demonstration){grid-template-rows:minmax(0,360px) minmax(0,1fr);gap:38px}
 .cta_closing>.diagram-demonstration{display:grid;height:100%}
+/* Cover text takes its intrinsic height before the diagram uses remaining safe space. */
+.cover:is(.split_horizontal,.framed_plate,.svg_diagram,.comparison_dual):has(>.diagram){
+  grid-template-rows:minmax(256px,var(--media-row)) max-content;align-content:start;padding-bottom:180px;
+  &>.diagram{height:100%;max-height:360px}
+  &>.diagram-demonstration{min-height:max-content}
+}
+.cover.comparison_dual:has(>.diagram) h1{font-size:var(--head,116px)}
 main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.svg_diagram,.comparison_dual,.artifact_proof){display:flex;align-items:stretch}
 main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.comparison_dual,.artifact_proof) .content{width:100%;justify-content:center}
 .list{display:grid;gap:16px;padding-left:1.15em;font-size:40px;line-height:1.34}

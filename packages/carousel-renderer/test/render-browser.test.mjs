@@ -255,6 +255,62 @@ const demonstrationSlides = [
   }),
 ];
 
+test('capa com comparação horizontal conserva manchete inteira na primeira passagem', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  const cover = slide('split_horizontal', 'Anúncio a 360px: texto pequeno some', {
+    kicker: '3 motivos de baixa leitura no feed',
+    diagram: { type: 'type_scale', labels: ['Texto pequeno', 'Texto legível'], sample: 'Oferta' },
+  });
+  const result = await renderDeckInMemory({
+    mode: 'editorial_art',
+    slides: [cover, demonstrationSlides[2], demonstrationSlides.at(-1)],
+  }, { browser, sharp, fonts: { 400: regular, 700: bold }, repair: false });
+
+  const [first] = result.slides;
+  assert.deepEqual(first.firstChecks.filter(check => check.status === 'fail'), []);
+  assert.deepEqual(first.repairs, []);
+  assert.equal(first.checks.find(check => check.id === 'TYPOGRAPHY').observed.headline, 116);
+  assert.equal(first.artAreaFraction, 904 * 360 / (1080 * 1350));
+  const crop = await sharp(result.artifacts.find(artifact => artifact.file === 'cover-grid.png').data).metadata();
+  assert.deepEqual([crop.width, crop.height], [270, 360]);
+});
+
+test('capas com diagrama preservam a escala do texto dentro da margem segura', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  for (const layout of ['svg_diagram', 'comparison_dual']) {
+    await t.test(layout, async () => {
+      const cover = slide(layout, '3 motivos para anúncios sumirem em 360px', {
+        body: 'Um guia visual para revisar criativos no feed mobile.',
+        diagram: { type: 'focus', labels: ['Feed', 'Anúncio'] },
+      });
+      const result = await renderDeckInMemory({
+        mode: 'editorial_art',
+        slides: [cover, demonstrationSlides[1], demonstrationSlides.at(-1)],
+      }, { browser, sharp, fonts: { 400: regular, 700: bold }, repair: false });
+      const [first] = result.slides;
+      assert.deepEqual(first.firstChecks.filter(check => check.status === 'fail'), []);
+      assert.deepEqual(first.repairs, []);
+      const { headline, body } = first.checks.find(check => check.id === 'TYPOGRAPHY').observed;
+      assert.deepEqual({ headline, body }, { headline: 116, body: 46 });
+      assert.ok(first.artAreaFraction >= 0.12);
+    });
+  }
+});
+
 function effectiveContrast({ fill, opacity }, background) {
   const channels = color => color.match(/\d+/g).map(Number);
   const [r, g, b] = channels(background);

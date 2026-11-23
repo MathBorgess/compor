@@ -4,6 +4,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'nod
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { AGENT_MODEL } from '../../../packages/agents-api/src/agent-model.mjs';
+import { CAROUSEL_OPENING_GUIDANCE } from '../../../packages/agents-api/src/creative-skills/format-carousel.mjs';
 import { createImageHandler } from '../../../packages/images-api/src/index.mjs';
 import { cadence, demonstrationLayouts, diagrams, layouts, validateDeck } from '../../../packages/carousel-renderer/src/plan.mjs';
 import { runRasterBatch } from './art-batch.mjs';
@@ -25,6 +26,7 @@ const candidateFiles = [
   'apps/web/public/studio/dm-sans-medium.ttf',
   'apps/web/public/studio/dm-sans-regular.ttf',
   'packages/agents-api/src/agent-model.mjs',
+  'packages/agents-api/src/creative-skills/format-carousel.mjs',
   'packages/carousel-renderer/src/color.mjs',
   'packages/carousel-renderer/src/index.mjs',
   'packages/carousel-renderer/src/layouts.mjs',
@@ -66,9 +68,10 @@ function plannerBody(testCase, cycle, artBatch) {
   const cycleGuide = artBatch ? cycleInstructions[cycle].replace('coverArtBrief', 'artDirection') : cycleInstructions[cycle];
   const artOutput = artBatch ? '"artDirection":{...}' : '"coverArtBrief":"..."';
   const coverLab = cycle < 4 ? '' : [
+    CAROUSEL_OPENING_GUIDANCE,
     'Para um desfecho delivered, acrescente coverOptions e coverRanking ao mesmo objeto JSON. coverOptions deve listar exatamente dez strings diferentes, inclusive após ignorar maiúsculas, acentos e pontuação. Cada opção deve propor um gancho próprio.',
     'Para estas dez opções, o alvo editorial é até oito palavras. O teto é onze palavras e 65 grafemas. Antes de ranquear, descarte apenas as opções acima do teto. Conserve todas as dez opções em coverOptions para registro.',
-    'Use coverRanking com order, array das posições originais 1-based de todas as opções dentro do teto, da melhor à pior, sem repetir posições. Priorize a opção que nomeia uma tensão concreta da situação de uso do público e antecipa a primeira entrega. Em rationale, explique em até 1000 caracteres por que a primeira venceu em clareza, especificidade, fidelidade e gancho. Repita a vencedora literalmente em deck.slides[0].headline.',
+    'Use coverRanking com order, array das posições originais 1-based de todas as opções dentro do teto, da melhor à pior, sem repetir posições. Priorize a opção que expressa a tensão da situação de uso e a promessa da coleção. Dê posição inferior às opções que repetem a conclusão da segunda lâmina. Em rationale, explique em até 1000 caracteres por que a primeira venceu e que informação nova a segunda lâmina entrega. Repita a vencedora literalmente em deck.slides[0].headline.',
   ].join(' ');
   const instructions = [
     'Planeje carrossel sintético em português brasileiro. Retorne somente um objeto JSON. Não use ferramentas ou fontes externas.',
@@ -283,9 +286,9 @@ async function syntheticCase(caseId, caseIndex) {
 
 async function sealedCases({ sealedSuite, cycle, controlOnly, candidateSha256 }) {
   const split = sealedSuite?.split;
-  requireCondition(split === 'holdout' && cycle === 4 && !controlOnly ||
+  requireCondition(split === 'holdout' && (cycle === 4 && !controlOnly || cycle === 3 && controlOnly === true) ||
     split === 'independent' && (cycle === 5 && !controlOnly || cycle === 4 && controlOnly === true),
-  'Use holdout em C4, independent em C5, ou independent em C4 com controlOnly:true.');
+  'Use holdout em C4 ou independent em C5. Para os controles, use holdout em C3 ou independent em C4 com controlOnly:true.');
   requireCondition(isDigest(candidateSha256) && loadedCandidateSha256 === candidateSha256 &&
     await fingerprintLiveCarouselCandidate() === candidateSha256,
     'O candidato diverge do SHA-256 congelado.');
@@ -354,7 +357,7 @@ export async function runLiveCarousel({
   requireCondition(!preflightOnly || artBatch && typeof caseId === 'string' && sealedSuite === undefined,
     'A pré-verificação exige um lote raster e um caso sintético explícito.');
   const sealed = sealedSuite === undefined ? null : await sealedCases({ sealedSuite, cycle, controlOnly, candidateSha256 });
-  requireCondition(sealed || !controlOnly, 'controlOnly exige a suíte independente selada em C4.');
+  requireCondition(sealed || !controlOnly, 'controlOnly exige uma suíte selada para o controle.');
   const testCase = sealed ? (caseId ? sealed.cases.find(item => item.id === caseId) : sealed.cases[caseIndex])
     : await syntheticCase(caseId, caseIndex);
   requireCondition(testCase, 'Caso sintético inexistente.');

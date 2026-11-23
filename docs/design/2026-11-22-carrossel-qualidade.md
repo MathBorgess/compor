@@ -67,6 +67,24 @@ No replay local de Traço Claro, somente o plano da lâmina 4 foi editado. A com
 
 Uma geração C5 da revisão `ecd0c3d3973ed94a8e27918d2d0fcedd73eac582c14f4c68364e0c30874ed41e` produziu quatro lâminas sem solicitar imagem. O Lab validou as dez manchetes e o ranking. A primeira passagem registrou a manchete da capa fora da margem segura. Um ajuste de tamanho resolveu a falha física. A última lâmina demonstrou hierarquia com os mesmos três elementos nos dois exemplos e um pedido de salvar em bloco separado.
 
-O juiz calibrado recebeu os PNGs originais do C0 e os JPEGs finais do C5, com as respectivas legendas e o mesmo briefing. Uma ordem preferiu o C0 e a outra preferiu o C5. O C0 situou melhor a revisão antes de exportar no Canva. O C5 demonstrou com mais precisão a alteração de escala na frase. As duas ordens deram 5 ao fechamento de ambas as coleções. O juiz apontou rótulos pequenos na demonstração final e uma instrução genérica na segunda lâmina do C5. Uma ordem também observou que a segunda lâmina repete a comparação já apresentada na capa.
+A bancada derivou as quatro vistas do juiz dos PNGs originais do C0 e dos JPEGs finais do C5. O juiz recebeu essas vistas, as respectivas legendas e o mesmo briefing. Uma ordem preferiu o C0 e a outra preferiu o C5. O C0 situou melhor a revisão antes de exportar no Canva. O C5 demonstrou com mais precisão a alteração de escala na frase. As duas ordens deram 5 ao fechamento de ambas as coleções. O juiz apontou rótulos pequenos na demonstração final e uma instrução genérica na segunda lâmina do C5. Uma ordem também observou que a segunda lâmina repete a comparação já apresentada na capa.
 
 O relatório de SHA-256 `3dc873adeddcb0eb4337b5d8c58fe46dbcb7b23601f210f7f6d9c99454fc82ad` registra um caso inconclusivo de desenvolvimento. CQS e promoção ainda dependem da evidência completa. A reserva e a confirmação seguem seladas. [Calibração do juiz](2026-11-22-carrossel-juiz-piloto.md#terceira-calibração)
+
+## Promessa da capa e entrega da segunda lâmina
+
+O estúdio e o Lab compartilham a instrução de planejar a dupla. A capa apresenta a promessa e a situação de uso. A segunda lâmina entrega a primeira decisão, com critério observável e ação quando o formato pede um guia. Quando o briefing exige prova na capa, a segunda lâmina extrai outra decisão do mesmo contexto. O ranking rebaixa opções que já resolvem a questão da segunda lâmina.
+
+O ensaio de desenvolvimento congelou a candidata `bb36a3232efed8300f409bd1db5fb8b62cac90da397e823edad6c084c1c7bb91` e fez três sessões de planejamento e seis de julgamento, sem gerar imagens raster. Cada comparação usou o mesmo briefing e as duas ordens. Para o par C5 de Traço Claro, o plano anterior foi renderizado com o mesmo compositor da candidata. A comparação com C0 usou as vistas derivadas dos PNGs originais do controle.
+
+| Comparação | Parecer | SHA-256 do relatório |
+| --- | --- | --- |
+| Traço Claro, C5 anterior e novo | A candidata venceu nas duas ordens. A promessa de três motivos ficou na manchete. A segunda lâmina trocou a repetição de escala por um teste de contraste. | `73c48c04a86deff41c73191a5e255e3ed8b12ca68007544488f9fc5644b8d891` |
+| Traço Claro, C0 e C5 novo | A candidata venceu nas duas ordens. A demonstração permite observar a mudança de tamanho da frase dentro de quadros equivalentes. | `f8d65acc642db7901bf28ad9efc576a9e2e9c9cd047b48bfa1d32159effb15d8` |
+| Notas de revisão, C5 anterior e novo | A candidata venceu nas duas ordens. As três notas numeradas correspondem a três testes, com ações específicas. Arte–mensagem recebeu 3 e 2. | `7e7be25f707092332a69657e8607ad488d264aecd4e74719f07610916033c0be` |
+
+As duas versões de notas passaram na primeira renderização. Na candidata de Traço Claro, a manchete é diferente do exemplo da segunda lâmina, e o corpo da capa em `svg_diagram` ainda precisou de um ajuste para a margem inferior. Os dois briefings medem um avanço localizado. A nota de arte–mensagem das notas seriadas ficou abaixo do piso de 3,5, e a promoção segue pendente. [Protocolo da promoção](../../scripts/evals/carrossel/README.md#reserva-confirmação-e-calibração)
+
+Em seguida, a grade passou a reservar espaço para a cópia antes de preencher a faixa gráfica das capas com diagrama. Os dois planos de Traço Claro renderizaram suas quatro lâminas sem reparo no replay. Na capa da candidata, o título manteve 116 px e o corpo 46 px. O diagrama ficou com 303 px de altura e os glifos do corpo terminaram em y = 1.166,69 px. O replay verificou a margem no recorte 3:4 e no feed a 360 px. Os pareceres da tabela estão vinculados à revisão congelada do ensaio. [Grade das capas](../adr/0082-renderizador-deterministico-de-carrossel.md#diagramas-de-categorias-e-orientação)
+
+O runner passou a materializar o controle C3 na reserva e a aceitar o C0 integral do checkout `720628e`, com PNGs, legenda e recibos preservados. Os testes com suíte sintética verificaram esses vínculos, rejeitaram um JPEG adulterado e mantiveram a trava diante de resultado incerto. A reserva de promoção permanece selada. [Controle integral C0](../../scripts/evals/carrossel/README.md#controle-integral-c0)

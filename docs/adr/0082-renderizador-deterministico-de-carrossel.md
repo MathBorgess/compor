@@ -22,6 +22,8 @@ A migração `20261123000050` admite as duas formas no plano salvo e mantém a v
 
 Quando a última lâmina precisa demonstrar uma distinção pedida pelo briefing, `cta_closing` admite uma comparação governada na faixa superior. A manchete indica o que observar e o único pedido de interação ocupa o corpo em uma área própria. O painel recebe os mesmos slots, limites e gates dos outros arquétipos de comparação. A migração admite esse arranjo no plano salvo e o digest inclui a demonstração. No caso tipográfico, o fechamento usa apenas a área de texto.
 
+Nas capas com diagrama acima do texto, a grade reserva primeiro a altura intrínseca da cópia e a margem inferior de 180 px. A faixa do diagrama usa o espaço disponível até a altura preferida do arquétipo. A amostra de uma comparação semântica conserva a altura necessária aos seus rótulos. O split horizontal reserva 360 px para o diagrama de comparação. Em `comparison_dual`, a manchete de capa começa em 116 px, como nos demais arquétipos de capa.
+
 ## Evidência para habilitação
 
 Executar o fluxo autenticado da rota em Linux no Preview da Vercel. Verificar o fechamento do Chromium em falha, os arquivos presentes no trace, o orçamento de tamanho do ZIP e o comportamento para planos recusados. Vínculo à versão e recuperação em outro navegador exigem mais uma verificação depois que o estúdio consumir esse contrato.

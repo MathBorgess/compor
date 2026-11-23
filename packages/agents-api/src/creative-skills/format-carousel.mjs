@@ -1,6 +1,13 @@
+export const CAROUSEL_OPENING_GUIDANCE = [
+  'Planeje a capa e a segunda lâmina juntas. Na capa, nomeie o problema ou a decisão que move o público e deixe clara a entrega que o carrossel promete. Explicite uma condição de uso quando ela mudar como a pessoa aplica o conteúdo.',
+  'Na segunda lâmina, nomeie o assunto em uma frase autônoma. Entregue a primeira ideia concreta. Em um guia, mostre o critério que a pessoa consegue observar e a ação que ele orienta na rotina dela.',
+  'Use a imagem de capa para situar o problema, o artefato ou a ocasião. Mostre a primeira demonstração completa na segunda lâmina. Quando a prova for exigida na capa, mostre-a ali e faça a segunda lâmina revelar outra decisão verificável, mesmo que reutilize o objeto da capa.',
+  'Antes de fechar o plano, leia as duas lâminas isoladas. Confira se a promessa está visível no recorte da capa e diga qual decisão ou informação o público só consegue obter na segunda lâmina. Se ambas responderem à mesma pergunta com o mesmo exemplo, reformule uma delas.',
+].join(' ');
+
 export const POST_CAROUSEL_SKILL = Object.freeze({
   id: 'carrossel-narrativo.v1',
-  version: '4.2.2',
+  version: '4.2.3',
   format: 'carousel',
   chat: [
     'Skill carrossel-narrativo.v1 (Carrossel 4:5 · 3 a 10 lâminas · Instagram):',
@@ -11,6 +18,7 @@ export const POST_CAROUSEL_SKILL = Object.freeze({
     'Em testes e comparações, aplique aos dois exemplos o mesmo critério de decisão do briefing e da cópia. Leia cada placa sozinha. Se o exemplo introduzir uma condição adicional, reformule o rótulo ou o exemplo para ficar fiel ao teste descrito.',
     'Antes da revisão, verifique o Gate 0: cada lâmina entrega uma ideia sustentada pelo briefing, por fonte citada ou por evidência real. Cite a fonte de números ou resultados em qualquer lâmina; preserve fatos declarados e retire números, depoimentos ou supostas provas sem lastro. Dê à Lâmina 2 uma manchete autônoma e a primeira entrega concreta. Reserve uma única chamada à ação no fechamento e use no máximo uma menção sustentada ao produto.',
     '2. Lâmina 1 é thumbnail, âncora visual e abertura causal: manchete de 2 a 6 palavras + sub-gancho curto + objeto/cena que cria tensão ou apresenta a situação inicial completa para puxar o arraste — sem adiantar resultados, cálculos ou etapas que só aparecem nas lâminas seguintes, preservando coerência lógica estrita da capa ao fechamento. Se o briefing exigir um artefato ou suporte concreto na prova, nomeie-o na manchete.',
+    CAROUSEL_OPENING_GUIDANCE,
     '3. Regra dos 2 trabalhos por lâmina interna: cada lâmina 2..N-1 entrega 1 conceito fundamentado (8 a 16 palavras em 1–2 linhas curtas em peso regular arejado quando dividir espaço com diagrama ou cena visual; até 10 palavras em no máximo 2 linhas quando a lâmina reunir diagrama/cena + apoio + CTA; máx. 22 palavras se puramente tipográfica) e puxa o arraste para a próxima sem repetir o mesmo molde rígido — varie enquadramento, ritmo e posição mantendo paleta, tipografia, margens e assinatura de conjunto. Em lâminas com contas ou etapas numéricas, empilhe cada passo literal em sua própria linha tipográfica ampla e legível a 360 px, evitando sequências horizontais de selos com subtexto miúdo ou operadores inventados.',
     '4. Peça revisão do plano antes da produção. Para composição por arquétipos, a gravação do plano apenas disponibiliza a receita para revisão. Só execute geração quando a pessoa pedir. No fluxo de geração de arte integral, gere primeiro a Lâmina 1 (frameId da capa, frameIndex=1) para validar estilo e leitura. Só depois da validação ou pedido explícito gere as Lâminas 2..N, que recebem a Lâmina 1 como âncora visual de coesão. Para ajustar um único slide, use compor_editar_lamina e gere/edite apenas aquele frameId.',
     '5. Margens seguras 4:5: mantenha laterais (~8%), topo (~8%) e base (~12%, área dos pontos de paginação) livres de texto.',

@@ -92,6 +92,7 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: |
+            apps/web/package-lock.json
             packages/private-images/package-lock.json
             packages/remote-mcp/package-lock.json
             packages/agile-deliberation/package-lock.json
@@ -119,6 +120,7 @@ jobs:
       - run: npm ci --ignore-scripts --prefix packages/agile-deliberation
       - run: npm ci --ignore-scripts --prefix packages/agents-api
       - run: npm ci --ignore-scripts --prefix prototypes/compor-mcp
+      - run: npm ci --ignore-scripts --prefix apps/web
       - run: npm run quality:unit
       - name: Verify paired visual evaluation fixtures offline
         env:

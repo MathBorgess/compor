@@ -322,8 +322,18 @@ test('congela partições, conserva recibos e só envia o caso selecionado', asy
   const changed = await writeSuite(join(directory, 'other-holdout.json'), 'holdout', 'other');
   await assert.rejects(runLiveCarousel({ ...options, cycle: 4, sealedSuite: changed }), /partição congelada/);
   await assert.rejects(runLiveCarousel({ ...options, cycle: 4, sealedSuite: independent }), /controlOnly:true/);
+  await assert.rejects(runLiveCarousel({ ...options, cycle: 3, sealedSuite: independent, controlOnly: true }), /holdout em C3/);
   await assert.rejects(runLiveCarousel({ ...options, cycle: 5, sealedSuite: colliding }), /partições seladas compartilham/);
   assert.equal(submissions.length, 1);
+
+  const reference = await runLiveCarousel({ ...options, cycle: 3, sealedSuite: holdout, caseIndex: 1, controlOnly: true, generateCover: false });
+  assert.equal(reference.state, 'planned');
+  assert.equal(reference.receipt.controlOnly, true);
+  assert.equal(reference.receipt.suiteSha256, first.receipt.suiteSha256);
+  assert.equal(reference.receipt.caseSha256, first.receipt.caseSha256);
+  assert.equal(reference.receipt.candidateSha256, candidateSha256);
+  assert.equal(JSON.parse(await readFile(reference.planPath, 'utf8')).coverLab, undefined);
+  assert.match(submissions[1].agent.instructions, /cadência de diagramas úteis/);
 
   const control = await runLiveCarousel({ ...options, cycle: 4, sealedSuite: independent, controlOnly: true });
   const confirmation = await runLiveCarousel({ ...options, cycle: 5, sealedSuite: independent });
@@ -332,7 +342,7 @@ test('congela partições, conserva recibos e só envia o caso selecionado', asy
   assert.equal(confirmation.state, 'planned');
   assert.equal(confirmation.receipt.controlOnly, false);
   assert.equal(control.receipt.suiteSha256, confirmation.receipt.suiteSha256);
-  assert.equal(submissions.length, 3);
+  assert.equal(submissions.length, 4);
   const stored = JSON.parse(await readFile(first.receiptPath, 'utf8'));
   assert.equal(stored.planner.usage.total_tokens, 30);
 });
@@ -394,6 +404,8 @@ test('preserva demonstrações de categorias e orientação e pede o artefato na
   assert.equal(result.state, 'planned');
   const instructions = submissions[0].agent.instructions;
   assert.match(instructions, /artefato específico.*manchete visível da capa/);
+  assert.match(instructions, /Quando a prova for exigida na capa, mostre-a ali e faça a segunda lâmina revelar outra decisão verificável/);
+  assert.match(instructions, /Dê posição inferior às opções que repetem a conclusão da segunda lâmina/);
   assert.match(instructions, /category_split em vez de balance/);
   assert.match(instructions, /orientation em vez de balance/);
   assert.match(instructions, /mesmo critério de decisão do briefing e da cópia/);

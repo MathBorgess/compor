@@ -103,6 +103,14 @@ node scripts/evals/carrossel/cli.mjs evaluate \
 
 Para produzir o controle do C5, use C4 com `--control-only` e a suíte `--independent` correspondente. Compare as duas versões sob o mesmo briefing, cegue revisão e autoria, e repita a avaliação com a ordem invertida. A amostra de seis mede regressões nos casos selecionados. [Zheng et al., análise de vieses em juízes](https://arxiv.org/abs/2306.05685) · [NIST, intervalos de proporção](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm)
 
+### Controle integral C0
+
+O C0 da reserva usa o checkout privado e limpo de `720628ebc4c32b41ab8fdc0c1b1a4f8f62511a79`. Esse era o caminho com as skills v4 e imagens integrais usado no caso Traço Claro. O executor legado chama esse braço de `candidate`. O primeiro PNG ancora as lâminas seguintes. O C0 usa quatro lâminas quando a suíte não fixa a contagem e respeita `exactSlideCount` quando presente. Casos com recusa esperada ficam fora do pareamento de entrega. [Registro do C0 de desenvolvimento](../../../docs/design/2026-11-22-carrossel-qualidade.md#execuções-observadas-em-22112026)
+
+`runIntegralControl` em `integral-control.mjs` recebe `root`, `baselineCheckout`, `suitePath`, `suiteSha256` e `caseId`. A opção `preflightOnly: true` verifica a seleção e informa o teto exato de uma sessão de planejamento e uma requisição de imagem por lâmina. O custo real depende dos recibos do provedor. Na execução autorizada, a função usa a chave mantida pelo processo chamador. Um resultado incerto retém `paid-active.json`. Consulte o ledger e os recibos preservados em `integral-raw/<caseId>/round-0/` antes de qualquer nova submissão.
+
+O executor guarda os PNGs e a legenda original, incluindo sua quebra final, e deriva JPEGs 4:5 e as folhas da bancada. O verificador C0 recalcula a derivação e confere os hashes dos PNGs nos recibos, a fixture, a revisão, o briefing e a sessão de planejamento. O envelope registra a ausência de uma camada separada de arte. A comparação cega usa os JPEGs derivados e a legenda original. Atribua checks, FPY e CQS apenas às etapas para as quais houver observação direta. Use a saída `<root>/c0` como `--evidence` no comando C0 acima e forneça `--candidate-sha256` com o valor `candidateSha256` da pré-verificação.
+
 ### Calibração do juiz visual
 
 Separe de seis a trinta pares para a calibração. Inclua ao menos dois pares sem defeitos críticos e dois com defeito crítico. Use revisão humana independente ou uma revisão independente pela rubrica com casos deliberadamente válidos e defeitos plantados. Congele o SHA-256 de `reference-labels.json` antes dos julgamentos. Mantenha a intenção do controle e os rótulos fora do contexto do juiz. O arquivo privado documenta a revisão com `{version: 1, split: "judge-calibration", reference: {kind, reviewerId, source}, cases}`. Use `human` ou `independent_rubric` em `kind`. Identifique o responsável e registre em `source` a origem verificável dos rótulos e dos defeitos.
@@ -172,6 +180,7 @@ Para casos privados, forneça somente dados sintéticos e congele a revisão em 
 
 | Execução | Opções adicionais de `runLiveCarousel` |
 | --- | --- |
+| Controle C3 da reserva | `cycle: 3`, `controlOnly: true`, `candidateSha256`, `sealedSuite: { path, split: 'holdout', sha256 }` |
 | C4 com reserva | `cycle: 4`, `candidateSha256`, `sealedSuite: { path, split: 'holdout', sha256 }` |
 | Controle C4 da confirmação | `cycle: 4`, `controlOnly: true`, `candidateSha256`, `sealedSuite: { path, split: 'independent', sha256 }` |
 | C5 com confirmação | `cycle: 5`, `candidateSha256`, `sealedSuite: { path, split: 'independent', sha256 }` |
