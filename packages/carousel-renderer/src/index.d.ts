@@ -1,5 +1,5 @@
 import type { Buffer } from 'node:buffer';
-import type { Browser } from 'playwright-core-carousel';
+import type { Browser } from 'playwright-core';
 import type sharp from 'sharp';
 
 export type CarouselFinding = {

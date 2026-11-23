@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import type { Browser } from 'playwright-core-carousel';
+import type { Browser } from 'playwright-core';
 import type sharp from 'sharp';
 
 const BROWSER_LAUNCH_TIMEOUT_MS = 15_000;
@@ -26,7 +27,8 @@ export type CarouselRuntime = {
 let rendering = false;
 
 async function launchBrowser(): Promise<Browser> {
-  const { chromium } = await import('playwright-core-carousel');
+  const loadPackage = createRequire(join(process.cwd(), 'package.json'));
+  const { chromium } = loadPackage('playwright-core') as typeof import('playwright-core');
   const options = { headless: true, timeout: BROWSER_LAUNCH_TIMEOUT_MS };
   const localBrowser = process.env.BROWSER_EXECUTABLE_PATH;
   const usePackagedChromium = process.env.VERCEL === '1'
