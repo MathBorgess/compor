@@ -1,6 +1,9 @@
+import { reviewNovelty } from './novelty.mjs';
+import { inspectClaimLedger } from './grounding.mjs';
 import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { coverLabArtifact } from './cover-lab.mjs';
 import {
   bounded, collectionWeights, formatVersion, isDigest, judgeWeights,
   readDocument, requireCondition, requiredChecks, sha256,
@@ -42,7 +45,10 @@ function weightedScore(values, weights, scale, requireReference) {
 export function summarizeSnapshot(snapshot) {
   if (!snapshot) return null;
   requireCondition(outcomes.includes(snapshot.outcome), 'Desfecho de avaliação inválido.');
-  const checks = snapshot.checks ?? {};
+  const checks = { ...(snapshot.checks ?? {}) };
+  if (snapshot.factualTrace?.status === 'fail') {
+    checks.FACT_GROUNDING = { status: 'fail', evidence: 'O plano tem citações inexistentes ou resultados sem fonte verificável no briefing.' };
+  }
   const planFailures = snapshot.planFailures ?? [];
   requireCondition(Array.isArray(planFailures) && planFailures.every(textEvidence), 'Falha de plano sem identificação.');
   const staged = Object.fromEntries(Object.entries(requiredChecks).map(([stage, keys]) => {
@@ -71,18 +77,34 @@ export function summarizeSnapshot(snapshot) {
     migMean: snapshot.migMean ?? null,
     ddr: snapshot.ddr ?? null,
     assetsVerified,
+    coverLab: snapshot.coverLab ?? null,
+    factualTrace: snapshot.factualTrace ?? null,
+    novelty: snapshot.novelty ?? null,
     retainedFiles: snapshot.artifacts?.map(artifact => artifact.file) ?? [],
-    hardFails: [...planFailures, ...Object.values(staged).flatMap(stage => stage.failures)],
+    hardFails: [...new Set([...planFailures, ...Object.values(staged).flatMap(stage => stage.failures), ...(snapshot.coverLab?.violations ?? []), ...(snapshot.factualTrace?.issues.map(issue => issue.id) ?? []), ...(snapshot.novelty?.status === 'fail' ? ['NOVELTY'] : [])])],
   };
 }
 
-async function verifyArtifacts(caseDir, input) {
+async function verifiedNovelty(root, plan, reference) {
+  if (reference === undefined) return null;
+  requireCondition(plan && typeof reference?.file === 'string' && /^novelty-(?:first-pass|final)\.json$/.test(reference.file)
+    && isDigest(reference.sha256), 'Evidência de novidade inválida.');
+  const path = join(root, reference.file);
+  const file = await lstat(path);
+  requireCondition(file.isFile() && file.size <= 1_000_000, 'Observação de novidade precisa ser um arquivo local regular.');
+  const assessment = await readDocument(path);
+  requireCondition(assessment.digest === reference.sha256, 'SHA-256 da observação de novidade divergente.');
+  return reviewNovelty(plan, assessment);
+}
+
+async function verifyArtifacts(caseDir, input, facts, noveltyEvidence) {
   const artifacts = input.artifacts ?? [];
   requireCondition(Array.isArray(artifacts), 'Lista de artefatos inválida.');
-  if (artifacts.length === 0) return false;
+  if (artifacts.length === 0) return { assetsVerified: false, coverLab: null };
   const root = await realpath(caseDir);
   const seen = new Set();
   const names = new Set();
+  const documents = new Map();
   requireCondition(input.slideCount === undefined
     || (Number.isInteger(input.slideCount) && input.slideCount >= 0 && input.slideCount <= 20),
   'Contagem de lâminas inválida no snapshot.');
@@ -98,18 +120,36 @@ async function verifyArtifacts(caseDir, input) {
     requireCondition(local && !isAbsolute(local) && local !== '..' && !local.startsWith('..' + sep), 'Artefato fora do diretório do caso.');
     const stat = await lstat(path);
     requireCondition(stat.isFile() && stat.size <= 64_000_000, 'O artefato precisa ser um arquivo regular de até 64 MB.');
-    requireCondition(sha256(await readFile(path)) === record.sha256, `SHA-256 divergente em ${record.file}.`);
+    const bytes = await readFile(path);
+    requireCondition(sha256(bytes) === record.sha256, `SHA-256 divergente em ${record.file}.`);
     seen.add(record.file);
     const parts = record.file.split('/');
+    const name = parts.at(-1);
     sets.add(parts.slice(0, -1).join('/'));
-    names.add(parts.at(-1));
+    names.add(name);
+    if (name === 'plan.json' || name === 'cover-lab.json') {
+      requireCondition(!documents.has(name), 'Documento do Lab de capas duplicado no snapshot.');
+      documents.set(name, { value: JSON.parse(bytes), digest: record.sha256 });
+    }
   }
   const indices = [...names].filter(name => /^slide-\d{2}\.jpg$/.test(name)).sort();
-  return sets.size === 1 && indices.length >= 2 && indices.length <= 20
+  const assetsVerified = sets.size === 1 && indices.length >= 2 && indices.length <= 20
     && indices.every((name, index) => name === `slide-${String(index + 1).padStart(2, '0')}.jpg`)
     && (input.slideCount === undefined || indices.length === input.slideCount)
     && requiredVisualArtifacts.every(name => names.has(name))
     && (names.has('art-sheet.jpg') || (input.artSheetApplicable === false && input.checks?.ART_PURITY?.status === 'not_applicable'));
+  const plan = documents.get('plan.json');
+  const lab = documents.get('cover-lab.json');
+  if (plan) requireCondition(sets.size === 1 && plan.digest === input.inputSha256, 'Evidência desvinculada do plano renderizado.');
+  const factualTrace = plan && Object.hasOwn(plan.value ?? {}, 'claims')
+    ? inspectClaimLedger(plan.value, plan.value.claims, facts)
+    : null;
+  const novelty = await verifiedNovelty(root, plan, noveltyEvidence);
+  if (!lab) return { assetsVerified, coverLab: null, factualTrace, novelty };
+  requireCondition(plan && lab.value?.inputSha256 === plan.digest, 'Lab de capas desvinculado do plano renderizado.');
+  const observed = coverLabArtifact(plan.value, plan.digest);
+  requireCondition(observed && isDeepStrictEqual(lab.value, observed), 'O Lab de capas diverge dos dados verificados do plano.');
+  return { assetsVerified, coverLab: observed, factualTrace, novelty };
 }
 
 function validatePair(pair) {
@@ -121,7 +161,7 @@ function validatePair(pair) {
 }
 
 const annotatableChecks = new Set(['FACT_GROUNDING', 'S2_STANDALONE', 'CTA_SINGLE', 'ART_PURITY']);
-const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr']);
+const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr', 'noveltyEvidence']);
 
 function attachAssessment(snapshot, assessment) {
   if (assessment === undefined) return snapshot;
@@ -153,7 +193,34 @@ async function readAssessments(directory, manifestSha256) {
   }
 }
 
-export async function readCaseEvidence(directory, testCase) {
+async function verifySealedExecution(directory, manifest, testCase, expectation) {
+  if (!expectation || !['holdout', 'independent'].includes(testCase.split)) return null;
+  const trace = manifest.execution;
+  const required = {
+    caseId: testCase.id, caseSha256: sha256(JSON.stringify(testCase)),
+    split: testCase.split, cycle: expectation.cycle, suiteSha256: expectation.suiteSha256,
+    candidateSha256: expectation.candidateSha256, controlOnly: expectation.controlOnly,
+  };
+  if (!trace || !isDigest(required.suiteSha256) || !isDigest(required.candidateSha256)) return { status: 'unavailable' };
+  const matches = data => Object.entries(required).every(([key, value]) => data?.[key] === value);
+  if (!matches(trace)) return { status: 'fail' };
+  const path = join(directory, '..', `${testCase.id}.live-receipt.json`);
+  try {
+    const file = await lstat(path);
+    if (!file.isFile() || file.size > 32_000) return { status: 'fail' };
+    const { value: receipt, digest } = await readDocument(path);
+    if (!matches(receipt) || receipt.state !== manifest.final.outcome) return { status: 'fail' };
+    if (!['delivered', 'rejected_claim', 'blocked_plan'].includes(receipt.state)) return { status: 'unavailable' };
+    if (receipt.planner?.state !== 'completed' || !/^sess_[\w-]+$/.test(receipt.planner.sessionId ?? '') ||
+      !/^turn_[\w-]+$/.test(receipt.planner.turnId ?? '') || !isDigest(receipt.planner.promptSha256)) return { status: 'fail' };
+    return { status: 'pass', receiptSha256: digest, candidateSha256: receipt.candidateSha256 };
+  } catch (error) {
+    if (error.code === 'ENOENT') return { status: 'unavailable' };
+    throw error;
+  }
+}
+
+export async function readCaseEvidence(directory, testCase, expectation) {
   const path = join(directory, 'qa-manifest.json');
   let source;
   try {
@@ -185,14 +252,15 @@ export async function readCaseEvidence(directory, testCase) {
   const firstAssessment = assessments?.first_pass ?? (sameSnapshot ? assessments?.final : undefined);
   const first = {
     ...attachAssessment(value.first_pass, firstAssessment),
-    assetsVerified: await verifyArtifacts(directory, value.first_pass),
+    ...await verifyArtifacts(directory, value.first_pass, testCase.facts, firstAssessment?.noveltyEvidence),
   };
   const final = sameSnapshot ? first : {
     ...attachAssessment(value.final, assessments?.final),
-    assetsVerified: await verifyArtifacts(directory, value.final),
+    ...await verifyArtifacts(directory, value.final, testCase.facts, assessments?.final?.noveltyEvidence),
   };
   return {
     digest, assessmentSha256: assessments?.digest ?? null, repairCount: value.repair_count,
+    execution: await verifySealedExecution(directory, value, testCase, expectation),
     first: summarizeSnapshot(first), final: summarizeSnapshot(final), pairwise,
   };
 }

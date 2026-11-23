@@ -9,10 +9,13 @@ export const layouts = Object.freeze([
 
 export const modes = Object.freeze(['editorial_art', 'native_serial']);
 export const diagrams = Object.freeze(['flow', 'balance', 'steps', 'focus']);
+export const demonstrationDiagrams = Object.freeze(['contrast', 'type_scale', 'hierarchy']);
+export const demonstrationLayouts = Object.freeze(['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual']);
 
 const MODE_POLARITY = ['base', 'inverted'];
 const IMAGE = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 const ID = /^[a-zA-Z0-9_-]{1,64}$/;
+const DEMONSTRATION_TEXT = /^[\p{L}\p{N}][\p{L}\p{M}\p{N} .,!?:%+×–—’'/-]*$/u;
 const words = new Intl.Segmenter('pt-BR', { granularity: 'word' });
 const graphemes = new Intl.Segmenter('pt-BR', { granularity: 'grapheme' });
 
@@ -56,9 +59,32 @@ function copyIssues(slide, index) {
 
 export function isDiagram(spec) {
   if (diagrams.includes(spec)) return true;
-  return Boolean(spec && typeof spec === 'object' && diagrams.includes(spec.type) &&
+  if (!spec || typeof spec !== 'object') return false;
+  if (demonstrationDiagrams.includes(spec.type)) return isDemonstration(spec);
+  return Boolean(diagrams.includes(spec.type) &&
     Array.isArray(spec.labels) && spec.labels.length >= 1 && spec.labels.length <= 3 &&
     spec.labels.every(label => validText(label, 30, true) && wordCount(label) <= 3));
+}
+
+function demonstrationText(value, limit, maxWords) {
+  return validText(value, limit, true) && value === value.trim() &&
+    !value.includes('  ') && DEMONSTRATION_TEXT.test(value) && wordCount(value) <= maxWords;
+}
+
+function distinctText(values, count, limit, maxWords) {
+  if (!Array.isArray(values) || values.length !== count ||
+    !Array.from(values).every(value => demonstrationText(value, limit, maxWords))) return false;
+  return new Set(values.map(value => value.normalize('NFC').toLocaleLowerCase('pt-BR'))).size === count;
+}
+
+function isDemonstration(spec) {
+  if (!distinctText(spec.labels, 2, 30, 3)) return false;
+  if (spec.type === 'hierarchy') {
+    return Object.keys(spec).every(key => ['type', 'labels', 'items'].includes(key)) &&
+      distinctText(spec.items, 3, 10, 2);
+  }
+  return Object.keys(spec).every(key => ['type', 'labels', 'sample'].includes(key)) &&
+    demonstrationText(spec.sample, 18, 4);
 }
 
 function slideIssues(slide, index) {
@@ -70,12 +96,17 @@ function slideIssues(slide, index) {
   if (slide.art !== undefined && (typeof slide.art !== 'string' || slide.art.length > 11_200_000 || !IMAGE.test(slide.art))) {
     findings.push(issue('ART_SOURCE', index, 'Arte deve ser uma imagem raster incorporada.'));
   }
-  if (slide.diagram !== undefined && !isDiagram(slide.diagram)) findings.push(issue('DIAGRAM', index, 'Diagrama não permitido.'));
+  const validDiagram = isDiagram(slide.diagram);
+  if (slide.diagram !== undefined && !validDiagram) findings.push(issue('DIAGRAM', index, 'Diagrama não permitido.'));
+  if (validDiagram && demonstrationDiagrams.includes(slide.diagram?.type) &&
+    (!demonstrationLayouts.includes(slide.layout) || slide.art !== undefined)) {
+    findings.push(issue('DEMONSTRATION_LAYOUT', index, 'A comparação exige painel largo e arte exclusiva do diagrama.'));
+  }
   if (slide.figure !== undefined && !validText(slide.figure, 18, true)) findings.push(issue('FIGURE', index, 'Número ou marcador excede o slot.'));
   if (slide.layout === 'stat_monument' && (!validText(slide.figure, 18, true) || !validText(slide.source, 110, true))) {
     findings.push(issue('STAT_SOURCE', index, 'Estatística exige valor e crédito.'));
   }
-  if (slide.layout === 'svg_diagram' && !isDiagram(slide.diagram)) findings.push(issue('DIAGRAM_REQUIRED', index, 'Escolha um diagrama.'));
+  if (slide.layout === 'svg_diagram' && !validDiagram) findings.push(issue('DIAGRAM_REQUIRED', index, 'Escolha um diagrama.'));
   if (slide.bridge !== undefined && !['hairline_thread', 'color_band_echo'].includes(slide.bridge)) {
     findings.push(issue('SEAM_BRIDGE', index, 'Ponte visual fora dos acabamentos permitidos.'));
   }

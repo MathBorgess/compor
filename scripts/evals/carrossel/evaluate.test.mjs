@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { readCaseEvidence, summarizeSnapshot } from './evidence.mjs';
 import { evaluate } from './evaluate.mjs';
+import { writePlanArtifacts } from './render-evidence.mjs';
 import { collectionWeights, judgeWeights, readSuite, requiredChecks, sha256 } from './protocol.mjs';
 
 const evidence = 'Observação sintética do teste.';
@@ -242,4 +243,71 @@ test('replay com recusa de plano retém primeira passagem sem pontuação visual
   assert.equal(result.cases[0].final.cqs, 88);
   assert.equal(result.firstPassYield.editorial.failed, 1);
   assert.equal(result.repair_count, 1);
+});
+
+
+test('C4/C5 exigem shortlist verificada e vinculada ao título renderizado', async t => {
+  const { root, directory, testCase, manifest, writeManifest } = await example(t);
+  const snapshot = manifest.first_pass;
+  const run = cycle => evaluate({ cycle, tests: [{ ...testCase, split: cycle === 4 ? 'holdout' : 'independent' }], evidenceRoot: root, references: new Map() });
+  const findCover = result => result.checks.find(check => check.name === 'lab_dez_capas');
+  snapshot.coverLab = { status: 'pass', violations: [] };
+  manifest.final = structuredClone(snapshot);
+  await writeManifest();
+  assert.equal(findCover(await run(4)).status, 'unavailable');
+  assert.equal(findCover(await run(5)).status, 'unavailable');
+
+  const headline = 'Como comparar uma escolha';
+  const options = [headline, ...Array.from({ length: 8 }, (_, index) => `Outra abertura ${index + 1}`),
+    'Uma manchete que consome muito espaço e passa do limite que cabe na tela'];
+  const coverLab = { options, ranking: { order: [1, 2, 3, 4, 5, 6, 7, 8, 9], rationale: 'O título nomeia o que a lâmina explica.' } };
+  const value = { mode: testCase.mode, slides: [{ headline }], coverLab };
+  const bytes = Buffer.from(JSON.stringify(value));
+  const digest = sha256(bytes);
+  snapshot.inputSha256 = digest;
+  const proof = await writePlanArtifacts(directory, 'first-pass', { value, bytes, digest });
+  snapshot.artifacts.push(...proof);
+  manifest.final = structuredClone(snapshot);
+  await writeManifest();
+  for (const cycle of [4, 5]) {
+    const report = await run(cycle);
+    assert.equal(findCover(report).status, 'pass');
+    assert.equal(report.cases[0].final.coverLab.selected, 1);
+    const overBudget = report.cases[0].final.coverLab.candidates[9];
+    assert.equal(overBudget.eligible, false);
+  }
+
+  snapshot.inputSha256 = 'a'.repeat(64);
+  manifest.final = structuredClone(snapshot);
+  await writeManifest();
+  await assert.rejects(run(4), /desvinculad[ao] do plano renderizado/);
+  snapshot.inputSha256 = digest;
+  manifest.final = structuredClone(snapshot);
+  await writeManifest();
+  await writeFile(join(directory, proof[1].file), '{}');
+  await assert.rejects(run(4), /SHA-256 divergente/);
+});
+
+test('a confirmação selada requer recibo do briefing, partição e revisão executados', async t => {
+  const { root, directory, testCase, manifest, writeManifest } = await example(t);
+  const sealed = { ...testCase, split: 'independent' };
+  const expectation = { cycle: 5, suiteSha256: 'a'.repeat(64), candidateSha256: 'b'.repeat(64), controlOnly: false };
+  const run = item => readCaseEvidence(directory, item, expectation);
+  assert.equal((await run(sealed)).execution.status, 'unavailable');
+  const execution = { ...expectation, caseId: sealed.id, caseSha256: sha256(JSON.stringify(sealed)), split: sealed.split };
+  manifest.execution = execution;
+  await writeManifest();
+  assert.equal((await run(sealed)).execution.status, 'unavailable');
+  const receiptPath = join(root, sealed.id + '.live-receipt.json');
+  await writeFile(receiptPath, JSON.stringify({ ...execution, state: 'delivered', planner: {
+    state: 'completed', sessionId: 'sess_canary', turnId: 'turn_canary', promptSha256: 'c'.repeat(64),
+  } }));
+  assert.equal((await run(sealed)).execution.status, 'pass');
+  assert.equal((await run({ ...sealed, briefing: 'Outro briefing com o mesmo ID.' })).execution.status, 'fail');
+  const report = await evaluate({
+    cycle: 5, tests: [sealed], evidenceRoot: root, references: new Map(), suiteDigests: { independent: expectation.suiteSha256 },
+    candidateSha256: expectation.candidateSha256, controlOnly: false,
+  });
+  assert.equal(report.checks.find(check => check.name === 'execucao_selada').status, 'pass');
+  assert.equal(report.status, 'insufficient_or_failed');
 });

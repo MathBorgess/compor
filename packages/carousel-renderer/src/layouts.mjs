@@ -1,3 +1,4 @@
+import { demonstrationDiagrams } from './plan.mjs';
 import { usesDarkSurface } from './visuals.mjs';
 
 const SYMBOLS = {
@@ -20,9 +21,47 @@ function makeHeadline({ headline, accentPhrase }) {
   return escape(headline.slice(0, start)) + '<em data-ink>' + escape(accentPhrase) + '</em>' + escape(headline.slice(end));
 }
 
+function diagramText(value, { x = 210, y, size, width, opacity = 1 }) {
+  return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-weight="700" textLength="${width}" lengthAdjust="spacingAndGlyphs" fill="var(--fg)" opacity="${opacity}">${escape(value)}</text>`;
+}
+
+function comparisonExample(type, sample, improved) {
+  if (type === 'type_scale') {
+    const scale = improved ? 2 : 1;
+    const width = Math.min(176, sample.length * 16);
+    return diagramText(sample, { y: 96, size: 32 * scale, width: width * scale });
+  }
+  const width = Math.min(352, sample.length * 27);
+  return diagramText(sample, { y: 96, size: 52, width, opacity: improved ? 1 : 0.3 });
+}
+
+function hierarchyExample(items, improved) {
+  const [primary, ...secondary] = items;
+  const tile = (label, { x, y, width, height, size, textWidth, prominent = false }) => {
+    const outline = prominent ? 'var(--ink)' : 'var(--fg)';
+    const text = diagramText(label, { x: x + width / 2, y: y + height / 2, size, width: Math.min(textWidth, label.length * size * 0.58) });
+    return `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="11" fill="var(--bg)" stroke="${outline}" stroke-width="${prominent ? 4 : 2}" stroke-opacity="${prominent ? 1 : 0.3}"/>${text}`;
+  };
+  if (!improved) {
+    return items.map((label, index) => tile(label, { x: 14 + index * 134, y: 52, width: 124, height: 88, size: 26, textWidth: 106 })).join('');
+  }
+  return tile(primary, { x: 14, y: 14, width: 392, height: 99, size: 56, textWidth: 345, prominent: true }) +
+    secondary.map((label, index) => tile(label, { x: 14 + index * 203, y: 126, width: 189, height: 51, size: 26, textWidth: 160 })).join('');
+}
+
+function demonstration({ type, labels, sample, items }) {
+  const panels = labels.map((label, index) => {
+    const improved = index === 1;
+    const drawing = type === 'hierarchy' ? hierarchyExample(items, improved) : comparisonExample(type, sample, improved);
+    return `<figure class="diagram-panel"><svg viewBox="0 0 420 192" aria-hidden="true"><rect x="1.5" y="1.5" width="417" height="189" rx="20" fill="var(--bg)" stroke="var(--ink)" stroke-width="3"/>${drawing}</svg><figcaption data-region="diagram-label">${escape(label)}</figcaption></figure>`;
+  });
+  return `<div class="media diagram diagram-demonstration" data-demonstration="${type}">${panels.join('')}</div>`;
+}
+
 function media(slide) {
   if (slide.art) return '<div class="media"><img src="' + escape(slide.art) + '" alt=""></div>';
   if (!slide.diagram) return '';
+  if (demonstrationDiagrams.includes(slide.diagram.type)) return demonstration(slide.diagram);
   const { type, labels = [] } = typeof slide.diagram === 'string' ? { type: slide.diagram } : slide.diagram;
   const diagram = '<svg viewBox="0 0 608 300" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">' +
     SYMBOLS[type] + '</g></svg>';
@@ -50,7 +89,11 @@ em{font-style:normal;color:var(--ink)}
 .diagram svg{width:100%;height:auto;min-height:0;max-height:300px}
 .diagram ul{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;padding:0;list-style:none;font-size:32px;line-height:1.23;color:var(--fg);text-align:center}
 .diagram ul li{max-width:100%;overflow-wrap:anywhere}
-.hero_bleed .diagram ul{margin-top:-18px}
+.diagram-demonstration{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-content:center;align-items:start}
+.diagram-panel{display:grid;gap:12px;min-width:0;margin:0}
+.diagram-panel svg{display:block}
+.diagram-panel figcaption{padding:0 8px;color:var(--fg);font-size:32px;line-height:1.23;text-align:center;overflow-wrap:anywhere}
+.hero_bleed .diagram ul{margin-top:12px}
 .split_vertical .diagram ul{flex-direction:column}
 .hero_bleed .media{position:absolute;z-index:-2;inset:0}
 .hero_bleed.has-art::before{position:absolute;z-index:-1;inset:0;content:"";background:linear-gradient(180deg,transparent 3%,var(--scrim-low) 27%,var(--scrim-high) 46%,var(--bg) 91%)}

@@ -40,3 +40,13 @@ Duas sessões cegas de Codex com o mesmo briefing favoreceram o C0 nas duas orde
 O compositor local validou 15 JPEGs em dois decks que cobrem os 12 arquétipos. No estúdio, o teste Chromium verificou prévia 3:4, salvamento direto na revisão a 390 px, recuperação após recarga e um ZIP com os cinco PNGs originais em ordem e a legenda UTF-8. A geração do produto ainda segue a arquitetura de arte integral. A recuperação das lâminas adicionais em outro dispositivo depende de um vínculo por lâmina e por versão.
 
 O preflight da publicação confirmou que o alias de produção respondia no commit `720628e`. Nesse commit, o GitHub impediu iniciar os checks do PR #77 e da automação de migrations por pagamento ou limite de gastos, e o job `Apply migrations or initialize baseline` foi pulado. A causa da atribuição do alias pela Vercel permanece incerta. Essa evidência pertence à release anterior. [PR #77](https://github.com/MathBorgess/compor/pull/77) · [Run de migrations](https://github.com/MathBorgess/compor/actions/runs/45085893471)
+
+## Continuação em 22/11/2026
+
+O salvamento privado passou a associar cada PNG preparado à lâmina e à versão. O teste Chromium a 390 px verificou a interrupção parcial, a conclusão explícita na mesma versão e a transferência do conjunto para um contexto novo com IndexedDB vazio. O ZIP recuperado manteve hashes, ordem e legenda. O limite de 2048 px e 4 MiB por PNG continua. [ADR 0081](../adr/0081-imagens-do-carrossel-na-versao-salva.md)
+
+Três diagramas governados demonstram escala, contraste e hierarquia com comparações da mesma amostra. O Lab exige dez opções, ranking válido das que cabem no orçamento e vencedora idêntica à manchete. O avaliador verifica os hashes do plano, da seleção e da execução selada. A identificação local de números sem lastro antecede a geração de pixels. A novidade aceita vetores e juízos de ganho identificados por plano e copy.
+
+Na réplica paga do C5 em desenvolvimento, o Lab passou com dez opções. O planejador transferiu o CTA para um campo reservado a um trecho do título, e a primeira passagem foi bloqueada. Um replay moveu o CTA literal para o corpo e corrigiu a distância entre o rótulo da capa e o diagrama. Os quatro JPEGs finais passaram os checks físicos. O adversarial com promessa de rendimento sem fonte foi recusado novamente antes da imagem.
+
+Na dupla leitura cega desse replay, o C0 continuou preferido. Os dois pareceres apontaram melhora nas comparações visuais de escala e contraste, com perda de continuidade no fechamento e menor força no gancho. Essa comparação ainda cobre um briefing de desenvolvimento. CQS, calibração e reserva seguem pendentes.

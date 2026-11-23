@@ -5,7 +5,8 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { layouts, renderDeck } from '../src/index.mjs';
+import { contrast, layouts, paletteFor, renderDeck } from '../src/index.mjs';
+import { slideDocument } from '../src/layouts.mjs';
 
 const web = new URL('../../../apps/web/', import.meta.url);
 const require = createRequire(new URL('package.json', web));
@@ -48,7 +49,7 @@ function decks(lightArt, darkArt) {
   ].map(slides => ({mode: 'editorial_art', tokens: {light: '#ffffff', dark: '#171412', accent: '#fff3a4'}, slides}));
 }
 
-async function verifyAssets(result, directory, sharp) {
+async function verifyAssets(result, directory, sharp, expectedArtifacts = ['art-sheet.jpg', 'contact-sheet.png', 'cover-grid.png']) {
   for (const artifact of [...result.slides, ...result.artifacts]) {
     const bytes = await readFile(join(directory, artifact.file));
     assert.equal(bytes.length, artifact.bytes, artifact.file);
@@ -62,7 +63,7 @@ async function verifyAssets(result, directory, sharp) {
   }
   const cover = await sharp(join(directory, 'cover-grid.png')).metadata();
   assert.deepEqual([cover.width, cover.height], [270, 360]);
-  assert.deepEqual(result.artifacts.map(artifact => artifact.file).sort(), ['art-sheet.jpg', 'contact-sheet.png', 'cover-grid.png']);
+  assert.deepEqual(result.artifacts.map(artifact => artifact.file).sort(), expectedArtifacts);
 }
 
 test('Chromium renderiza os doze arquétipos em JPEG sRGB e registra o fit', {skip, timeout: 60_000}, async t => {
@@ -105,4 +106,95 @@ test('Chromium renderiza os doze arquétipos em JPEG sRGB e registra o fit', {sk
   assert.ok(fit, 'o texto longo na coluna exerce a recuperação de fit');
   assert.ok(fit.firstChecks.some(check => check.status === 'fail'));
   assert.ok(fit.checks.every(check => check.status === 'pass'));
+});
+
+const demonstrationSlides = [
+  slide('hero_bleed', 'Seu anúncio some no feed?', { body: 'Três ajustes para ler sem ampliar.' }),
+  slide('split_horizontal', 'Dê escala à mensagem', {
+    body: 'Abra a prévia a 360 px e aumente a frase principal até ler sem zoom.',
+    diagram: { type: 'type_scale', labels: ['Texto pequeno', 'Texto ampliado'], sample: 'Seu anúncio' },
+  }),
+  slide('svg_diagram', 'Separe a frase do fundo', {
+    polarity: 'inverted', body: 'Compare a mesma frase sobre o mesmo fundo.',
+    diagram: { type: 'contrast', labels: ['Contraste baixo', 'Contraste alto'], sample: 'Seu anúncio' },
+  }),
+  slide('comparison_dual', 'Escolha o que aparece primeiro', {
+    body: 'Dê peso ao título e use preço e selo como apoio.',
+    diagram: { type: 'hierarchy', labels: ['Peso igual', 'Título dominante'], items: ['Título', 'Preço', 'Selo'] },
+  }),
+  slide('cta_closing', 'Salve para revisar seu anúncio'),
+];
+
+function effectiveContrast({ fill, opacity }, background) {
+  const channels = color => color.match(/\d+/g).map(Number);
+  const [r, g, b] = channels(background);
+  const bg = [r, g, b];
+  const hex = values => '#' + values.map(value => value.toString(16).padStart(2, '0')).join('');
+  const paint = channels(fill).map((value, index) => Math.round(value * opacity + bg[index] * (1 - opacity)));
+  return contrast(hex(paint), hex(bg));
+}
+
+test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const directory = await mkdtemp(join(tmpdir(), 'compor-carousel-diagrams-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  const fonts = { 400: regular, 700: bold };
+  const tokens = { light: '#ffffff', dark: '#171412', accent: '#bc5c35' };
+  const result = await renderDeck({ mode: 'editorial_art', tokens, slides: demonstrationSlides }, { outputDir: directory, browser, sharp, fonts, repair: false });
+  assert.equal(result.slides.length, demonstrationSlides.length, JSON.stringify(result.checks));
+  const failures = [...result.checks, ...result.slides.flatMap(item => item.checks)].filter(check => check.status !== 'pass');
+  assert.deepEqual(failures, []);
+  assert.ok(result.slides.slice(1, 4).every(item => item.artAreaFraction >= 0.12));
+  await verifyAssets(result, directory, sharp, ['contact-sheet.png', 'cover-grid.png']);
+
+  const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
+  try {
+    for (const [index, item] of demonstrationSlides.entries()) {
+      if (!item.diagram) continue;
+      await page.setContent(slideDocument(item, { index: index + 1, palette: paletteFor(tokens), fonts }));
+      await page.evaluate(() => document.fonts.ready);
+      const panels = await page.locator('.diagram-panel').evaluateAll(figures => figures.map(figure => {
+        const svg = figure.querySelector('svg');
+        return {
+          label: figure.querySelector('figcaption').textContent,
+          background: getComputedStyle(svg.querySelector('rect')).fill,
+          text: Array.from(svg.querySelectorAll('text'), text => {
+            const style = getComputedStyle(text);
+            const { x, y, width, height } = text.getBBox();
+            return { value: text.textContent, size: parseFloat(style.fontSize), fill: style.fill, opacity: Number(style.opacity), x, y, width, height };
+          }),
+        };
+      }));
+      const values = item.diagram.items ?? [item.diagram.sample];
+      assert.deepEqual(panels.map(panel => panel.label), item.diagram.labels);
+      for (const { text } of panels) assert.deepEqual(text.map(sample => sample.value), values);
+      for (const sample of panels.flatMap(panel => panel.text)) {
+        assert.ok(sample.x >= 0 && sample.x + sample.width <= 420);
+        assert.ok(sample.y >= 0 && sample.y + sample.height <= 192);
+      }
+      const [left, right] = panels;
+      if (item.diagram.type === 'type_scale') {
+        assert.equal(right.text[0].size / left.text[0].size, 2);
+        assert.equal(right.text[0].opacity, left.text[0].opacity);
+      } else if (item.diagram.type === 'contrast') {
+        assert.equal(right.background, left.background);
+        assert.equal(right.text[0].size, left.text[0].size);
+        assert.ok(effectiveContrast(left.text[0], left.background) < 4.5);
+        assert.ok(effectiveContrast(right.text[0], right.background) >= 4.5);
+      } else {
+        assert.deepEqual(left.text.map(sample => sample.size), [26, 26, 26]);
+        assert.deepEqual(right.text.map(sample => sample.size), [56, 26, 26]);
+        assert.ok(right.text[0].y < right.text[1].y);
+      }
+    }
+  } finally {
+    await page.close();
+  }
 });

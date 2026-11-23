@@ -31,6 +31,7 @@ O integrador grava `qa-manifest.json` em `<evidence>/<caseId>/`. O manifesto tem
 | `artifacts` | Lista `{file, sha256}` com caminhos relativos ao caso. Inclua JPEGs sequenciais, `contact-sheet.png`, `cover-grid.png` e a folha de arte raster quando aplicável. |
 | `artSheetApplicable` | `false` quando nenhuma lâmina contém arte raster, junto com `ART_PURITY: not_applicable`. A CLI de render calcula ambos. |
 | `slideCount` | Quantidade de lâminas pretendida no plano. A CLI confere que há um arquivo por lâmina. |
+| `inputSha256` | SHA-256 dos bytes do plano usados pelo snapshot. Na presença do Lab de capas, preserve esses bytes em `plan.json` e registre `cover-lab.json` junto dele. |
 | `checks` | Objeto de IDs para `{status, evidence}`. O status usa `pass`, `fail`, `not_run`, `unknown` ou `not_applicable`. Um veredito conclusivo exige uma observação. |
 | `planFailures` | IDs de gates que impediram o plano de renderizar. A CLI preserva as observações do renderer em `render-checks.json`. |
 | `collectionScores` | Notas de 0–100 em `visualDelivery`, `diversity`, `progression` e `cohesion`. Cada nota exige `score` e `evidence`. |
@@ -44,6 +45,12 @@ Para anexar uma avaliação independente sem editar o manifesto original, grave 
 A camada física conta os sete checks definidos em `protocol.mjs` e exige cobertura de todos para publicar `S_det`. A CLI verifica os hashes dos arquivos e conserva os checks do renderer como evidência à parte. As notas de coleção e de juiz usam todas as dimensões com os pesos publicados no protocolo. `CQS = 0,25 S_det + 0,30 S_col + 0,45 S_vlm` exige as três parcelas e uma entrega visual verificada. Os vetos factuais e físicos são registrados independentemente do CQS.
 
 O FPY usa como denominador os casos de entrega previstos na suíte. O numerador conta os casos que passaram a etapa na primeira passagem. Reporte também casos com falha observada e casos indisponíveis. A recusa correta conta no desfecho esperado do caso adversarial. Ela fica fora do denominador físico. Comparações com a baseline histórica do Marco 5 podem partir dos dois carrosséis arquivados. A avaliação histórica usou outra rubrica e expôs o conjunto reservado. [Marco 5](../../../docs/evals/pr61/05-post.md)
+
+## Lab de dez capas
+
+Em C4 e C5, o planejador devolve as dez manchetes em `coverOptions` e a ordem em `coverRanking.order`. O prefiltro usa o teto de onze palavras e 65 grafemas e registra o alvo editorial de oito palavras. As posições originais são 1-based. O ranking inclui todas as opções dentro do teto uma vez, da melhor à pior, e `coverRanking.rationale` registra a justificativa da primeira. A manchete da primeira lâmina coincide literalmente com a primeira posição ranqueada. O plano conserva a lista original e o ranking em `coverLab.options` e `coverLab.ranking`. O Lab bloqueia listas ausentes, duplicadas ou incompletas antes da renderização.
+
+Cada snapshot guarda as medições em `cover-lab.json` e o plano original em `plan.json`. A leitura verifica os hashes, o vínculo com o plano do snapshot e recompõe o resultado antes de contar um deck entregue na cobertura de C4 e C5. Uma primeira passagem bloqueada conserva os mesmos documentos e códigos de falha. O registro do ranking documenta a escolha editorial do planejador. A comparação cega avalia o resultado visual.
 
 ## Reserva, confirmação e calibração
 
@@ -91,3 +98,11 @@ Use o mesmo `root` para os três passos de modo a vincular os recibos ao primeir
 O runner produz evidência do planejamento, do render e dos artefatos que conseguiu recuperar. Para promover um ciclo, acrescente as avaliações de fatos, autonomia de S2, CTA único, pureza de arte, novidade, coleção e julgamento visual verificáveis previstas no protocolo. As comparações pareadas exigem controle e candidato do mesmo caso, nas duas ordens. O hash da revisão vincula o código executado. A aprovação depende dos resultados registrados nos manifestos e do relatório do ciclo.
 
 O módulo `blind-judge.mjs` prepara capas recortadas, lâminas 2 isoladas e folhas de contato a partir de uma pasta de evidência privada. O juiz recebe o briefing, as legendas e os dois grupos sem identificação da revisão. As ordens usam sessões próprias e os recibos vinculam os hashes dos arquivos. Use exemplos rotulados e avaliadores independentes antes de tratar essa observação como evidência de promoção.
+
+O planejador registra as citações em `claims`. Cada entrada localiza um trecho literal por `slideId` e `slot` e o liga a um fato enumerado pelo briefing. A legenda usa `slideId: "deck"` e `slot: "caption"`. A verificação cobre valores monetários, percentuais, multiplicadores, datas numéricas e alguns relatos de resultado em primeira pessoa. Uma referência ruim ou um resultado detectado sem fonte bloqueia o plano antes da imagem. A validação é refeita no relatório com o plano associado por SHA-256. O parecer `FACT_GROUNDING` continua exigindo verificação humana ou julgamento independente por causa de afirmações implícitas, unidades ambíguas e contexto.
+
+Para medir novidade com insumos revisados, use `novelty --plan <plano.json> --observations <avaliação.json> --output <relatório.json>`. O JSON de observação fornece `model: "text-embedding-3-small"`, `inputSha256` do plano e uma lista `slides` com `id`, `textSha256`, `embedding`, `gain`, `cognitiveOperation` e `evidence`. O hash textual usa UTF-8 sobre manchete, corpo e itens de lista unidos por quebras de linha e processados por `stripScaffold`. O comando mantém embeddings ou julgamentos de ganho ausentes como inconclusivos e registra os pares reprovados. O comando trabalha com vetores fornecidos localmente e produz um diagnóstico.
+
+Para ligar a observação de novidade ao julgamento de um caso, salve o JSON de observações como `novelty-first-pass.json` ou `novelty-final.json` na pasta do caso. Em `qa-assessments.json`, associe o snapshot a `noveltyEvidence: {file, sha256}`. O C2 recalcula os vetos a partir do plano, hashes da copy e vetores fornecidos. Um `migMean` declarado isoladamente permanece diagnóstico.
+
+Nas rodadas seladas, passe também `--candidate-sha256` ao avaliar. O relatório compara briefing, partição, ciclo e revisão entre execução e recibo terminal. Comparações da reserva usam controles com evidência selada. Um manifesto de uma execução antiga, com texto ou hash distintos, fica indisponível para promoção. Esse vínculo local deve acompanhar a revisão independente das notas e das imagens.

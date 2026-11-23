@@ -1,7 +1,8 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { formatVersion, physicalChecks, readDocument, requireCondition, sha256 } from './protocol.mjs';
+import { coverLabArtifact } from './cover-lab.mjs';
+import { formatVersion, physicalChecks, requireCondition, sha256 } from './protocol.mjs';
 
 const web = new URL('../../../apps/web/', import.meta.url);
 const require = createRequire(new URL('package.json', web));
@@ -22,9 +23,36 @@ function collectCheck(id, slides) {
   return { status: 'not_run' };
 }
 
+async function readPlan(path) {
+  const bytes = await readFile(path);
+  return { bytes, value: JSON.parse(bytes), digest: sha256(bytes) };
+}
+
+export async function writePlanArtifacts(directory, name, { value, bytes, digest }) {
+  const lab = coverLabArtifact(value, digest);
+  if (!lab && !Object.hasOwn(value ?? {}, 'claims')) return [];
+  await mkdir(join(directory, name), { recursive: true, mode: 0o700 });
+  const files = [
+    ['plan.json', bytes],
+    ...(lab ? [['cover-lab.json', JSON.stringify(lab, null, 2) + '\n']] : []),
+  ];
+  const artifacts = [];
+  for (const [filename, content] of files) {
+    const file = `${name}/${filename}`;
+    await writeFile(join(directory, file), content, { flag: 'wx', mode: 0o600 });
+    artifacts.push({ file, sha256: sha256(content) });
+  }
+  return artifacts;
+}
+
 async function captureSnapshot(renderDeck, document, directory, name, browser, sharp, fonts, repair) {
   const { value: deck, digest: inputSha256 } = document;
   const outputDir = join(directory, name);
+  const lab = coverLabArtifact(deck, inputSha256);
+  const labArtifacts = await writePlanArtifacts(directory, name, document);
+  if (lab?.status === 'fail') {
+    return { outcome: 'blocked_plan', inputSha256, artifacts: labArtifacts, checks: {}, planFailures: lab.violations };
+  }
   try {
     const result = await renderDeck(deck, { outputDir, browser, sharp, fonts, repair });
     const planFailures = result.slides.length ? [] : result.checks
@@ -51,21 +79,21 @@ async function captureSnapshot(renderDeck, document, directory, name, browser, s
     await writeFile(join(outputDir, 'render-checks.json'), checksBytes, { flag: 'wx', mode: 0o600 });
     const artifacts = [...result.slides, ...result.artifacts]
       .filter(asset => asset.file).map(asset => ({ file: `${name}/${asset.file}`, sha256: asset.sha256 }));
-    artifacts.push({ file: `${name}/render-checks.json`, sha256: sha256(checksBytes) });
+    artifacts.push(...labArtifacts, { file: `${name}/render-checks.json`, sha256: sha256(checksBytes) });
     const outcome = planFailures.length ? 'blocked_plan' : 'delivered';
     const slideCount = planFailures.length === 0 ? deck.slides.length : undefined;
     return { outcome, inputSha256, artifacts, checks, planFailures, artSheetApplicable, slideCount };
   } catch (error) {
-    return { outcome: 'failed_execution', inputSha256, reason: error.message, checks: {}, artifacts: [] };
+    return { outcome: 'failed_execution', inputSha256, reason: error.message, checks: {}, artifacts: labArtifacts };
   }
 }
 
 export async function renderEvidence({
-  caseId, firstPath, finalPath, repairReason, caseDirectory,
+  caseId, firstPath, finalPath, repairReason, caseDirectory, execution,
   executablePath = process.env.BROWSER_EXECUTABLE_PATH,
 }) {
-  const first = await readDocument(firstPath);
-  const final = finalPath ? await readDocument(finalPath) : first;
+  const first = await readPlan(firstPath);
+  const final = finalPath ? await readPlan(finalPath) : first;
   requireCondition(first.value?.mode === final.value?.mode, 'O reparo deve preservar o modo do carrossel.');
   requireCondition(!finalPath || (typeof repairReason === 'string' && repairReason.trim()),
     'Um segundo plano exige o motivo observado do reparo.');
@@ -93,6 +121,7 @@ export async function renderEvidence({
       : [];
     const manifest = {
       version: formatVersion, caseId, mode: first.value.mode,
+      ...(execution ? { execution } : {}),
       first_pass: firstSnapshot, final: finalSnapshot,
       repair_count: repairs.length, repairs,
     };

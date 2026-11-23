@@ -3,6 +3,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { evaluate } from './evaluate.mjs';
+import { reviewNovelty } from './novelty.mjs';
 import { formatVersion, isId, readDocument, readSuite, requireCondition } from './protocol.mjs';
 
 const repository = fileURLToPath(new URL('../../../', import.meta.url));
@@ -40,7 +41,7 @@ async function evaluateCommand(arguments_) {
   const { values } = parseArgs({ args: arguments_, options: {
     cycle: { type: 'string' }, evidence: { type: 'string' }, output: { type: 'string' },
     holdout: { type: 'string' }, 'holdout-sha256': { type: 'string' },
-    independent: { type: 'string' }, 'independent-sha256': { type: 'string' },
+    independent: { type: 'string' }, 'independent-sha256': { type: 'string' }, 'candidate-sha256': { type: 'string' },
     compare: { type: 'string', multiple: true }, 'control-only': { type: 'boolean' }, strict: { type: 'boolean' },
   } });
   requireCondition(/^[0-5]$/.test(values.cycle ?? '') && values.evidence && values.output,
@@ -65,7 +66,7 @@ async function evaluateCommand(arguments_) {
   const tests = independent ? independent.cases : [...dev.cases, ...(holdout?.cases ?? [])];
   const references = await loadReferences(values.compare);
   const result = await evaluate({
-    cycle, tests, evidenceRoot: resolve(values.evidence), references, controlOnly,
+    cycle, tests, evidenceRoot: resolve(values.evidence), references, controlOnly, candidateSha256: values['candidate-sha256'],
     suiteDigests: { dev: dev.digest, holdout: holdout?.digest ?? null, independent: independent?.digest ?? null },
   });
   await writeFile(values.output, JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
@@ -91,11 +92,25 @@ async function renderCommand(arguments_) {
   if (result.final.outcome !== 'delivered') process.exitCode = 2;
 }
 
+async function noveltyCommand(arguments_) {
+  const { values } = parseArgs({ args: arguments_, options: {
+    plan: { type: 'string' }, observations: { type: 'string' }, output: { type: 'string' },
+  } });
+  requireCondition(values.plan && values.observations && values.output,
+    'Use novelty --plan <plano.json> --observations <avaliação.json> --output <relatório.json>.');
+  const [plan, assessment] = await Promise.all([readDocument(values.plan), readDocument(values.observations)]);
+  const result = reviewNovelty(plan, assessment);
+  await writeFile(values.output, JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  console.log(JSON.stringify({ status: result.status, migMean: result.migMean, pairs: result.pairs.length }));
+  if (result.status !== 'pass') process.exitCode = 2;
+}
+
 try {
   const [command, ...arguments_] = process.argv.slice(2);
   if (command === 'evaluate') await evaluateCommand(arguments_);
   else if (command === 'render') await renderCommand(arguments_);
-  else throw Error('Comandos: evaluate e render. Consulte scripts/evals/carrossel/README.md.');
+  else if (command === 'novelty') await noveltyCommand(arguments_);
+  else throw Error('Comandos: evaluate, render e novelty. Consulte scripts/evals/carrossel/README.md.');
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

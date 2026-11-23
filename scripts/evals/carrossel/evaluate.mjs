@@ -49,6 +49,8 @@ function completeAverage(cases, readValue) {
 
 function pairResult(candidate, control, againstCycle) {
   const vote = candidate.pairwise.find(pair => pair.againstCycle === againstCycle);
+  if (['holdout', 'independent'].includes(candidate.split) &&
+    (candidate.execution?.status !== 'pass' || control?.execution?.status !== 'pass')) return 'unavailable';
   if (!candidate.final?.assetsVerified || !control?.final?.assetsVerified || candidate.caseFingerprint !== control.caseFingerprint
     || vote?.controlManifestSha256 !== control.manifestSha256) return 'unavailable';
   if (vote.candidateFirst === 'first' && vote.controlFirst === 'second') return 'win';
@@ -101,6 +103,20 @@ function dimensionFloor(cases) {
   return cases.every(item => Number.isFinite(item.final?.sVlm)) && items.length ? Math.min(...items) : null;
 }
 
+function coverLabCoverage(decks) {
+  const observed = decks.filter(item => item.final?.assetsVerified && item.final.coverLab?.status === 'pass').length;
+  const status = decks.some(item => item.final?.coverLab?.status === 'fail') ? 'fail'
+    : decks.length && observed === decks.length ? 'pass' : 'unavailable';
+  return { name: 'lab_dez_capas', observed, target: decks.length, status };
+}
+
+function executionCoverage(cases) {
+  const observed = cases.filter(item => item.execution?.status === 'pass').length;
+  return { name: 'execucao_selada', observed, target: cases.length,
+    status: cases.some(item => item.execution?.status === 'fail') ? 'fail'
+      : cases.length && observed === cases.length ? 'pass' : 'unavailable' };
+}
+
 function promotionChecks(cycle, cases, split, references) {
   const selected = cycle === 4 ? cases.filter(item => item.split === 'holdout')
     : cases.filter(item => item.split === split);
@@ -125,7 +141,9 @@ function promotionChecks(cycle, cases, split, references) {
   if (cycle === 2) {
     const c1 = pair(1, 0.60);
     return { checks: [expectedCoverage(selected), minimumYield('fpy_editorial', yieldFor(decks, 'editorial'), 0.85),
-      minimum('mig_medio', final('migMean'), 0.75), minimum('delta_cqs', c1.result.delta, 5), c1.check], comparisons: [c1.result] };
+      minimum('mig_medio', completeAverage(decks, item => item.final?.novelty?.migMean), 0.75),
+      minimum('novidade_sem_vetos', completeAverage(decks, item => item.final?.novelty?.status === 'pass' ? 1
+        : item.final?.novelty?.status === 'fail' ? 0 : null), 1), minimum('delta_cqs', c1.result.delta, 5), c1.check], comparisons: [c1.result] };
   }
   if (cycle === 3) {
     const c2 = pair(2, 0.60);
@@ -139,26 +157,26 @@ function promotionChecks(cycle, cases, split, references) {
   }
   const allDecks = cases.filter(item => item.expected === 'deliver_deck');
   const controls = cycle === 4 ? [pair(0, 0.85), pair(3, 0.60)] : [pair(4, 0.60)];
-  return { checks: [expectedCoverage(cases), minimum('cqs', completeAverage(allDecks, item => item.final?.cqs), 85),
+  return { checks: [expectedCoverage(cases), executionCoverage(selected), coverLabCoverage(allDecks), minimum('cqs', completeAverage(allDecks, item => item.final?.cqs), 85),
     minimum('s_vlm', completeAverage(allDecks, item => item.final?.sVlm), 82),
     minimum('piso_dimensoes_vlm', dimensionFloor(allDecks), 3.5), ...controls.map(control => control.check)],
   comparisons: controls.map(control => control.result) };
 }
 
-async function evaluateCase(testCase, evidenceRoot) {
-  const evidence = await readCaseEvidence(join(evidenceRoot, testCase.id), testCase);
+async function evaluateCase(testCase, evidenceRoot, expectation) {
+  const evidence = await readCaseEvidence(join(evidenceRoot, testCase.id), testCase, expectation);
   const { id, split, expected, mode, strata } = testCase;
   return {
     id, split, expected, mode, strata, caseFingerprint: sha256(JSON.stringify(testCase)),
     manifestSha256: evidence?.digest ?? null, assessmentSha256: evidence?.assessmentSha256 ?? null, repairCount: evidence?.repairCount ?? null,
-    first: evidence?.first ?? null, final: evidence?.final ?? null, pairwise: evidence?.pairwise ?? [],
+    execution: evidence?.execution ?? null, first: evidence?.first ?? null, final: evidence?.final ?? null, pairwise: evidence?.pairwise ?? [],
     verdict: expectedResult(testCase, evidence?.final),
   };
 }
 
-export async function evaluate({ cycle, tests, evidenceRoot, references, controlOnly, suiteDigests }) {
+export async function evaluate({ cycle, tests, evidenceRoot, references, controlOnly, suiteDigests, candidateSha256 }) {
   const cases = [];
-  for (const testCase of tests) cases.push(await evaluateCase(testCase, evidenceRoot));
+  for (const testCase of tests) cases.push(await evaluateCase(testCase, evidenceRoot, { cycle, suiteSha256: suiteDigests?.[testCase.split], candidateSha256, controlOnly }));
   const split = cycle === 5 ? 'independent' : 'dev';
   const { checks, comparisons } = controlOnly ? { checks: [], comparisons: [] }
     : promotionChecks(cycle, cases, split, references);

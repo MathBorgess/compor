@@ -22,7 +22,7 @@ async function writeSuite(path, split, prefix, first = {}) {
   return { path, split, sha256: sha256(bytes) };
 }
 
-function scenario() {
+function scenario(changeCovers = cover => cover) {
   const submissions = [];
   const headline = 'Um exemplo verificável';
   const deck = { mode: 'editorial_art', slides: [
@@ -30,7 +30,9 @@ function scenario() {
     { id: 'explicacao', layout: 'svg_diagram', headline: 'Uma escolha muda o caminho', diagram: { type: 'flow', labels: ['Antes', 'Depois'] }, alt: 'Duas etapas.' },
     { id: 'fecho', layout: 'cta_closing', headline: 'Salve o exemplo', alt: 'Convite para salvar.' },
   ] };
-  const coverOptions = [headline, ...Array.from({ length: 9 }, (_, index) => `Exemplo candidato ${index}`)];
+  const options = [headline, ...Array.from({ length: 9 }, (_, index) => `Exemplo candidato ${index}`)];
+  const ranking = { order: options.map((_, index) => index + 1), rationale: 'A primeira é a mais específica.' };
+  const cover = changeCovers({ coverOptions: options, coverRanking: ranking });
   const fetchApi = async (url, options) => {
     assert.equal(new Headers(options.headers).get('authorization'), `Bearer ${fakeKey}`);
     const { pathname } = new URL(url);
@@ -41,7 +43,7 @@ function scenario() {
     }
     if (pathname.endsWith('/items')) return Response.json({ data: [{
       type: 'message', role: 'assistant', phase: 'final_answer', status: 'completed', turn_id: 'turn_local_mock',
-      content: [{ type: 'output_text', text: JSON.stringify({ outcome: 'delivered', deck, coverOptions }) }],
+      content: [{ type: 'output_text', text: JSON.stringify({ outcome: 'delivered', deck, claims: [], ...cover }) }],
     }] });
     if (pathname.endsWith('/turns')) return Response.json({ data: [
       { id: 'turn_local_mock', session_id: 'sess_local_mock', subagent_id: null, status: 'completed' },
@@ -84,8 +86,14 @@ test('congela partições, conserva recibos e só envia o caso selecionado', asy
   assert.equal(first.receipt.suiteSha256, holdout.sha256);
   assert.equal(first.receipt.candidateSha256, candidateSha256);
   const [submitted] = submissions;
+  assert.match(submitted.agent.instructions, /exatamente dez strings diferentes/);
+  assert.doesNotMatch(submitted.agent.instructions, /"coverOptions":\[\]/);
+  assert.match(submitted.agent.instructions, /hierarchy.*split_horizontal/);
+  const { coverLab } = JSON.parse(await readFile(first.planPath, 'utf8'));
+  assert.equal(coverLab.options.length, 10);
+  assert.equal(coverLab.ranking.order[0], 1);
   assert.deepEqual(JSON.parse(submitted.input), {
-    mode: 'editorial_art', briefing: 'Exemplo sintético reserve: situação 1.', facts: ['Fato hipotético 1.'],
+    mode: 'editorial_art', briefing: 'Exemplo sintético reserve: situação 1.', facts: [{ id: 'f1', text: 'Fato hipotético 1.' }],
   });
   assert.equal((await runLiveCarousel({ ...options, cycle: 4, sealedSuite: holdout, caseIndex: 1 })).reused, true);
   const changed = await writeSuite(join(directory, 'other-holdout.json'), 'holdout', 'other');
@@ -104,4 +112,60 @@ test('congela partições, conserva recibos e só envia o caso selecionado', asy
   assert.equal(submissions.length, 3);
   const stored = JSON.parse(await readFile(first.receiptPath, 'utf8'));
   assert.equal(stored.planner.usage.total_tokens, 30);
+});
+
+
+test('Lab C4/C5 bloqueia a falha de primeira passagem e mantém suas opções verificáveis', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'compor-cover-lab-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const changes = [
+    ['ausente', () => ({}), 'COVER_LAB_OPTIONS', null],
+    ['excedente', cover => ({ ...cover, coverOptions: [...cover.coverOptions, 'Mais uma'] }), 'COVER_LAB_OPTIONS', 11],
+    ['duplicado', cover => ({ ...cover, coverOptions: ['ÚM exemplo — verificável!', ...cover.coverOptions.slice(0, 9)] }), 'COVER_LAB_DUPLICATE', 10],
+    ['incompleto', cover => ({ ...cover, coverRanking: { ...cover.coverRanking, order: cover.coverRanking.order.slice(0, 9) } }), 'COVER_LAB_RANKING', 10],
+    ['seleção divergente', cover => ({ ...cover, coverRanking: { ...cover.coverRanking, order: [2, 1, ...cover.coverRanking.order.slice(2)] } }), 'COVER_LAB_SELECTION', 10],
+    ['rank de opção fora do orçamento', cover => ({
+      ...cover, coverOptions: [...cover.coverOptions.slice(0, 9), 'Um dois três quatro cinco seis sete oito nove dez onze doze'],
+    }), 'COVER_LAB_RANKING', 10],
+  ];
+  for (const [index, [name, change, violation, optionCount]] of changes.entries()) {
+    await t.test(name, async () => {
+      const { fetchApi, submissions } = scenario(change);
+      const result = await runLiveCarousel({ key: fakeKey, root: join(directory, String(index)), cycle: 5, render: false, fetchApi });
+      assert.equal(submissions.length, 1);
+      assert.equal(result.state, 'blocked_plan');
+      const manifest = JSON.parse(await readFile(join(result.caseDirectory, 'qa-manifest.json'), 'utf8'));
+      const snapshot = manifest.first_pass;
+      assert.deepEqual(manifest.final, snapshot);
+      assert.equal(manifest.repair_count, 0);
+      assert.ok(snapshot.planFailures.includes(violation));
+      assert.deepEqual(snapshot.artifacts.map(item => item.file), ['first-pass/plan.json', 'first-pass/cover-lab.json']);
+      const plan = await readFile(join(result.caseDirectory, 'first-pass/plan.json'));
+      assert.equal(sha256(plan), snapshot.inputSha256);
+      assert.equal(JSON.parse(plan).coverLab.options?.length ?? null, optionCount);
+      const labFile = await readFile(join(result.caseDirectory, 'first-pass/cover-lab.json'));
+      assert.equal(sha256(labFile), snapshot.artifacts[1].sha256);
+      assert.equal(JSON.parse(labFile).status, 'fail');
+    });
+  }
+});
+
+test('marca uma promessa numérica sem fonte no manifesto antes de solicitar a capa', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'compor-grounding-block-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const { submissions, fetchApi } = scenario(cover => ({
+    ...cover, coverArtBrief: 'Capa que ilustra o cenário sem texto.',
+    deck: { mode: 'editorial_art', slides: [
+      { id: 'um', layout: 'typo_breather', headline: 'Ganhe 47% mais', alt: 'Abertura.' },
+      { id: 'dois', layout: 'svg_diagram', headline: 'Uma revisão ajuda a ler', diagram: 'flow', alt: 'Diagrama.' },
+      { id: 'tres', layout: 'cta_closing', headline: 'Salve para revisar', alt: 'Fechamento.' },
+    ] },
+  }));
+  const result = await runLiveCarousel({ key: fakeKey, root: directory, cycle: 1, caseIndex: 1, render: false, fetchApi });
+  assert.equal(result.state, 'blocked_plan');
+  assert.equal(result.receipt.image, null);
+  assert.equal(submissions.length, 1);
+  const manifest = JSON.parse(await readFile(join(result.caseDirectory, 'qa-manifest.json')));
+  assert.deepEqual(manifest.first_pass.planFailures, ['UNBOUND_RESULT']);
+  assert.equal(manifest.first_pass.artifacts[0].file, 'first-pass/plan.json');
 });

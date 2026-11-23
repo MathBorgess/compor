@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { accentAgainst, contrast, layouts, paletteFor, validateDeck } from '../src/index.mjs';
 import { slideDocument } from '../src/layouts.mjs';
-import { cadence } from '../src/plan.mjs';
+import { cadence, demonstrationDiagrams, demonstrationLayouts, isDiagram } from '../src/plan.mjs';
 
 const makeSlide = (id, layout, headline, extra = {}) => ({
   id, layout, headline, alt: 'Uma descrição da lâmina.', ...extra,
@@ -43,4 +43,38 @@ test('escapa copy e não interpreta HTML vindo do plano', () => {
   assert.match(document, /&lt;img src=bad&gt; &amp; <em data-ink>acento<\/em>/);
   assert.doesNotMatch(document, /<img src=bad>/);
   assert.match(document, /default-src 'none'/);
+});
+
+test('comparações governam a mesma amostra e dois rótulos distintos', () => {
+  const sample = { type: 'type_scale', labels: ['Menor', 'Maior'], sample: 'Seu anúncio' };
+  assert.deepEqual(demonstrationDiagrams, ['contrast', 'type_scale', 'hierarchy']);
+  assert.ok(isDiagram(sample));
+  assert.ok(isDiagram({ ...sample, type: 'contrast' }));
+  assert.ok(isDiagram({ type: 'hierarchy', labels: ['Peso igual', 'Título primeiro'], items: ['Título', 'Preço', 'Selo'] }));
+  assert.ok(isDiagram('balance'));
+  assert.ok(isDiagram({ type: 'balance', labels: ['Opção antiga'] }));
+  for (const invalid of [
+    'type_scale',
+    { ...sample, labels: ['Menor', 'menor'] },
+    { ...sample, labels: ['Menor', 'Maior', 'Ambos'] },
+    { ...sample, labels: ['Tem mais palavras aqui', 'Maior'] },
+    { ...sample, sample: 'Uma frase longa demais' },
+    { ...sample, sample: '<svg>Opa</svg>' },
+    { ...sample, stroke: '#ff0000' },
+    { type: 'hierarchy', labels: sample.labels, items: ['Título', 'Preço', 'Preço'] },
+    { type: 'hierarchy', labels: sample.labels, items: ['Título', 'Preço'] },
+  ]) assert.equal(isDiagram(invalid), false, JSON.stringify(invalid));
+});
+
+test('comparação exige um painel largo com espaço dedicado', () => {
+  const valid = deck();
+  const diagram = { type: 'type_scale', labels: ['Menor', 'Maior'], sample: 'Seu anúncio' };
+  for (const layout of demonstrationLayouts) {
+    valid.slides[1] = makeSlide('two', layout, 'A escala muda a leitura', { diagram });
+    assert.deepEqual(validateDeck(valid), []);
+  }
+  valid.slides[1] = makeSlide('two', 'split_vertical', 'A escala muda a leitura', { diagram });
+  assert.deepEqual(validateDeck(valid).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+  valid.slides[1] = makeSlide('two', 'split_horizontal', 'A escala muda a leitura', { diagram, art: 'data:image/png;base64,AA==' });
+  assert.deepEqual(validateDeck(valid).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
 });
