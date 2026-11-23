@@ -68,7 +68,18 @@ function readStoredZip(bytes) {
   return entries;
 }
 
-async function applyStudioPlan(page) {
+async function installCarouselToolRegistry(page) {
+  await page.addInitScript(() => {
+    const tools = Object.create(null);
+    window.carouselTools = tools;
+    Object.defineProperty(document, 'modelContext', {configurable: true, value: {registerTool: async (definition, {signal}) => {
+      tools[definition.name] = definition;
+      signal?.addEventListener('abort', () => {if (tools[definition.name] === definition) delete tools[definition.name];}, {once: true});
+    }}});
+  });
+}
+
+async function applyStudioPlan(page, frames = planFrames) {
   const context = await page.waitForFunction(async ({userId, projectId}) => {
     if (typeof window.carouselTools?.compor_definir_plano_laminas?.execute !== 'function') return null;
     const database = await new Promise((resolve, reject) => {
@@ -92,7 +103,7 @@ async function applyStudioPlan(page) {
   const result = await page.evaluate(args => window.carouselTools.compor_definir_plano_laminas.execute(args), {
     projectId: project, requestId: id(5), revision, pieceId, baseVersion,
     visualInvariants: 'Uma família tipográfica com azul profundo.', compositionMode: 'editorial_art',
-    compositionTokens: {accent: '#123456'}, frames: planFrames,
+    compositionTokens: {accent: '#123456'}, frames,
   });
   assert.equal(result.status, 'completed');
   return pieceId;
@@ -170,14 +181,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   await waitForApp({url: origin, child, signal: t.signal, diagnostics: () => logs, timeoutMs: 60000});
   browser = await chromium.launch({executablePath: process.env.BROWSER_EXECUTABLE_PATH, headless: true});
   const page = await browser.newPage({viewport: {width: 1440, height: 950}});
-  await page.addInitScript(() => {
-    const tools = Object.create(null);
-    window.carouselTools = tools;
-    Object.defineProperty(document, 'modelContext', {configurable: true, value: {registerTool: async (definition, {signal}) => {
-      tools[definition.name] = definition;
-      signal?.addEventListener('abort', () => {if (tools[definition.name] === definition) delete tools[definition.name];}, {once: true});
-    }}});
-  });
+  await installCarouselToolRegistry(page);
 
   const versions = [], renders = [], uploads = [], reads = [], errors = [];
   const privateImages = new Map();
@@ -476,6 +480,80 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
       delayRender=undefined;
       renderReleased.resolve();
       signOutReleased.resolve();
+    }
+  });
+
+  await t.test('aviso de leitura legada persiste quando o novo plano de cinco lâminas ainda não foi composto', async () => {
+    const legacyPage = await browser.newPage({viewport: {width: 1440, height: 950}});
+    const legacyPiece = id(31), legacyAsset = id(40);
+    const frames = [
+      ...planFrames.slice(0, 2),
+      {id:id(23), position:3, role:'prática', headline:'Aproxime o objeto da janela', body:'', visualCue:'',
+        composition:{layout:'framed_plate', alt:'Um objeto junto à janela.'}},
+      {id:id(24), position:4, role:'comparação', headline:'Mude o objeto de posição', body:'', visualCue:'',
+        composition:{layout:'typo_breather', alt:'Uma orientação para mudar o objeto de posição.'}},
+      {...planFrames[2], position:5},
+    ];
+    const legacy = {
+      project_id: project, piece_id: legacyPiece, version: 1,
+      content: {format:'carousel', headline:'Abertura da versão legada', price:'', date:'', caption:'', captionOrigin:'user',
+        frames:frames.map(({composition: _composition, ...frame}, index) => ({
+          ...frame, ...(index === 0 && {headline:'Abertura da versão legada'}), assetId:index === 0 ? legacyAsset : null,
+        }))},
+    };
+    const legacyButton = name => legacyPage.getByRole('button',{name,exact:true});
+    const imageReads = [], compositions = [];
+    await installCarouselToolRegistry(legacyPage);
+    await installRoutes(legacyPage);
+    await legacyPage.route(url => url.pathname==='/api/pieces', route => {
+      assert.equal(route.request().method(), 'GET');
+      return route.fulfill({json:{versions:[legacy], posts:[{projectId:project, pieceId:legacyPiece, name:'Post legado', deleted:false}]}});
+    });
+    await legacyPage.route(url => url.pathname==='/api/images', route => {
+      assert.equal(route.request().method(), 'GET');
+      const {searchParams} = new URL(route.request().url());
+      assert.deepEqual(Object.fromEntries(searchParams), {projectId:project, pieceId:legacyPiece, version:'1', assetId:legacyAsset});
+      return route.fulfill({status:503, json:{error:'unavailable'}});
+    });
+    legacyPage.on('request', request => {
+      const {pathname} = new URL(request.url());
+      if (request.method()==='GET' && ['/api/images','/api/piece-version-images'].includes(pathname)) imageReads.push(pathname);
+      if (request.method()==='POST' && pathname==='/api/studio/carousel/render') compositions.push(pathname);
+    });
+
+    try {
+      const legacyReads = Promise.all([
+        legacyPage.waitForResponse(response => new URL(response.url()).pathname==='/api/images'),
+        legacyPage.waitForResponse(response => new URL(response.url()).pathname==='/api/piece-version-images'),
+      ]);
+      await legacyPage.goto(`${origin}/projetos/${project}/posts/${legacyPiece}`);
+      const [response, canonical] = await legacyReads;
+      assert.equal(response.status(), 503);
+      assert.deepEqual(await response.json(), {error:'unavailable'});
+      assert.deepEqual(await canonical.json(), {assetId:null});
+      const banner = legacyPage.getByText('Não foi possível verificar todas as lâminas desta versão.', {exact:true});
+      await banner.waitFor();
+      await legacyButton('Salvar versão').and(legacyPage.locator(':enabled')).waitFor();
+      const priorReads = [...imageReads];
+      assert.ok(priorReads.includes('/api/images'));
+
+      assert.equal(await applyStudioPlan(legacyPage, frames), legacyPiece);
+      await legacyPage.getByText('Componha as lâminas na revisão antes de salvar esta versão.', {exact:true}).waitFor();
+      await legacyPage.waitForFunction(() => document.querySelectorAll('.studio-frame-chip').length===5);
+      assert.equal(await legacyPage.locator('.studio-frame-chip').getByText('Planejada', {exact:true}).count(), 5);
+      assert.equal(await legacyButton('Salvar versão').isDisabled(), true);
+      assert.equal(await banner.isVisible(), true, 'o aviso legado continua visível depois de registrar o novo plano');
+      const plan = await localCarouselSnapshot(legacyPage, legacyPiece);
+      assert.equal(plan.headline, frames[0].headline);
+      assert.equal(plan.receipt, null);
+
+      await legacyButton('Revisar post').click();
+      await legacyButton('Compor lâminas').and(legacyPage.locator(':enabled')).waitFor();
+      assert.equal(await legacyButton('Salvar versão').isDisabled(), true);
+      assert.deepEqual(imageReads, priorReads, 'planejar e abrir a revisão não iniciam nova leitura de imagens');
+      assert.deepEqual(compositions, [], 'a composição aguarda o clique explícito');
+    } finally {
+      await legacyPage.close();
     }
   });
   assert.deepEqual(errors, []);
