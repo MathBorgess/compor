@@ -17,6 +17,11 @@ for (const directory of packages) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
+console.log('Testing carousel evaluation');
+const carousel = spawnSync(process.execPath, ['--test', 'scripts/evals/carrossel/*.test.mjs'], { cwd: root, stdio: 'inherit' });
+if (carousel.error) throw carousel.error;
+if (carousel.status !== 0) process.exit(carousel.status ?? 1);
+
 const python = spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['-B', '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_*.py'], { cwd: root, stdio: 'inherit' });
 if (python.error) throw python.error;
 process.exitCode = python.status ?? 1;

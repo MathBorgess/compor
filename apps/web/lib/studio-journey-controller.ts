@@ -3,9 +3,12 @@ import {savedVersionSchema,type PieceVersion} from './studio-piece-contract';
 import {changeStudioState,editDraft,getCurrentDraft,recordSavedVersion,samePieceContent,selectVersion,setPostFormat,updateBrandVoice,updateBrief} from './studio-state';
 import {cancelPostPreparation,completePostPreparation,startPostPreparation,updateLegacyPostName,updatePostPreparation,updateWorkflow} from './studio-workflow';
 import {selectScopedReference,unselectScopedReference,updatePostContext} from './studio-post-context';
-import type {ActionResult,BrandVoice,DraftContext,PostContext,PostFormat,StudioState} from './studio-domain';
+import type {ActionResult,BrandVoice,DraftContext,PieceContent,PostContext,PostFormat,StudioState} from './studio-domain';
 import type {DraftAssetAddress, createStudioStorage} from './studio-storage';
 import type {ImageProposal} from '@compor/agents-api/image-proposal';
+import {carouselPlanFor} from './studio-carousel-client';
+import {carouselPlanJson} from './carousel-plan-json';
+import {sha256Hex} from './browser-bytes';
 
 type Lock={current:boolean};
 type RetainedProposal={result:'retained'|'preserved'|'none';hasImage:boolean};
@@ -29,17 +32,18 @@ export type PostCreationResult=
 export type SaveDraftInput=DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>&{frameId?:string};
 export type VersionImagePublication='published'|'absent'|'conflict'|'unknown';
 type PreparedVersionImage=
-  | {status:'ready';publish:(version:number)=>Promise<VersionImagePublication>}
+  | {status:'ready';publish:(version:number)=>Promise<VersionImagePublication>;content?:PieceContent}
   | {status:'absent'|'image_unsupported'|'unknown'};
 type SavePorts={
   readVersions:()=>Promise<PieceVersion[]>;
   copyDraftAsset:ReturnType<typeof createStudioStorage>['copyDraftAsset'];
-  prepareVersionImage?:(input:{userId:string;projectId:string;pieceId:string;version:number;source:DraftAssetAddress})=>Promise<PreparedVersionImage>;
+  prepareVersionImage?:(input:{userId:string;projectId:string;pieceId:string;version:number;source:DraftAssetAddress;content:PieceContent})=>Promise<PreparedVersionImage>;
   newEventId:()=>string;
   onVersionsChanging:()=>void;
   onVersionSaved:(version:PieceVersion)=>void;
 };
-export type SaveResult={result:ActionResult;notice:'saved'|'recovered'|'conflict'|'image_unsupported'|'unknown'|'inactive'};
+export type SaveResult={result:ActionResult;notice:'saved'|'recovered'|'conflict'|'image_unsupported'|'unknown'|'inactive'|'composition_required'};
+const compositionRequired:SaveResult={result:{status:'declined'},notice:'composition_required'};
 
 export function createStudioJourneyController(port:StatePort) {
   const locks=port.locks??{creation:{current:false},save:{current:false}};
@@ -133,21 +137,25 @@ export function createStudioJourneyController(port:StatePort) {
     const assetScope={userId:current.userId,projectId:current.projectId};
     const source:DraftAssetAddress={pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'};
     let prepared:PreparedVersionImage|undefined;
+    let savedContent=draft.content;
+    const governed=Boolean(draft.content.carouselPlan);
     async function adopt(version:PieceVersion,recovered:boolean):Promise<SaveResult> {
       if(!sameScope(current))return unknown('inactive');
       if(version.project_id!==current.projectId||version.piece_id!==draft.pieceId||version.version!==draft.expectedLatestVersion+1)throw Error('save_unconfirmed');
+      const frameSnapshot=prepared?.status==='ready'&&prepared.content!==undefined;
+      if(frameSnapshot&&!samePieceContent(version.content,savedContent))throw Error('save_unconfirmed');
       const destination={...source,baseVersion:version.version};
       if(!args?.operation){
         if(prepared?.status==='ready'){
           const published=await prepared.publish(version.version);
           if(!sameScope(current))return unknown('inactive');
-          if(published==='unknown')return unknown();
+          if(published==='unknown'||(frameSnapshot&&published!=='published'))return unknown();
         }else if(!options.prepareVersionImage&&!args?.changedDimension){
           await options.copyDraftAsset(assetScope,source,destination);
         }
       }
       // Other frames carry forward; the target slot must stay free for its new image.
-      if(targetFrame||(!args?.operation&&!args?.changedDimension)){
+      if(!frameSnapshot&&(targetFrame||(!args?.operation&&!args?.changedDimension))){
         for(const frame of version.content.frames??[]){
           if(frame.id!==targetFrame?.id)await options.copyDraftAsset(assetScope,{...source,frameId:frame.id},{...destination,frameId:frame.id});
         }
@@ -161,31 +169,42 @@ export function createStudioJourneyController(port:StatePort) {
       if(!recovered){options.onVersionsChanging();options.onVersionSaved(version);}
       change(value=>recordSavedVersion(value,{
         pieceId:draft.pieceId,baseVersion:draft.baseVersion,version:version.version,content:version.content,
+        ...(frameSnapshot?{sourceContent:draft.content}:{}),
         approval:version.metadata?.approval.status==='approved'?version.metadata.approval:version.metadata||recovered?{status:'unapproved'}:undefined,
         eventId:options.newEventId(),
       }));
       await port.flush();
-      if(recovered)return unknown('recovered');
+      if(recovered&&!frameSnapshot)return unknown('recovered');
       return {result:{status:'completed',pieceId:draft.pieceId,version:version.version},notice:'saved'};
     }
     try {
       if(!sameScope(current))return unknown('inactive');
+      if(governed&&(!draft.content.carouselRender||args?.operation))return compositionRequired;
       await port.flush();options.onVersionsChanging();
       if(!sameScope(current))return unknown('inactive');
       if(!args?.operation&&options.prepareVersionImage){
-        prepared=await options.prepareVersionImage({userId:current.userId,projectId:current.projectId,pieceId:draft.pieceId,version:draft.expectedLatestVersion+1,source});
+        prepared=await options.prepareVersionImage({userId:current.userId,projectId:current.projectId,pieceId:draft.pieceId,version:draft.expectedLatestVersion+1,source,content:draft.content});
         if(!sameScope(current))return unknown('inactive');
-        if(prepared.status==='image_unsupported'||prepared.status==='unknown')return unknown(prepared.status);
+        if(prepared.status==='image_unsupported'||prepared.status==='unknown'){
+          return governed&&prepared.status==='image_unsupported'?compositionRequired:unknown(prepared.status);
+        }
+        if(prepared.status==='ready'&&prepared.content)savedContent=prepared.content;
+      }
+      if(governed||savedContent.carouselPlan){
+        const plan=carouselPlanFor(savedContent),receipt=savedContent.carouselRender;
+        if(prepared?.status!=='ready'||!prepared.content||!plan||!receipt||!savedContent.frames?.every(frame=>frame.assetId)||
+          await sha256Hex(carouselPlanJson(plan))!==receipt.planSha256)return compositionRequired;
+        if(!sameScope(current))return unknown('inactive');
       }
       const response=await fetchImpl('/api/pieces',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
-        projectId:current.projectId,pieceId:draft.pieceId,expectedVersion:draft.expectedLatestVersion,baseVersion:draft.baseVersion,content:draft.content,
+        projectId:current.projectId,pieceId:draft.pieceId,expectedVersion:draft.expectedLatestVersion,baseVersion:draft.baseVersion,content:savedContent,
         ...(args?.operation?{operation:args.operation}:{}),...(args?.changedDimension?{changedDimension:args.changedDimension}:{}),
       })});
       const input:unknown=await response.json();
       if(response.status===409){
         const versions=await options.readVersions();
         const latest=versions.filter(item=>item.piece_id===draft.pieceId).reduce<PieceVersion|null>((previous,item)=>!previous||item.version>previous.version?item:previous,null);
-        if(latest?.version===draft.expectedLatestVersion+1&&latest.metadata?.baseVersion===(draft.baseVersion||null)&&samePieceContent(latest.content,draft.content)&&
+        if(latest?.version===draft.expectedLatestVersion+1&&latest.metadata?.baseVersion===(draft.baseVersion||null)&&samePieceContent(latest.content,savedContent)&&
           (latest.metadata?.operation??null)===(args?.operation??null)&&(latest.metadata?.changedDimension??null)===(args?.changedDimension??null))return await adopt(latest,true);
         return unknown('conflict');
       }

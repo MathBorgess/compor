@@ -10,7 +10,7 @@ import StudioLoading from "./studio-loading";
 import { brandImages, entryCopy, entryDraftStorage } from "../lib/entry-content";
 
 const StudioApp = lazy(() => import("./studio-app"));
-export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false, selectedVisualsAvailable = false, selectedVisualsRequired = false, referenceAuthorityEnabled = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean }) {
+export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false, selectedVisualsAvailable = false, selectedVisualsRequired = false, referenceAuthorityEnabled = false, carouselRenderAvailable = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;carouselRenderAvailable?:boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState(loginAvailable ? "checking" : "offline");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
@@ -284,6 +284,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
               selectedVisualsAvailable={selectedVisualsAvailable}
               selectedVisualsRequired={selectedVisualsRequired}
               referenceAuthorityEnabled={referenceAuthorityEnabled}
+              carouselRenderAvailable={carouselRenderAvailable}
               key={authenticatedUser}
               userId={authenticatedUser}
               accountLabel={account?.label ?? "Conta conectada"}

@@ -426,6 +426,7 @@ export default function StudioEditor({
                   </button>
                 )}
               </div>
+              {draft.content.carouselPlan&&<p className="studio-hint">Ajuste a quantidade de lâminas no plano da conversa.</p>}
               {anchorBlob && remainingPendingCount > 0 && onGenerateRemainingFrames && (
                 <button
                   type="button"

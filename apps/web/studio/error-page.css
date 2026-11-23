@@ -1,0 +1,4 @@
+.compor-error { min-height: 100vh; display: grid; place-content: center; text-align: center; font-family: system-ui, sans-serif; color: #000; background: #fff }
+ .compor-error h1 { display: inline-block; margin: 0 20px 0 0; padding-right: 23px; border-right: 1px solid #0004; font-size: 24px; font-weight: 500; line-height: 48px; vertical-align: top }
+ .compor-error p { display: inline-block; margin: 0; font-size: 14px; line-height: 48px }
+ @media (prefers-color-scheme: dark) { .compor-error.dark { color: #fff; background: #000 } .compor-error.dark h1 { border-color: #fff4 } }

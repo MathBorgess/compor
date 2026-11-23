@@ -22,3 +22,16 @@ test('recusa partes truncadas, conteúdo divergente e troca de autorização',as
  for(const options of [{changePart:1},{truncatePart:1},{denyPart:1}]){const fake=service(options);await assert.rejects(fetchPrivateImage(query,{fetch:fake.fetch}));assert.deepEqual(fake.calls,[null,'0','1']);}
  const fake=service();const fetch=async input=>{const response=await fake.fetch(input);const part=new URL(input,'https://compor.test').searchParams.get('part');if(part!=='2')return response;const bytes=Buffer.from(await response.arrayBuffer());bytes[0]^=1;return new Response(bytes,{status:200,headers:response.headers});};await assert.rejects(fetchPrivateImage(query,{fetch}));
 });
+
+test('JPEG requer formato explícito e confere o hash da versão quando informado', async () => {
+  const jpeg = new URLSearchParams(query);
+  jpeg.set('format', 'jpeg');
+  const bytes = Buffer.from([255, 216, 42, 255, 217]);
+  const expectedSha256 = createHash('sha256').update(bytes).digest('hex');
+  const fetchJpeg = async () => new Response(bytes, {headers: {'content-type': 'image/jpeg'}});
+  const result = await fetchPrivateImage(jpeg, {fetch: fetchJpeg, expectedSha256});
+  assert.equal(result.type, 'image/jpeg');
+  assert.deepEqual(Buffer.from(await result.arrayBuffer()), bytes);
+  await assert.rejects(fetchPrivateImage(query, {fetch: fetchJpeg}), /image unavailable/);
+  await assert.rejects(fetchPrivateImage(jpeg, {fetch: fetchJpeg, expectedSha256: '0'.repeat(64)}), /image changed/);
+});

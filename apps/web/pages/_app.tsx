@@ -13,6 +13,7 @@ import '../studio/studio-reference-workspace.css';
 import '../studio/studio-reference-chat.css';
 import '../studio/studio-variant-cards.css';
 import '../studio/entry.css';
+import '../studio/error-page.css';
 import type {AppProps} from 'next/app';
 import '../studio/style.css';
 export default function App({Component,pageProps}:AppProps) { return <Component {...pageProps}/>; }

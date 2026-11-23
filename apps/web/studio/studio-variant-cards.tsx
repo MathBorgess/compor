@@ -52,6 +52,7 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
   const [notice,setNotice]=useState('');
   const [recovering,setRecovering]=useState(false);
   const sequence=useRef(0),localSequence=useRef(0),read=useRef<AbortController|null>(null);
+  const governed=version.content.carouselPlan!==undefined;
   const scope=`${userId}:${projectId}:${version.piece_id}:${version.version}`;
   const blob=asset?.scope===scope?asset.blob:null,url=useObjectUrl(blob),candidateUrl=useObjectUrl(candidate?.scope===scope?candidate.blob:null);
   useEffect(()=>{
@@ -95,9 +96,9 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
   }
   return <div ref={frame} className="studio-variant-image">
     {url?<img src={url} alt={`Arte da versão ${version.version}`} loading="lazy" />:<p>Imagem da versão {version.version} ainda não disponível neste navegador.</p>}
-    {!blob&&<button type="button" onClick={()=>setRecovery(value=>!value)}>Recuperar imagem da versão {version.version}</button>}
-    {recovery&&<AssetRecovery userId={userId} projectId={projectId} pieceId={version.piece_id} version={version.version} onSelect={assetId=>void select(assetId)} />}
-    {candidate&&candidate.scope===scope&&<div><p>Origem desconhecida. Confira a imagem antes de usá-la nesta versão.</p>{candidateUrl&&<img src={candidateUrl} alt={`Imagem recuperada para a versão ${version.version}`} onLoad={()=>setCandidate(value=>value===candidate?{...value,decoded:true}:value)} onError={()=>{setCandidate(null);setNotice('A imagem recuperada não pôde ser exibida.');}} />}<button type="button" disabled={!candidate.decoded||recovering} onClick={()=>void useCandidate()}>Usar imagem nesta versão</button></div>}
+    {!governed&&!blob&&<button type="button" onClick={()=>setRecovery(value=>!value)}>Recuperar imagem da versão {version.version}</button>}
+    {!governed&&recovery&&<AssetRecovery userId={userId} projectId={projectId} pieceId={version.piece_id} version={version.version} onSelect={assetId=>void select(assetId)} />}
+    {!governed&&candidate&&candidate.scope===scope&&<div><p>Origem desconhecida. Confira a imagem antes de usá-la nesta versão.</p>{candidateUrl&&<img src={candidateUrl} alt={`Imagem recuperada para a versão ${version.version}`} onLoad={()=>setCandidate(value=>value===candidate?{...value,decoded:true}:value)} onError={()=>{setCandidate(null);setNotice('A imagem recuperada não pôde ser exibida.');}} />}<button type="button" disabled={!candidate.decoded||recovering} onClick={()=>void useCandidate()}>Usar imagem nesta versão</button></div>}
     {notice&&<p role="status">{notice}</p>}
   </div>;
 }

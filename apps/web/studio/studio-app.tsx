@@ -1,5 +1,5 @@
 "use client";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
 import {useProjectNameDisclosure} from "./project-name-tooltip";
 import PersonaStep from "./persona-step";
@@ -23,6 +23,10 @@ import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import { StudioStorageError } from '../lib/studio-storage.ts';
+import {readSavedFrameImage,prepareSavedFrameImages,publishSavedFrameImage} from '../lib/piece-version-frame-assets';
+import {carouselArtId,carouselCompositionNotice,carouselPreviewId,carouselPlanFor,composeCarousel} from '../lib/studio-carousel-client';
+import {sha256Hex} from '../lib/browser-bytes.ts';
+import {samePieceContent,setDraftCarouselArt,setDraftCarouselRender} from '../lib/studio-state.ts';
 import {bindVersionImage, lookupVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
 import {fetchPrivateImage} from '../lib/private-image-fetch.ts';
 import {composeStudioPng} from '../lib/studio-compose.ts';
@@ -38,6 +42,7 @@ import {useParallelExploration} from './use-parallel-exploration';
 import {releaseObjectUrl} from './release-object-url.ts';
 import {parallelExplorationContext} from '../lib/parallel-exploration-context';
 import {ParallelExplorationProgress} from './parallel-exploration-progress';
+import ParallelExplorationRecovery from './parallel-exploration-recovery';
 import type { CredentialSource } from "./use-ai-credentials";
 import { selectedExplorationKey } from "../lib/exploration-batch";
 import {confirmedExploration,recordCompletedExploration,prepareExplorationDraft} from "../lib/exploration-draft";
@@ -79,12 +84,12 @@ import StudioAssets from "./studio-assets";
 import * as z from '../lib/schema.ts';
 import { projectsSchema, projectResponseSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
 import { versionsSchema, versionSchema } from '../lib/studio-piece-contract';
-import type { StudioState, StudioReference, ActionResult } from '../lib/studio-domain';
+import type { StudioState, StudioReference, ActionResult, PieceFrame, PieceContent, StudioDraft } from '../lib/studio-domain';
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
-const ParallelExplorationRecovery=lazy(()=>import('./parallel-exploration-recovery'));
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;awaitConfirmedIdentity?:()=>Promise<boolean>;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+const carouselSaveHint='Componha as lâminas na revisão antes de salvar esta versão.';
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;carouselRenderAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;awaitConfirmedIdentity?:()=>Promise<boolean>;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
 type Confirmation={name:StudioActionName;args:StudioAction};
@@ -120,6 +125,7 @@ export default function StudioApp({
   selectedVisualsAvailable = false,
   selectedVisualsRequired = false,
   referenceAuthorityEnabled = false,
+  carouselRenderAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -337,6 +343,7 @@ export default function StudioApp({
         selectedVisualsAvailable={selectedVisualsAvailable}
         selectedVisualsRequired={selectedVisualsRequired}
         referenceAuthorityEnabled={referenceAuthorityEnabled}
+        carouselRenderAvailable={carouselRenderAvailable}
         onUseAI={onUseAI}
         onPauseAI={onPauseAI}
         getApiKey={getApiKey}
@@ -417,6 +424,7 @@ function ProjectStudio({
   selectedVisualsAvailable = false,
   selectedVisualsRequired = false,
   referenceAuthorityEnabled = false,
+  carouselRenderAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -489,6 +497,12 @@ function ProjectStudio({
     [drawer, setDrawer] = useState<StudioDrawer>(null),
     [viewingArt, setViewingArt] = useState(false),
     [panelRequest, setPanelRequest] = useState<{id:string;nonce:number}|null>(null);
+  const carouselRequest=useRef<AbortController|null>(null);
+  const carouselArtBusy=useRef(false);
+  const [uploadingCarouselArt,setUploadingCarouselArt]=useState(false);
+  const [composingCarousel,setComposingCarousel]=useState(false);
+  const versionBusy=saving||composingCarousel||uploadingCarouselArt;
+  const [loadedCarousel,setLoadedCarousel]=useState<string|null>(null);
   const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
   const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
   const referenceUrls=useRef(new Map<string,number>()),referenceUrlGeneration=useRef(0),referenceUrlCleanup=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -507,6 +521,9 @@ function ProjectStudio({
     baseLoadGeneration=useRef(0),
     versionsReadSequence=useRef(0),
     proposalRequest=useRef({scope:'',sequence:0,pending:false});
+  const isStudioActive=()=>active.current&&isAuthenticated();
+  const authenticatedFetch:typeof fetch=(input,init)=>isStudioActive()
+    ? fetch(input,init) : Promise.reject(Error('studio_scope_changed'));
   const [authorityStatus,setAuthorityStatus]=useState<'checking'|'ready'|'pending'|'conflict'|'unavailable'>('checking');
   const [authorityReview,setAuthorityReview]=useState<ReferenceAdoptionReview|null>(null);
   const authorityCurrent=useRef<'checking'|'ready'|'pending'|'conflict'|'unavailable'>('checking'),authorityLock=useRef(false);
@@ -799,10 +816,10 @@ function ProjectStudio({
     }
     return (await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'base'}))?.file??null;
   }
-  async function cacheSavedImage(pieceId:string, version:number, file:Blob) {
+  async function cacheSavedImage(pieceId:string, version:number, file:Blob, frameId?:string) {
     const storage=local.storage.current;
     if(!storage||version<1)return;
-    try{await storage.putDraftAsset({userId, projectId:project.id, pieceId, baseVersion:version, kind:'base', file});}
+    try{await storage.putDraftAsset({userId, projectId:project.id, pieceId, baseVersion:version, kind:'base', frameId, file});}
     catch(error){if(!(error instanceof StudioStorageError)||error.code!=='studio_draft_asset_exists')throw error;}
   }
   async function canonicalImage(pieceId:string, version:number) {
@@ -812,7 +829,119 @@ function ProjectStudio({
     await cacheSavedImage(pieceId, version, blob);
     return blob;
   }
+  async function workingFrameImage(pieceId:string, baseVersion:number, frame:PieceFrame, content?:PieceContent) {
+    const storage=local.storage.current;
+    if(!storage)return null;
+    if(content?.carouselPlan){
+      const panel=content.carouselRender?.frames.find(item=>item.frameId===frame.id);
+      if(!panel)return null;
+      const address={pieceId,baseVersion,kind:'preview' as const,frameId:await carouselPreviewId(frame.id,panel.sha256)};
+      const scope={userId,projectId:project.id};
+      const preview=await storage.getDraftAsset(scope,address);
+      if(preview?.file.type==='image/jpeg' && await sha256Hex(await preview.file.arrayBuffer())===panel.sha256)return preview.file;
+      if(baseVersion<1||!frame.assetId)return null;
+      return readSavedFrameImage({projectId:project.id,pieceId,version:baseVersion,frameId:frame.id,assetId:frame.assetId,expectedSha256:panel.sha256});
+    }
+    const stored=await storage.getDraftAsset({userId,projectId:project.id}, {
+      pieceId,baseVersion,kind:'base',frameId:frame.id,
+    });
+    if(stored)return stored.file;
+    if(baseVersion<1||!frame.assetId)return null;
+    const file=await readSavedFrameImage({projectId:project.id,pieceId,version:baseVersion,frameId:frame.id,assetId:frame.assetId});
+    if(file)await cacheSavedImage(pieceId,baseVersion,file,frame.id).catch(()=>{});
+    return file;
+  }
+  async function carouselArtAddress(pieceId:string,frameId:string,sha256:string) {
+    return {pieceId,baseVersion:0,kind:'art-layer' as const,frameId:await carouselArtId(frameId,sha256)};
+  }
+  async function changeCarouselArt(source:StudioDraft,frameId:string,file?:File) {
+    const storage=local.storage.current;
+    if (!storage||carouselArtBusy.current||carouselRequest.current||saveLock.current)return;
+    carouselArtBusy.current=true;
+    setUploadingCarouselArt(true);
+    const sameSource=()=>{
+      if(!isStudioActive())return false;
+      const selected=getCurrentDraft(local.get());
+      return selected?.pieceId===source.pieceId&&selected.baseVersion===source.baseVersion&&
+        selected.expectedLatestVersion===source.expectedLatestVersion&&samePieceContent(selected.content,source.content);
+    };
+    const showNotice=(message:string)=>{
+      if(isStudioActive()&&local.get().selection?.pieceId===source.pieceId)setNotice(message);
+    };
+    try {
+      if (!isAuthenticated()) await awaitConfirmedIdentity?.();
+      if (!sameSource()) throw Error('studio_scope_changed');
+      let artSha256:string|null=null;
+      if (file) {
+        if (!file.size||file.size>4*1024*1024)throw Error('carousel_art_too_large');
+        artSha256=await sha256Hex(await file.arrayBuffer());
+        const scope={userId,projectId:project.id};
+        const address=await carouselArtAddress(source.pieceId,frameId,artSha256);
+        if (!sameSource())throw Error('studio_scope_changed');
+        try {
+          await storage.putDraftAsset({...scope,...address,file,ifAbsent:true});
+        } catch (error) {
+          if (!(error instanceof StudioStorageError)||error.code!=='studio_draft_asset_exists')throw error;
+          const known=await storage.getDraftAsset(scope,address);
+          if (!known||await sha256Hex(await known.file.arrayBuffer())!==artSha256)throw error;
+        }
+      }
+      if (!sameSource()||saveLock.current)throw Error('studio_scope_changed');
+      local.change(value=>setDraftCarouselArt(value,{pieceId:source.pieceId,baseVersion:source.baseVersion,frameId,artSha256}));
+      await local.flush();
+      showNotice('');
+    }catch {
+      showNotice('Confira a seleção e escolha um PNG ou JPEG de até 4 MiB.');
+    }finally{
+      carouselArtBusy.current=false;
+      if(active.current)setUploadingCarouselArt(false);
+    }
+  }
+  async function requestCarouselComposition(source:StudioDraft) {
+    const storage=local.storage.current;
+    if(!carouselRenderAvailable||!storage||carouselRequest.current||carouselArtBusy.current||saveLock.current||!isStudioActive())return;
+    const controller=new AbortController();
+    const checkAccess=()=>{
+      controller.signal.throwIfAborted();
+      if(!isStudioActive())throw Error('studio_scope_changed');
+    };
+    carouselRequest.current=controller;
+    setComposingCarousel(true);setNotice('');
+    try{
+      const plan=carouselPlanFor(source.content);
+      if(!plan)throw Error('carousel_plan_invalid');
+      const {receipt,images}=await composeCarousel(project.id,plan,controller.signal,async(frameId,sha256)=>{
+        const address=await carouselArtAddress(source.pieceId,frameId,sha256);
+        const art=await storage.getDraftAsset({userId,projectId:project.id},address);
+        checkAccess();
+        return art?.file??null;
+      },authenticatedFetch);
+      checkAccess();
+      for(const image of images){
+        const frameId=await carouselPreviewId(image.frameId,image.sha256);
+        checkAccess();
+        await storage.putDraftAsset({userId,projectId:project.id,pieceId:source.pieceId,baseVersion:source.baseVersion,
+          kind:'preview',frameId,file:image.file});
+      }
+      checkAccess();
+      local.change(value=>setDraftCarouselRender(value,source,receipt));
+      await local.flush();
+    }catch(error){
+      if(isStudioActive()&&!controller.signal.aborted){
+        setNotice(carouselCompositionNotice(error));
+      }
+    }finally{
+      if(carouselRequest.current===controller)carouselRequest.current=null;
+      if(active.current)setComposingCarousel(false);
+    }
+  }
+  useEffect(()=>()=>carouselRequest.current?.abort(),[draft?.pieceId,draft?.baseVersion]);
+  const receiptKey=draft?.content.carouselRender
+    ? [draft.pieceId,draft.baseVersion,draft.content.carouselRender.planSha256,...draft.content.carouselRender.frames.map(frame=>frame.sha256)].join(':')
+    : null;
+  const visibleFrameBlobs=!draft?.content.carouselPlan || (receiptKey&&loadedCarousel===receiptKey) ? frameBlobs : {};
   const draftFrameIds = (draft?.content.frames ?? []).map(frame => frame.id).join(',');
+  const draftFrameAssets = (draft?.content.frames ?? []).map(frame => frame.assetId ?? '').join(',');
   useEffect(() => {
     const frames = draft?.content.frames ?? [];
     if (!frames.length) {
@@ -828,10 +957,8 @@ function ProjectStudio({
     const loadGeneration=++baseLoadGeneration.current;
     if (!draft || !local.storage.current) return;
     let live = true;
-    const storage = local.storage.current;
-    const scope = { userId, projectId: project.id };
     const pieceId=draft.pieceId, baseVersion=draft.baseVersion;
-    workingImage(pieceId, baseVersion)
+    if(!draft.content.carouselPlan) workingImage(pieceId, baseVersion)
       .then(async file=>{
         if(!live||loadGeneration!==baseLoadGeneration.current)return;
         if(file){setBase(file);return;}
@@ -845,31 +972,36 @@ function ProjectStudio({
       });
     const frames = draft.content.frames ?? [];
     if (frames.length) {
-      Promise.all(frames.map(async frame => {
-        const stored = await storage.getDraftAsset(scope, {
-          pieceId: draft.pieceId,
-          baseVersion: draft.baseVersion,
-          kind: "base",
-          frameId: frame.id,
-        }).catch(() => null);
-        return stored ? [frame.id, stored.file] as const : null;
+      Promise.allSettled(frames.map(async frame => {
+        const file=await workingFrameImage(pieceId,baseVersion,frame,draft.content);
+        return {id:frame.id,file};
       })).then(entries => {
-        if (!live) return;
-        const map: Record<string, Blob> = {};
-        for (const entry of entries) if (entry) map[entry[0]] = entry[1];
-        setFrameBlobs(current => ({ ...map, ...current }));
-      }).catch(() => {});
+        if(!live)return;
+        const map:Record<string,Blob>={};
+        for(const entry of entries){
+          if(entry.status==='fulfilled'&&entry.value.file)map[entry.value.id]=entry.value.file;
+        }
+        if(draft.content.carouselPlan){
+          setFrameBlobs(map);
+          setLoadedCarousel(receiptKey);
+          const cover=frames.find(frame=>frame.position===1);
+          if(cover)setBase(map[cover.id]??null);
+        }else setFrameBlobs(current=>({...map,...current}));
+        if(entries.some(entry=>entry.status==='rejected'))setNotice('Não foi possível verificar todas as lâminas desta versão.');
+      });
     }
     return () => {
       live = false;
     };
-  }, [draft?.pieceId, draft?.baseVersion, draftFrameIds]);
+  }, [draft?.pieceId, draft?.baseVersion, draftFrameIds, draftFrameAssets, draft?.content.carouselPlan!==undefined, receiptKey]);
   async function useBase({ blob, pieceId, version, frameId, assetId, creationContext }:ImageSelection) {
     baseLoadGeneration.current++;
     try {
       if(!local.storage.current)throw Error("Armazenamento indisponível.");
       const storage=local.storage.current;
       const scope={userId, projectId:project.id};
+      if(local.get().drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===version)?.content.carouselPlan)
+        throw Error('Use a composição do carrossel para criar as lâminas deste plano.');
       let shown=blob;
       if (frameId) {
         await storage.putDraftAsset({
@@ -944,8 +1076,8 @@ function ProjectStudio({
   function closeSettings(){setSettings(null);setDrawer(null);}
   function isRemoved(pieceId:string){return Boolean(session.get()?.posts[pieceId]?.deleted||postRecordsRef.current.some(post=>post.pieceId===pieceId&&post.deleted));}
   const journey=createStudioJourneyController({
-    getState:local.get,change:local.change,flush:local.flush,fetchImpl:fetch,
-    isActive:()=>active.current&&isAuthenticated(),isRemoved,
+    getState:local.get,change:local.change,flush:local.flush,fetchImpl:authenticatedFetch,
+    isActive:isStudioActive,isRemoved,
     locks:{creation:creationLock,save:saveLock},
   });
   function newPost(pieceId:string = crypto.randomUUID(),fromAgent=false) {
@@ -1042,34 +1174,73 @@ function ProjectStudio({
     setDialog(null);
   }
   async function saveCurrent(args?:SaveDraftInput):Promise<ActionResult> {
-    if(!getCurrentDraft(local.get())||saveLock.current)throw Error("save_unavailable");
+    const selected=getCurrentDraft(local.get());
+    if(!selected||saveLock.current||carouselRequest.current||carouselArtBusy.current)throw Error("save_unavailable");
     setSaving(true);setNotice("");
     try {
       const outcome=await journey.saveCurrent({
         readVersions:refreshVersions,
         copyDraftAsset:async(scope,source,target)=>{
           const storage=local.storage.current;
-          if(!storage)throw Error('storage_unavailable');
+          if(!storage||!isStudioActive())throw Error('storage_unavailable');
           return storage.copyDraftAsset(scope,source,target);
         },
         prepareVersionImage:async input=>{
           const storage=local.storage.current;
           if(!storage||input.userId!==userId||input.projectId!==project.id)return {status:'unknown'};
           const scope={userId:input.userId, projectId:input.projectId};
+          const {projectId,pieceId,version}=input;
+          const governed=input.content.carouselPlan!==undefined;
+          const frameLookup=(!args||governed)&&input.content.format==='carousel'&&input.content.frames?.length
+            ? await lookupVersionImage({projectId,pieceId,version})
+            : null;
+          if(frameLookup?.status==='unknown'||(governed&&frameLookup?.status!=='enabled'))return {status:'unknown'};
+          if(frameLookup?.status==='enabled'){
+            const baseVersion=input.source.baseVersion;
+            const prepared=await prepareSavedFrameImages({
+              version:{projectId,pieceId,version},
+              content:input.content,
+              readFrame:async frame=>{
+                const file=await workingFrameImage(pieceId,baseVersion,frame,input.content);
+                if(governed)return file;
+                if(file)return file;
+                if(baseVersion>=1&&frame.assetId?.[14]==='5')throw Error('frame_image_unconfirmed');
+                if(frame.position!==1)return null;
+                return await workingImage(pieceId,baseVersion) ?? (baseVersion>=1?await canonicalImage(pieceId,baseVersion):null);
+              },
+            });
+            if(prepared.status!=='ready')return prepared;
+            return {status:'ready',content:prepared.content,publish:async savedVersion=>{
+              const firstFrame=prepared.content.frames.find(frame=>frame.position===1);
+              let cover:{assetId:string;file:Blob}|null=null;
+              for(const image of prepared.images){
+                const file=await publishSavedFrameImage(image,authenticatedFetch);
+                if(!file||!isStudioActive())return 'unknown';
+                if(!governed)await cacheSavedImage(pieceId,savedVersion,file,image.address.frameId).catch(()=>{});
+                if(image.address.frameId===firstFrame?.id)cover={assetId:image.address.assetId,file};
+              }
+              if(cover&&!governed){
+                if(await bindVersionImage({projectId,pieceId,version:savedVersion,assetId:cover.assetId,fetchImpl:authenticatedFetch})!=='published'||!isStudioActive())return 'unknown';
+                await cacheSavedImage(pieceId,savedVersion,cover.file).catch(()=>{});
+              }
+              return 'published';
+            }};
+          }
           const preview=input.source.baseVersion>=1?await storage.getDraftAsset(scope,{...input.source, kind:'preview'}):null;
           const source=preview??await storage.getDraftAsset(scope, input.source);
           if(!source)return {status:'absent'};
-          const {projectId,pieceId,version}=input;
-          const link=await lookupVersionImage({projectId,pieceId,version});
+          const link=frameLookup??await lookupVersionImage({projectId,pieceId,version});
           if(link.status==='unknown')return {status:'unknown'};
           if(link.status==='disabled')return {status:'ready',publish:async savedVersion=>{
+            if(!isStudioActive())return 'unknown';
             await cacheSavedImage(pieceId,savedVersion,source.file);
             return 'published';
           }};
           if(link.status==='enabled'&&link.assetId){
             const query=new URLSearchParams({projectId,pieceId,version:String(version),assetId:link.assetId});
             return {status:'ready',publish:async savedVersion=>{
-              const file=await fetchPrivateImage(query,{signal:AbortSignal.timeout(30000)});
+              const file=await fetchPrivateImage(query,{fetch:authenticatedFetch,signal:AbortSignal.timeout(30000)});
+              if(!isStudioActive())return 'unknown';
               await cacheSavedImage(pieceId,savedVersion,file);
               return 'published';
             }};
@@ -1081,8 +1252,8 @@ function ProjectStudio({
           }catch{return {status:'image_unsupported'};}
           if(png.size>4*1024*1024)return {status:'image_unsupported'};
           return {status:'ready',publish:async savedVersion=>{
-            const published=await publishVersionPng({projectId,pieceId,version:savedVersion,png});
-            if(published.status==='unknown')return 'unknown';
+            const published=await publishVersionPng({projectId,pieceId,version:savedVersion,png,fetchImpl:authenticatedFetch});
+            if(published.status==='unknown'||!isStudioActive())return 'unknown';
             await cacheSavedImage(pieceId,savedVersion,published.file);
             return published.status;
           }};
@@ -1093,6 +1264,7 @@ function ProjectStudio({
       },args);
       const notices={
         saved:'Nova versão salva.',
+        composition_required:carouselSaveHint,
         recovered:'Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',
         conflict:'Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',
         image_unsupported:'Seu rascunho foi preservado. Para salvar a versão, use uma imagem de até 2048 × 2048 pixels que resulte em um PNG de até 4 MB.',
@@ -1115,6 +1287,7 @@ function ProjectStudio({
         baseVersion: d?.baseVersion ?? null,
         expectedLatestVersion: d?.expectedLatestVersion ?? 0,
         unsaved: Boolean(d?.dirty),
+        ...(carouselRenderAvailable?{carouselCompositionAvailable:true}:{}),
       };
     },
     compor_editar_briefing: async (args,context) => {
@@ -1138,6 +1311,9 @@ function ProjectStudio({
         baseVersion: args.baseVersion,
         visualInvariants: args.visualInvariants,
         frames: args.frames,
+        ...(carouselRenderAvailable&&args.compositionMode?{
+          compositionMode:args.compositionMode,compositionTokens:args.compositionTokens,
+        }:{}),
       }));
       const firstId = next?.drafts.find(item => item.pieceId === args.pieceId && item.baseVersion === args.baseVersion)?.content.frames?.[0]?.id;
       if (firstId) setActiveFrameId(firstId);
@@ -1461,6 +1637,10 @@ function ProjectStudio({
   const activeFormat = draft ? postFormatOf(s, draft.pieceId) : 'single';
   const activeFormatOption = postFormatOption(activeFormat);
   const activeFrames = draft?.content.frames ?? [];
+  const carouselPlan=draft?.content.carouselPlan;
+  const compositionPending=Boolean(carouselPlan&&!draft?.content.carouselRender);
+  const artSlide=carouselPlan?.slides.find(slide=>slide.frameId===activeFrameId);
+  const canAttachArt=carouselRenderAvailable&&artSlide&&artSlide.layout!=='cta_closing'&&!artSlide.diagram;
   const triggerChatAction = (text: string) => {
     if (!draft) return;
     setChatMinimized(false);
@@ -1472,18 +1652,18 @@ function ProjectStudio({
       format={activeFormat}
       frames={activeFrames}
       activeFrameId={activeFrameId}
-      frameBlobs={frameBlobs}
+      frameBlobs={visibleFrameBlobs}
       canTriggerAI={canUseProjectAI}
       onSelectFrame={setActiveFrameId}
       onUpdateFrame={(frameId, patch) => {
         if (!draft) return;
         local.change(value => updateDraftFrame(value, { pieceId: draft.pieceId, baseVersion: draft.baseVersion, frameId, patch }));
       }}
-      onAddFrame={() => {
+      onAddFrame={carouselPlan ? undefined : () => {
         if (!draft || !activeFormatOption.multiFrame || activeFrames.length >= activeFormatOption.maxFrames) return;
         local.change(value => setPostFormat(value, draft.pieceId, activeFormat, activeFrames.length + 1));
       }}
-      onRemoveFrame={frameId => {
+      onRemoveFrame={carouselPlan ? undefined : frameId => {
         if (!draft || !activeFormatOption.multiFrame || activeFrames.length <= activeFormatOption.minFrames) return;
         const remaining = activeFrames.filter(item => item.id !== frameId).sort((a, b) => a.position - b.position).map((item, idx) => ({ ...item, position: idx + 1 }));
         local.change(value => setDraftFrames(value, { pieceId: draft.pieceId, baseVersion: draft.baseVersion, frames: remaining }));
@@ -1499,24 +1679,38 @@ function ProjectStudio({
           ? `Revise e aprimore os textos das lâminas deste ${activeFormatOption.label.toLowerCase()} usando copy-na-imagem (gancho direct response na capa, complementos com continuidade e adequação ao meu perfil/tom). Proponha até 3 opções de gancho para a capa e ajustes nos complementos sem gerar imagem ainda.`
           : `Revise e aprimore o texto desta imagem (${activeFormatOption.label} ${activeFormatOption.ratioLabel}) usando copy-na-imagem com foco em gancho, direct response e adequação ao meu perfil/tom de voz. Proponha até 3 opções de gancho sem gerar imagem ainda.`);
       }}
-      onGenerateRemainingFrames={() => {
+      onGenerateRemainingFrames={draft?.content.carouselPlan ? undefined : () => {
         if (!draft) return;
         const pendingPositions = [...activeFrames].sort((a, b) => a.position - b.position).slice(1).filter(item => !frameBlobs[item.id]).map(item => item.position);
         if (!pendingPositions.length) return;
         triggerChatAction(`A Lâmina 1 (âncora visual) está aprovada como referência de estilo. Gere a próxima lâmina pendente (${pendingPositions.join(', ')}) mantendo a coesão visual da Lâmina 1 e os textos revisados de cada lâmina.`);
       }}
       panels={[
-        {id:"base",label:"Imagem-base",title:"Usar uma imagem-base própria",className:"guided-base-upload",content:<label>
-            Imagem-base PNG ou JPEG
-            <input type="file" accept="image/png,image/jpeg" onChange={event => {
-              const file = event.target.files?.[0];
-              if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion,...(activeFrameId?{frameId:activeFrameId}:{})});
-              event.target.value = "";
-            }} />
-          </label>},
+        {id:"base",label:carouselPlan?"Arte da lâmina":"Imagem-base",
+          title:carouselPlan?"Anexar arte à composição":"Usar uma imagem-base própria",
+          className:"guided-base-upload",content:!carouselPlan||canAttachArt?<>
+            <label>
+              {carouselPlan?"Arquivo PNG ou JPEG da lâmina":"Imagem-base PNG ou JPEG"}
+              <input key={artSlide?.frameId} type="file" accept="image/png,image/jpeg" disabled={Boolean(carouselPlan)&&versionBusy} onChange={event=>{
+              const file=event.target.files?.[0];
+              if(file&&draft){
+                if(artSlide)void changeCarouselArt(draft,artSlide.frameId,file);
+                else void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion,...(activeFrameId?{frameId:activeFrameId}:{})});
+              }
+              event.target.value='';
+              }}/>
+            </label>
+            {artSlide?.artSha256&&draft&&<button type="button" disabled={versionBusy} onClick={()=>{void changeCarouselArt(draft,artSlide.frameId);}}>Remover arte da lâmina</button>}
+          </>:<p>Escolha uma lâmina com espaço para arte.</p>},
         {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={async version=>{
           const storage=local.storage.current;
           if(!storage)return null;
+          if(version.content.carouselPlan){
+            const cover=version.content.frames?.find(frame=>frame.position===1);
+            if(!cover?.assetId||version.project_id!==project.id||!isStudioActive())return null;
+            const jpeg=await workingFrameImage(version.piece_id,version.version,cover,version.content);
+            return jpeg&&isStudioActive()?{file:jpeg}:null;
+          }
           const localImage=await storage.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'});
           if(localImage)return localImage;
           const remote=await canonicalImage(version.piece_id, version.version);
@@ -1597,7 +1791,7 @@ function ProjectStudio({
       }}
     />
   );
-  const parallelRecovery=referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<Suspense fallback={null}><ParallelExplorationRecovery {...(referenceAuthorityEnabled?{createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={!referenceUploading&&usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={async (...args)=>{await onExplorationCompleted(...args);if(active.current)setRecoveredCompletions(value=>value+1);}} onContinuePlan={!pendingTurn&&!referenceUploading&&canUseProjectAI&&usingParallel&&!parallel.running&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/></Suspense>;
+  const parallelRecovery=referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery {...(referenceAuthorityEnabled?{createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={!referenceUploading&&usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={async (...args)=>{await onExplorationCompleted(...args);if(active.current)setRecoveredCompletions(value=>value+1);}} onContinuePlan={!pendingTurn&&!referenceUploading&&canUseProjectAI&&usingParallel&&!parallel.running&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>;
   const explorationRecovery=<>{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
     <StudioChat key={`${userId}:${project.id}:${conversationId??"legacy"}`} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} referenceAuthorityBlocked={referenceAuthorityEnabled&&authorityStatus!=='ready'} {...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&!proposalsLocked&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
@@ -1726,8 +1920,9 @@ function ProjectStudio({
             <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" aria-label="Escolher mais referências" title="Escolher mais referências" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}><PostActionIcon path="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5a1 1 0 1 0 0-.01"/>Referências</button>
             <button type="button" className="studio-button-secondary" aria-label="Configurações do Post" title="Configurações do Post" onClick={()=>setPostSettingsOpen(true)}><PostActionIcon path="M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"/>Configurações</button>
             <button type="button" className="studio-button-secondary" aria-label="Revisar post" title="Revisar post" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}><PostActionIcon path="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/>Revisar</button>
-            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} title="Salvar versão" disabled={saving||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
+            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} aria-describedby={compositionPending?'studio-carousel-save-hint':undefined} title="Salvar versão" disabled={versionBusy||compositionPending||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
 
+          {compositionPending&&<p id="studio-carousel-save-hint" className="studio-hint">{carouselSaveHint}</p>}
           <div className="guided-artwork-editor">
           {editor}
         </div>
@@ -1970,7 +2165,23 @@ function ProjectStudio({
           }
           description="Confira arte, fatos e legenda antes de usar."
         >
-          <p className="studio-hint">{postTitle}</p><StudioReview title={projectDetails.title} draft={draft} base={base} format={activeFormat} frames={activeFrames} frameBlobs={frameBlobs} />
+          <p className="studio-hint">{postTitle}</p>
+          <StudioReview
+            title={projectDetails.title}
+            downloadTitle={postTitle}
+            draft={draft}
+            base={base}
+            format={activeFormat}
+            frames={activeFrames}
+            frameBlobs={visibleFrameBlobs}
+            saving={saving}
+            composing={composingCarousel}
+            uploadingArt={uploadingCarouselArt}
+            onCompose={carouselRenderAvailable&&draft?.content.carouselPlan ? ()=>{void requestCarouselComposition(draft);} : undefined}
+            onSave={() => {
+              void saveCurrent().catch(() => setNotice('Não foi possível iniciar o salvamento desta versão.'));
+            }}
+          />
           <button onClick={() => nextStage("studio")}>
             Pedir ajuste no estúdio
           </button>

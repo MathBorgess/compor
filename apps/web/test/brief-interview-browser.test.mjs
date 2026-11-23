@@ -175,7 +175,10 @@ test('respostas exibem Markdown seguro e indicam processamento acessível', {ski
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   const status = page.getByRole('status').filter({hasText:'Compor está trabalhando…'});
   await status.waitFor();
-  assert.equal(await status.locator('i').first().evaluate(element=>getComputedStyle(element).animationName),'none');
+  const dots = page.locator('.studio-thinking').filter({has: status}).locator('.studio-thinking-dots');
+  assert.equal(await dots.getAttribute('aria-hidden'), 'true');
+  assert.deepEqual(await dots.locator('i').evaluateAll(elements => elements.map(element => getComputedStyle(element).animationName)),
+    ['none', 'none', 'none']);
   release();
   const message=activeChat(page).locator('article[data-role="assistant"]').last();
   await message.locator('strong').getByText('Direção visual').waitFor();

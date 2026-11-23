@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {carouselPlanJson} from '../lib/carousel-plan-json.ts';
 import { createPieceRoutes } from '../lib/piece-route.ts';
 const projectId = '11111111-1111-4111-8111-111111111111';
 const pieceId = '22222222-2222-4222-8222-222222222222';
@@ -73,6 +75,63 @@ test('aceita o plano de carrossel e rejeita lâminas em um Story antes de gravar
   assert.equal((await routes.POST(request({ ...version, content:carousel }))).status, 200);
   assert.equal((await routes.POST(request({ ...version, content:{ ...carousel, format:'story' } }))).status, 400);
   assert.deepEqual(calls, [{ ...version, content:carousel }]);
+});
+
+test('salva e lista carrossel composto sem perder a leitura da versão legada', async () => {
+  const {createProjectPieceStore} = await import('../lib/piece-store.ts');
+  const frames = [1, 2, 3].map(position => ({
+    id: `44444444-4444-4444-8444-44444444444${position}`,
+    position, role: '', headline: `Lâmina ${position}`, body: position === 2 ? 'Texto de apoio' : '', visualCue: '',
+    assetId: `55555555-5555-5555-8555-55555555555${position}`,
+  }));
+  const slides = frames.map(({id, position, headline, body}) => ({
+    id, layout: position === 3 ? 'cta_closing' : 'native_serial', headline, alt: `Descrição da lâmina ${position}`,
+    ...(body ? {body} : {}),
+  }));
+  const {caption} = content;
+  const mode = 'native_serial';
+  const planSha256 = createHash('sha256').update(carouselPlanJson({mode, slides, caption})).digest('hex');
+  const carouselPlan = {mode, slides: slides.map(({id, layout, alt}) => ({frameId: id, layout, alt}))};
+  const carouselRender = {planSha256, frames: slides.map(({id, alt}, index) => ({
+    frameId: id, alt, sha256: createHash('sha256').update(`jpeg-${index}`).digest('hex'),
+  }))};
+  const legacy = {...content, format: 'carousel', frames};
+  const governed = {...legacy, carouselPlan, carouselRender};
+  const legacyRow = {
+    project_id: projectId, piece_id: pieceId, version: 1, content: legacy, created_at: '2026-11-21T00:00:00Z',
+    metadata: {baseVersion: null, revision: 0, approval: {status: 'unapproved', kind: null, sourceVersion: null, at: null}},
+  };
+  const savedRow = {...legacyRow, version: 2, content: governed, metadata: {...legacyRow.metadata, baseVersion: 1}};
+  const store = createProjectPieceStore({url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetchImpl: async (url, options) => {
+    assert.equal(options.headers.authorization, 'Bearer fake-user-token');
+    if (url.pathname === '/rest/v1/rpc/save_piece_version_v2') {
+      const submitted = JSON.parse(options.body);
+      const expectedVersion = submitted.p_expected_version === 0 ? 0 : 1;
+      assert.deepEqual(submitted, {
+        p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion,
+        p_base_version: expectedVersion, p_content: expectedVersion === 0 ? legacy : governed,
+      });
+      return Response.json({status: 'saved', version: expectedVersion === 0 ? legacyRow : savedRow});
+    }
+    assert.equal(url.pathname, '/rest/v1/rpc/list_project_piece_versions_v3');
+    return Response.json([savedRow, legacyRow]);
+  }});
+  const routes = createPieceRoutes({appOrigin: 'https://compor.test', resolveActor: async () => actor, ownsProject: async () => true, pieceStore: store});
+  const load = () => routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`));
+  const first = await routes.POST(request({projectId, pieceId, baseVersion: 0, expectedVersion: 0, content: legacy}));
+  assert.equal(first.status, 200);
+  assert.deepEqual(await first.json(), {status: 'saved', version: legacyRow});
+  const saved = await routes.POST(request({projectId, pieceId, baseVersion: 1, expectedVersion: 1, content: governed}));
+  assert.equal(saved.status, 200);
+  assert.deepEqual(await saved.json(), {status: 'saved', version: savedRow});
+  const listed = await load();
+  assert.equal(listed.status, 200);
+  assert.deepEqual((await listed.json()).versions, [savedRow, legacyRow]);
+
+  savedRow.content = {...governed, carouselRender: {...carouselRender, planSha256: 'a'.repeat(64)}};
+  const corrupted = await load();
+  assert.equal(corrupted.status, 503);
+  assert.doesNotMatch(await corrupted.text(), /Lâmina|fake-user-token/);
 });
 
 test('base explícita e aprovação usam contratos distintos sem aceitar aprovação inventada',async()=>{
