@@ -91,8 +91,9 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
     try {
       return await fetch(origin + '/api/studio/carousel/render', {
         method: 'POST',
-        headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/json', ...headers },
-        body: JSON.stringify(payload),
+        headers: { Cookie: cookie, Origin: origin,
+          ...(payload instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...headers },
+        body: payload instanceof FormData ? payload : JSON.stringify(payload),
         signal: AbortSignal.timeout(30_000),
       });
     } catch (error) {
@@ -159,4 +160,46 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
     assert.equal(image.size,panel.bytes);
     assert.equal(createHash('sha256').update(Buffer.from(await image.arrayBuffer())).digest('hex'),panel.sha256);
   }
+
+  const source = await sharp({create:{width:320,height:240,channels:3,background:'#87815b'}}).jpeg().toBuffer();
+  const artSha256 = createHash('sha256').update(source).digest('hex');
+  const rasterPlan = {
+    ...plan,
+    slides: [
+      {...plan.slides[0], layout:'framed_plate', artSha256},
+      plan.slides[1],
+      {...plan.slides[1], id:'releitura', headline:'Observe a cor do café', body:'Compare a foto com a cena.'},
+      plan.slides[2],
+    ],
+  };
+  const multipart = (project, bytes, mime = 'image/jpeg') => {
+    const form = new FormData();
+    form.append('request', JSON.stringify({projectId:project, plan:rasterPlan}));
+    form.append('art:capa', new Blob([bytes], {type:mime}), 'foto');
+    return form;
+  };
+  assert.equal((await post(multipart(projectId, source), { Cookie: '' })).status, 401);
+  assert.equal((await post(multipart(otherProject, Buffer.from('dados de arte inválidos')))).status, 404);
+  const wrongHash = await post(multipart(projectId, Buffer.from('hash divergente')));
+  assert.equal(wrongHash.status, 400);
+  assert.deepEqual(await wrongHash.json(), {error:'invalid_request'});
+  const wrongFormat = await post(multipart(projectId, source, 'image/png'));
+  assert.equal(wrongFormat.status, 422);
+  assert.ok((await wrongFormat.json()).checks.some(check => check.id === 'ASSET_DECODE'));
+
+  const withArt = await post(multipart(projectId, source));
+  assert.equal(withArt.status, 200, () => logs);
+  const withArtMembers = storedMembers(Buffer.from(await withArt.arrayBuffer()));
+  const artManifest = JSON.parse(withArtMembers.get('qa-manifest.json'));
+  const canonical = JSON.stringify(rasterPlan, (_key, value) =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.keys(value).sort().map(key => [key, value[key]])) : value);
+  assert.equal(artManifest.planSha256, createHash('sha256').update(canonical).digest('hex'));
+  const normalized = await sharp(source).autoOrient().png().toBuffer();
+  assert.deepEqual(artManifest.final.slides[0].artSource, {
+    sha256:artSha256, format:'jpeg', width:320, height:240, bytes:source.length,
+    embeddedSha256:createHash('sha256').update(normalized).digest('hex'),
+  });
+  assert.ok(withArtMembers.has('art-sheet.jpg'));
+  assert.equal(requests.every(request => request.startsWith('GET ')), true);
 });

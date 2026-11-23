@@ -1,11 +1,14 @@
 import * as z from './schema.ts';
 import {referenceSchema, type StudioReference, type StudioState, type StudioScope} from './studio-domain.ts';
-export interface DraftAssetAddress {pieceId:string;baseVersion:number;kind:'base'|'preview';frameId?:string}
+const assetKinds = ['base','preview','art-layer'] as const;
+const maxArtBytes = 4 * 1024 * 1024;
+const maxArtPixels = 16_000_000;
+export interface DraftAssetAddress {pieceId:string;baseVersion:number;kind:typeof assetKinds[number];frameId?:string}
 export interface DraftAssetMetadata extends DraftAssetAddress {mime:string;size:number;width:number;height:number}
 export interface StoredReference {metadata:StudioReference;file:Blob}
 export interface StoredDraftAsset {metadata:DraftAssetMetadata;file:Blob}
 interface StoredRecord {key:string;scope:string;metadata:StudioReference|DraftAssetMetadata;file:Blob}
-const assetMetadataSchema=z.strictObject({pieceId:z.string(),baseVersion:z.number(),kind:z.enum(['base','preview']),frameId:z.optional(z.string()),mime:z.string(),size:z.number(),width:z.number(),height:z.number()});
+const assetMetadataSchema=z.strictObject({pieceId:z.string(),baseVersion:z.number(),kind:z.enum(assetKinds),frameId:z.optional(z.string()),mime:z.string(),size:z.number(),width:z.number(),height:z.number()});
 const recordSchema=z.object({key:z.string(),scope:z.string(),metadata:z.union([referenceSchema,assetMetadataSchema]),file:z.instanceof(Blob)});
 function parseRecord(input:unknown):StoredRecord {const value=recordSchema.safeParse(input);if(!value.success)throw new StudioStorageError('studio_storage_corrupt');return value.data;}
 function parseRecords(input:unknown):StoredRecord[]{if(!Array.isArray(input))throw new StudioStorageError('studio_storage_corrupt');return input.map(parseRecord);}
@@ -21,16 +24,32 @@ export class StudioStorageError extends Error {
 const uuid = (value:unknown):value is string => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 function scopeOf({userId,projectId}: Partial<StudioScope>={}) { if(!uuid(userId)||!uuid(projectId))throw new StudioStorageError('studio_storage_invalid');return JSON.stringify([userId,projectId]); }
 const referenceKey = (scope:string,id:string) => {if(!uuid(id))throw new StudioStorageError('studio_storage_invalid');return JSON.stringify([scope,id]);};
-function draftAddress(scope:string,{pieceId,baseVersion,kind,frameId}:Partial<DraftAssetAddress>={}) {if(!uuid(pieceId)||typeof baseVersion!=='number'||!Number.isSafeInteger(baseVersion)||baseVersion<0||(kind!=='base'&&kind!=='preview')||(frameId!==undefined&&!uuid(frameId)))throw new StudioStorageError('studio_storage_invalid');return{key:frameId===undefined?JSON.stringify([scope,pieceId,baseVersion,kind]):JSON.stringify([scope,pieceId,baseVersion,kind,frameId]),pieceId,baseVersion,kind,...(frameId===undefined?{}:{frameId})};}
+function draftAddress(scope:string,{pieceId,baseVersion,kind,frameId}:Partial<DraftAssetAddress>={}) {
+  if(!uuid(pieceId)||typeof baseVersion!=='number'||!Number.isSafeInteger(baseVersion)||baseVersion<0||
+    !kind||!assetKinds.includes(kind)||(frameId!==undefined&&!uuid(frameId))||
+    (kind==='art-layer'&&(baseVersion!==0||!frameId)))throw new StudioStorageError('studio_storage_invalid');
+  return{key:frameId===undefined?JSON.stringify([scope,pieceId,baseVersion,kind]):JSON.stringify([scope,pieceId,baseVersion,kind,frameId]),pieceId,baseVersion,kind,...(frameId===undefined?{}:{frameId})};
+}
 const storageError = (error: unknown) => error instanceof StudioStorageError ? error : new StudioStorageError(error instanceof Error && error.name==='QuotaExceededError'?'studio_storage_quota':'studio_storage_unavailable');
-const metadataValid = (value: StudioReference) => value && Object.getPrototypeOf(value)===Object.prototype && referenceSchema.safeParse(value).success && uuid(value.id) && typeof value.name==='string' && value.name.length>0 && value.name.length<=200 && !/sk-[A-Za-z0-9_-]{20,}/.test(value.name) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size) && value.size>0 && value.size<=STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width)&&value.width>0 && Number.isSafeInteger(value.height)&&value.height>0 && value.width*value.height<=40_000_000;
+function validImageMetadata({mime,size,width,height}: Pick<DraftAssetMetadata,'mime'|'size'|'width'|'height'>, art=false) {
+  return (mime==='image/png'||mime==='image/jpeg') && Number.isSafeInteger(size) && size>0
+    && size<=(art ? maxArtBytes : STUDIO_LIMITS.referenceBytes) && Number.isSafeInteger(width) && width>0
+    && Number.isSafeInteger(height) && height>0 && width*height<=(art ? maxArtPixels : 40_000_000);
+}
+const metadataValid = (value: StudioReference) => value && Object.getPrototypeOf(value)===Object.prototype && referenceSchema.safeParse(value).success && uuid(value.id) && typeof value.name==='string' && value.name.length>0 && value.name.length<=200 && !/sk-[A-Za-z0-9_-]{20,}/.test(value.name) && validImageMetadata(value);
 const assetMetadataValid = (value: DraftAssetMetadata) => {
-  if (!value || Object.getPrototypeOf(value) !== Object.prototype) return false;
-  const sortedKeys = Object.keys(value).sort().join(',');
-  if (sortedKeys !== 'baseVersion,height,kind,mime,pieceId,size,width' && sortedKeys !== 'baseVersion,frameId,height,kind,mime,pieceId,size,width') return false;
-  return uuid(value.pieceId) && (value.frameId === undefined || uuid(value.frameId)) && Number.isSafeInteger(value.baseVersion) && value.baseVersion >= 0 && ['base','preview'].includes(value.kind) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size) && value.size > 0 && value.size <= STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width) && value.width > 0 && Number.isSafeInteger(value.height) && value.height > 0 && value.width * value.height <= 40_000_000;
+  const art = value.kind === 'art-layer';
+  if (art && (value.baseVersion!==0 || !value.frameId)) return false;
+  return uuid(value.pieceId) && (value.frameId === undefined || uuid(value.frameId)) && Number.isSafeInteger(value.baseVersion)
+    && value.baseVersion >= 0 && validImageMetadata(value,art);
 };
 const recordValid = (record: StoredRecord,asset=false) => record && (asset?("pieceId" in record.metadata && assetMetadataValid(record.metadata)):("id" in record.metadata && metadataValid(record.metadata))) && record.file instanceof Blob && record.file.size===record.metadata.size && record.file.type===record.metadata.mime;
+function matchesDraftAsset(record:StoredRecord,scope:string,address:DraftAssetAddress):record is StoredRecord & {metadata:DraftAssetMetadata} {
+  const metadata=record.metadata;
+  return record.scope===scope && 'pieceId' in metadata && recordValid(record,true)
+    && metadata.pieceId===address.pieceId && metadata.baseVersion===address.baseVersion
+    && metadata.kind===address.kind && metadata.frameId===address.frameId;
+}
 
 function checkGlobalBudget(references:StoredRecord[],assets:StoredRecord[],replacementKey:string|null,newSize:number) {
   if(references.some(record=>!recordValid(record))||assets.some(record=>!recordValid(record,true)))throw new StudioStorageError('studio_storage_corrupt');
@@ -249,7 +268,9 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       if(!(file instanceof Blob)||typeof decodeImage!=='function')throw new StudioStorageError('studio_draft_asset_invalid');
       let image:Pick<ImageBitmap,"width"|"height"|"close">|undefined,metadata:DraftAssetMetadata;
       try{
-        const dimensions=await studioImageDimensions(file);
+        const art=address.kind==='art-layer';
+        if (art && file.size>maxArtBytes) throw Error();
+        const dimensions=await studioImageDimensions(file, art ? {maxPixels:maxArtPixels} : undefined);
         image=await decodeImage(file);
         if(!await studioImageDimensionsMatch(file,dimensions,image))throw Error();
         metadata={pieceId:address.pieceId,baseVersion:address.baseVersion,kind:address.kind,...(address.frameId===undefined?{}:{frameId:address.frameId}),mime:file.type,size:file.size,width:image.width,height:image.height};
@@ -261,7 +282,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
         const store=tx.objectStore('draftAssets'),referencesRequest=tx.objectStore('references').getAll(),assetsRequest=store.getAll();
         let references:StoredRecord[]|undefined,assets:StoredRecord[]|undefined;
         let revisionChecked=input.expectedRevision===undefined;
-        const put=()=>{if(!references||!assets||!revisionChecked)return;try{const savedBase=address.kind==='base'&&address.baseVersion>=1&&assets.some(record=>record.key===address.key);if(savedBase||(input.ifAbsent&&assets.some(record=>record.key===address.key)))throw new StudioStorageError('studio_draft_asset_exists');checkGlobalBudget(references,assets,address.key,metadata.size);store.put({key:address.key,scope,metadata,file:blob});done(Object.freeze(metadata));}catch(error){fail(error);}};
+        const put=()=>{if(!references||!assets||!revisionChecked)return;try{const immutable=address.kind==='art-layer'||(address.kind==='base'&&address.baseVersion>=1);if((immutable||input.ifAbsent)&&assets.some(record=>record.key===address.key))throw new StudioStorageError('studio_draft_asset_exists');checkGlobalBudget(references,assets,address.key,metadata.size);store.put({key:address.key,scope,metadata,file:blob});done(Object.freeze(metadata));}catch(error){fail(error);}};
         if(input.expectedRevision!==undefined){const stateRequest=tx.objectStore('states').get(scope);stateRequest.onsuccess=()=>{try{if(!Number.isSafeInteger(input.expectedRevision)||readState(stateRequest.result,scope)?.revision!==input.expectedRevision)throw new StudioStorageError('studio_storage_conflict');revisionChecked=true;put();}catch(error){fail(error);}};}
         referencesRequest.onsuccess=()=>{try{references=parseRecords(referencesRequest.result);put();}catch(error){fail(error);}};
         assetsRequest.onsuccess=()=>{try{assets=parseRecords(assetsRequest.result);put();}catch(error){fail(error);}};
@@ -273,7 +294,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const scopeKey=scopeOf(scope),address=draftAddress(scopeKey,input);
     return transaction(['draftAssets'],'readonly',(tx,done,fail)=>{
       const request=tx.objectStore('draftAssets').get(address.key);
-      request.onsuccess=()=>{const raw:unknown=request.result;if(raw===undefined){done(null);return;}let value;try{value=parseRecord(raw);}catch(error){fail(error);return;}if(value.scope!==scopeKey||!("pieceId" in value.metadata)||!recordValid(value,true)||value.metadata.pieceId!==address.pieceId||value.metadata.baseVersion!==address.baseVersion||value.metadata.kind!==address.kind||value.metadata.frameId!==address.frameId){fail(new StudioStorageError('studio_storage_corrupt'));return;}done({metadata:Object.freeze({...value.metadata}),file:value.file});};
+      request.onsuccess=()=>{const raw:unknown=request.result;if(raw===undefined){done(null);return;}let value;try{value=parseRecord(raw);}catch(error){fail(error);return;}if(!matchesDraftAsset(value,scopeKey,address)){fail(new StudioStorageError('studio_storage_corrupt'));return;}done({metadata:Object.freeze({...value.metadata}),file:value.file});};
     });
   }
   // Preserve an existing destination, including one written by another tab.
@@ -288,10 +309,9 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
         let references:StoredRecord[]|undefined,records:StoredRecord[]|undefined;
         const copy=()=>{if(!references||!records)return;try{
           const original=records.find(record=>record.key===from.key),existing=records.find(record=>record.key===to.key);
-          const matches=(record:StoredRecord,address:ReturnType<typeof draftAddress>)=>record.scope===scopeKey && 'pieceId' in record.metadata && recordValid(record,true) && record.metadata.pieceId===address.pieceId && record.metadata.baseVersion===address.baseVersion && record.metadata.kind===address.kind && record.metadata.frameId===address.frameId;
-          if(existing){if(!matches(existing,to))throw new StudioStorageError('studio_storage_corrupt');done('exists');return;}
+          if(existing){if(!matchesDraftAsset(existing,scopeKey,to))throw new StudioStorageError('studio_storage_corrupt');done('exists');return;}
           if(!original){done('missing');return;}
-          if(!matches(original,from)||!('pieceId' in original.metadata))throw new StudioStorageError('studio_storage_corrupt');
+          if(!matchesDraftAsset(original,scopeKey,from))throw new StudioStorageError('studio_storage_corrupt');
           checkGlobalBudget(references,records,null,original.file.size);
           store.add({key:to.key,scope:scopeKey,metadata:{...original.metadata,baseVersion:to.baseVersion,...(to.frameId===undefined?{}:{frameId:to.frameId})},file:original.file});done('copied');
         }catch(error){fail(error);}};

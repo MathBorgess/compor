@@ -7,6 +7,7 @@ import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import sharp from 'sharp';
 import {carouselPlanJson} from '../lib/carousel-plan-json.ts';
+import {carouselArtId,carouselCopyForChat} from '../lib/studio-carousel-client.ts';
 import {finishPreparation, openConversation} from './guided-navigation.mjs';
 import {mockPostCatalog} from './mock-post-catalog.mjs';
 import {sessionCookie} from './session-cookie.mjs';
@@ -19,7 +20,7 @@ const caption = 'À luz da manhã.\nSalve para testar.';
 const sha256 = input => createHash('sha256').update(input).digest('hex');
 
 const planFrames = [
-  {headline: 'Fotografe com luz de janela', role: 'abertura', layout: 'typo_breather', alt: 'Uma manchete sobre luz de janela.'},
+  {headline: 'Fotografe com luz de janela', role: 'abertura', layout: 'framed_plate', alt: 'Uma manchete sobre luz de janela.'},
   {headline: 'Afaste a mesa da janela', role: 'orientação', layout: 'svg_diagram', alt: 'Um diagrama explica a distância da janela.'},
   {headline: 'Salve para a próxima foto', role: 'fechamento', layout: 'cta_closing', alt: 'Um pedido para salvar a orientação.'},
 ].map(({headline, role, layout, alt}, index) => ({
@@ -28,11 +29,12 @@ const planFrames = [
 }));
 
 async function mockComposition(plan) {
-  const slides = await Promise.all(plan.slides.map(async ({id, headline}, index) => {
-    const color = '#' + sha256(headline).slice(0, 6);
+  const slides = await Promise.all(plan.slides.map(async ({id, headline,artSha256}, index) => {
+    const color = '#' + sha256(headline + (artSha256??'')).slice(0, 6);
     const data = await sharp({create: {width: 1080, height: 1350, channels: 3, background: color}})
       .withIccProfile('srgb').jpeg({quality: 92, chromaSubsampling: '4:4:4'}).toBuffer();
-    return {id, index: index + 1, file: `slide-0${index + 1}.jpg`, data, bytes: data.length, sha256: sha256(data)};
+    return {id, index: index + 1, file: `slide-0${index + 1}.jpg`, data, bytes: data.length, sha256: sha256(data),
+      ...(artSha256 ? {artSource:{sha256:artSha256}} : {})};
   }));
   const planSha256 = sha256(carouselPlanJson(plan));
   const manifest = {
@@ -88,7 +90,7 @@ async function applyStudioPlan(page) {
   await context.dispose();
   const result = await page.evaluate(args => window.carouselTools.compor_definir_plano_laminas.execute(args), {
     projectId: project, requestId: id(5), revision, pieceId, baseVersion,
-    visualInvariants: 'Uma família tipográfica com azul profundo.', compositionMode: 'native_serial',
+    visualInvariants: 'Uma família tipográfica com azul profundo.', compositionMode: 'editorial_art',
     compositionTokens: {accent: '#123456'}, frames: planFrames,
   });
   assert.equal(result.status, 'completed');
@@ -98,6 +100,55 @@ async function applyStudioPlan(page) {
 async function readDownload(page, button) {
   const [download] = await Promise.all([page.waitForEvent('download'), button.click()]);
   return [download.suggestedFilename(), readStoredZip(await readFile(await download.path()))];
+}
+
+async function attachArt(page, {pieceId,frameId,bytes}) {
+  const input=page.getByLabel('Arquivo PNG ou JPEG da lâmina',{exact:true});
+  if (!await input.isVisible()) await page.getByRole('button',{name:'Arte da lâmina',exact:true}).click();
+  await input.setInputFiles({name:'fotografia.png',mimeType:'image/png',buffer:bytes});
+  const digest=sha256(bytes);
+  const assetKey=JSON.stringify([JSON.stringify([alice,project]),pieceId,0,'art-layer',await carouselArtId(frameId,digest)]);
+  await page.waitForFunction(async ({assetKey,expectedSize})=>{
+    const db=await new Promise((resolve,reject)=>{
+      const request=indexedDB.open('compor-studio-v1');
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error);
+    });
+    try {
+      return await new Promise((resolve,reject)=>{
+        const request=db.transaction('draftAssets').objectStore('draftAssets').get(assetKey);
+        request.onsuccess=()=>resolve(request.result?.file?.size===expectedSize);
+        request.onerror=()=>reject(request.error);
+      });
+    }finally{db.close();}
+  },{assetKey,expectedSize:bytes.length});
+  return digest;
+}
+
+async function localCarouselSnapshot(page, pieceId) {
+  const scope=JSON.stringify([alice,project]);
+  return page.evaluate(async ({scope,pieceId})=>{
+    const read = request => new Promise((resolve,reject)=>{
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error);
+    });
+    const db=await read(indexedDB.open('compor-studio-v1'));
+    try {
+      const tx=db.transaction(['states','draftAssets']);
+      const [row,assets]=await Promise.all([
+        read(tx.objectStore('states').get(scope)),
+        read(tx.objectStore('draftAssets').getAll()),
+      ]);
+      const selection=row?.state?.selection;
+      const draft=row?.state?.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===selection?.baseVersion);
+      return {
+        headline:draft?.content.frames?.find(frame=>frame.position===1)?.headline,
+        receipt:draft?.content.carouselRender?.planSha256??null,
+        previews:assets.filter(asset=>asset.scope===scope&&asset.metadata.pieceId===pieceId&&asset.metadata.kind==='preview')
+          .map(asset=>asset.key).sort(),
+      };
+    } finally {db.close();}
+  },{scope,pieceId});
 }
 
 test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabre em outro navegador', {timeout: 90000}, async t => {
@@ -129,7 +180,8 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
 
   const versions = [], renders = [], uploads = [], reads = [], errors = [];
   const privateImages = new Map();
-  let projects = [], catalog, interrupted = false;
+  const art = await sharp({create:{width:384,height:256,channels:3,background:'#123456'}}).png().toBuffer();
+  let projects = [], catalog, interrupted = false, delayRender;
   async function mockApi(route) {
     const request = route.request();
     const {pathname, searchParams} = new URL(request.url());
@@ -141,11 +193,27 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
     if (pathname === '/api/ai/credential-status') return route.fulfill({json: {defaultAvailable: false}});
     if (pathname === '/api/studio/carousel/render') {
       assert.equal(request.headers().accept,'multipart/form-data');
-      const {projectId, plan} = request.postDataJSON();
+      const contentType=request.headers()['content-type'];
+      const form=contentType.startsWith('multipart/form-data;')
+        ? await new Response(request.postDataBuffer(),{headers:{'content-type':contentType}}).formData()
+        : null;
+      const {projectId, plan} = form ? JSON.parse(form.get('request')) : request.postDataJSON();
       assert.equal(projectId, project);
       assert.deepEqual(plan.slides.map(slide => slide.id), planFrames.map(frame => frame.id));
+      if (form) {
+        const [{id,artSha256}]=plan.slides;
+        assert.deepEqual([...form.keys()],['request','art:'+id]);
+        const file=form.get('art:'+id);
+        assert.equal(file.name,'art');
+        assert.equal(file.type,'image/png');
+        assert.deepEqual(Buffer.from(await file.arrayBuffer()),art);
+        assert.equal(artSha256,sha256(art));
+      }else{
+        assert.ok(plan.slides.every(slide=>slide.artSha256===undefined));
+      }
       const render = await mockComposition(plan);
       renders.push({plan, ...render});
+      await delayRender?.();
       return route.fulfill({contentType:render.contentType,body:render.body});
     }
     if (pathname === '/api/pieces') {
@@ -225,18 +293,34 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   assert.equal(renders.length, 1);
 
   await button('Pedir ajuste no estúdio').click();
-  if (!await page.getByLabel('Manchete na imagem (gancho)', {exact: true}).isVisible()) await button('Textos').click();
-  await page.getByLabel('Manchete na imagem (gancho)', {exact: true}).fill('Faça a foto junto à janela');
+  const artSha256=await attachArt(page,{pieceId,frameId:planFrames[0].id,bytes:art});
+  await button('Remover arte da lâmina').waitFor();
   await button('Revisar post').click();
+  assert.equal(await exportZip.isDisabled(),true,'anexar arte invalida a composição anterior');
+  let entered, release;
+  const enteredRender=new Promise(resolve=>{entered=resolve;});
+  const holdResponse=new Promise(resolve=>{release=resolve;});
+  delayRender=()=>{entered();return holdResponse;};
+  try{
+    await compose.click();
+    await enteredRender;
+    await button('Pedir ajuste no estúdio').click();
+    const headline=page.getByLabel('Manchete na imagem (gancho)',{exact:true});
+    if (!await headline.isVisible()) await button('Textos').click();
+    await headline.fill('Faça a foto junto à janela');
+    await button('Revisar post').click();
+  }finally{delayRender=undefined;release();}
+  await compose.and(page.locator(':enabled')).waitFor();
   assert.equal(await exportZip.isDisabled(), true, 'uma edição invalida o ZIP anterior');
   assert.equal(await save.isDisabled(), true, 'uma edição invalida o salvamento sem recompor');
-  assert.equal(renders.length, 1, 'editar um título não dispara render automaticamente');
+  assert.equal(renders.length, 2, 'editar um título não dispara render automaticamente');
   await compose.click();
   await exportZip.and(page.locator(':enabled')).waitFor();
-  assert.equal(renders.length, 2);
-  assert.notEqual(renders[0].planSha256, renders[1].planSha256);
-  const render = renders[1];
+  assert.equal(renders.length,3);
+  assert.notEqual(renders[1].planSha256,renders[2].planSha256);
+  const render=renders[2];
   assert.equal(render.plan.slides[0].headline, 'Faça a foto junto à janela');
+  assert.equal(render.plan.slides[0].artSha256,artSha256);
   await page.getByRole('img', {name: planFrames[0].composition.alt, exact: true}).waitFor();
   const [draftName, draftZip] = await readDownload(page, exportZip);
   assert.equal(draftName, title + '-v0.zip');
@@ -259,6 +343,10 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   const saved = versions[0];
   assert.equal(saved.piece_id, pieceId);
   assert.equal(saved.content.carouselRender.planSha256, render.planSha256);
+  assert.equal(saved.content.carouselPlan.slides[0].artSha256,artSha256);
+  const chatCopy=carouselCopyForChat(saved.content);
+  assert.equal(chatCopy.carouselPlan.slides[0].artSha256,undefined);
+  assert.equal(saved.content.carouselPlan.slides[0].artSha256,artSha256);
   for (const frame of saved.content.frames) {
     assert.match(frame.assetId, /^[\da-f]{8}-[\da-f]{4}-5[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/);
     assert.deepEqual(privateImages.get(frame.assetId), render.slides[frame.position - 1].data);
@@ -280,6 +368,72 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   assert.deepEqual([...savedZip.values()], [...draftZip.values()]);
   assert.ok(reads.length >= readsBeforeReopen + 3, 'um navegador sem cache recupera cada JPEG pela versão');
   assert.equal(uploads.length, writesBeforeReopen, 'reabrir e baixar não republicam objetos');
-  assert.equal(renders.length, 2, 'reabrir não recompõe carrosséis salvos');
+  assert.equal(renders.length,3,'reabrir não recompõe carrosséis salvos');
+  const freshButton=name=>fresh.getByRole('button',{name,exact:true});
+  await freshButton('Pedir ajuste no estúdio').click();
+  const freshHeadline=fresh.getByLabel('Manchete na imagem (gancho)',{exact:true});
+  if (!await freshHeadline.isVisible()) await freshButton('Textos').click();
+  await freshHeadline.fill('Fotografe com a janela ao lado');
+  await open.click();
+  await freshButton('Compor lâminas').click();
+  const missingArt=fresh.getByText('Anexe novamente a arte da lâmina no estúdio para compor neste navegador.',{exact:true});
+  await missingArt.waitFor();
+  assert.equal(renders.length,3,'o render não recebe pedido sem o original local');
+  assert.equal(await download.isDisabled(),true);
+  await freshButton('Pedir ajuste no estúdio').click();
+  await attachArt(fresh,{pieceId,frameId:planFrames[0].id,bytes:art});
+  await missingArt.waitFor({state:'hidden'});
+  await open.click();
+  await Promise.all([
+    fresh.waitForResponse(response=>new URL(response.url()).pathname==='/api/studio/carousel/render'&&response.ok()),
+    freshButton('Compor lâminas').click(),
+  ]);
+  await download.and(fresh.locator(':enabled')).waitFor();
+  assert.equal(renders.length,4,'a recomposição fica disponível após anexar a fonte');
+
+  await t.test('saída pendente descarta o render recebido sem gravar prévias ou recibo', async () => {
+    await freshButton('Pedir ajuste no estúdio').click();
+    if (!await freshHeadline.isVisible()) await freshButton('Textos').click();
+    const headlineDepoisDaEdicao='Compare a luz em dois horários';
+    await freshHeadline.fill(headlineDepoisDaEdicao);
+    await open.click();
+    assert.equal(await download.isDisabled(), true);
+
+    const renderEntered=Promise.withResolvers();
+    const renderReleased=Promise.withResolvers();
+    const signOutReleased=Promise.withResolvers();
+    delayRender=()=>{renderEntered.resolve();return renderReleased.promise;};
+    await fresh.route('**/auth/sign-out',async route=>{
+      await signOutReleased.promise;
+      return route.fulfill({json:{state:'signed-out'}});
+    });
+    try {
+      await freshButton('Compor lâminas').click();
+      await renderEntered.promise;
+      assert.equal(renders.length,5);
+      assert.equal(renders[4].plan.slides[0].headline,headlineDepoisDaEdicao);
+      await fresh.getByLabel(/Conta:/).click();
+      await Promise.all([
+        fresh.waitForRequest(request=>new URL(request.url()).pathname==='/auth/sign-out'&&request.method()==='POST'),
+        freshButton('Sair').click(),
+      ]);
+      const boundary=fresh.getByTestId('studio-auth-boundary');
+      await boundary.and(fresh.locator('[hidden]')).waitFor({state:'attached'});
+      // The logout request waits for the edited draft to flush first. Keep the
+      // workspace mounted and inert until the competing render has settled.
+      const before=await localCarouselSnapshot(fresh,pieceId);
+      assert.equal(before.headline,headlineDepoisDaEdicao);
+      assert.equal(before.receipt,null);
+      const composeLabel=boundary.locator('button').filter({hasText:/^Compor lâminas$/});
+      assert.equal(await composeLabel.count(),0,'o render ainda está em andamento');
+      renderReleased.resolve();
+      await composeLabel.waitFor({state:'attached'});
+      assert.deepEqual(await localCarouselSnapshot(fresh,pieceId),before);
+    } finally {
+      delayRender=undefined;
+      renderReleased.resolve();
+      signOutReleased.resolve();
+    }
+  });
   assert.deepEqual(errors, []);
 });

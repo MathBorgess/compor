@@ -26,16 +26,49 @@ export function carouselPreviewId(frameId: string, sha256: string) {
   return versionImageIdForName('compor-carousel-preview/' + frameId + '/' + sha256);
 }
 
+// The storage kind separates source artwork and composed previews.
+export const carouselArtId = carouselPreviewId;
+
+export function carouselCopyForChat(content: PieceContent | undefined): PieceContent | null {
+  const plan=content?.carouselPlan;
+  if (!content || !plan) return content ?? null;
+  return {...content,carouselPlan:{...plan,slides:plan.slides.map(({artSha256: _artSha256,...slide})=>slide)}};
+}
+
 export type ComposedCarousel = {
   receipt: CarouselRender;
   images: {frameId:string;file:Blob;sha256:string}[];
 };
 
-export async function composeCarousel(projectId: string, plan: NonNullable<ReturnType<typeof carouselPlanFor>>, signal: AbortSignal) {
+export async function composeCarousel(
+  projectId: string,
+  plan: NonNullable<ReturnType<typeof carouselPlanFor>>,
+  signal: AbortSignal,
+  loadArt?: (frameId: string, sha256: string) => Promise<Blob | null>,
+  fetchImpl = fetch,
+) {
   const planSha256 = await sha256Hex(carouselPlanJson(plan));
-  const response = await fetch('/api/studio/carousel/render', {
-    method:'POST', headers:{'content-type':'application/json',accept:'multipart/form-data'}, body:JSON.stringify({projectId,plan}), signal, cache:'no-store',
+  const json=JSON.stringify({projectId,plan});
+  const form=plan.slides.some(slide=>slide.artSha256!==undefined)?new FormData():null;
+  const headers: Record<string, string> = {accept:'multipart/form-data'};
+  if (form) {
+    form.set('request',json);
+    let bytes=new TextEncoder().encode(json).byteLength;
+    for (const {id,artSha256} of plan.slides) {
+      if (artSha256===undefined) continue;
+      const file=await loadArt?.(id,artSha256);
+      signal.throwIfAborted();
+      if (!file?.size) throw Error('carousel_art_missing');
+      bytes+=file.size;
+      if (bytes>=MAX_ARCHIVE_BYTES) throw Error('carousel_art_too_large');
+      if (await sha256Hex(await file.arrayBuffer())!==artSha256) throw Error('carousel_art_missing');
+      form.set('art:'+id,file,'art');
+    }
+  } else headers['content-type']='application/json';
+  const response = await fetchImpl('/api/studio/carousel/render', {
+    method:'POST', headers, body:form??json, signal, cache:'no-store',
   });
+  if (response.status===413) throw Error('carousel_art_too_large');
   if (response.status===422) throw Error('carousel_quality_held');
   if (response.status===429) throw Error('carousel_renderer_busy');
   if (!response.ok || !response.headers.get('content-type')?.startsWith('multipart/form-data;') ||
@@ -53,6 +86,8 @@ export async function composeCarousel(projectId: string, plan: NonNullable<Retur
   });
   const images=await Promise.all(receipt.frames.map(async(frame,index)=>{
     const panel = panels[index];
+    const requestedArt=plan.slides[index].artSha256;
+    if (requestedArt&&(!record(panel.artSource)||panel.artSource.sha256!==requestedArt)) throw Error('carousel_receipt_invalid');
     const name='slide-'+String(index+1).padStart(2,'0')+'.jpg';
     const jpeg=parts.get(name);
     if (panel.id!==frame.frameId || panel.index!==index+1 || panel.file!==name || !(jpeg instanceof Blob) ||

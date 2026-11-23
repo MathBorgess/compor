@@ -70,6 +70,7 @@ export default function StudioReview({
   frameBlobs = EMPTY_FRAME_BLOBS,
   saving = false,
   composing = false,
+  uploadingArt = false,
   onCompose,
   onSave,
 }: {
@@ -82,10 +83,12 @@ export default function StudioReview({
   frameBlobs?: Readonly<Record<string, Blob>>;
   saving?: boolean;
   composing?: boolean;
+  uploadingArt?: boolean;
   onCompose?: () => void;
   onSave?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const controlsBusy=busy||saving||composing||uploadingArt;
   const [notice, setNotice] = useState("");
   const generation = useRef(0);
   const locked = useRef(false);
@@ -270,12 +273,12 @@ export default function StudioReview({
       {caption && <p className="studio-review-caption">{caption}</p>}
       <div className="studio-review-actions">
         {governed && !completeCarousel && onCompose && (
-          <button type="button" className="studio-button" disabled={composing || saving || busy} onClick={onCompose}>
+          <button type="button" className="studio-button" disabled={controlsBusy} onClick={onCompose}>
             {composing ? 'Compondo…' : 'Compor lâminas'}
           </button>
         )}
         {isCarousel && draft && onSave && (
-          <button type="button" className="studio-button-secondary" disabled={saving || busy || composing || (governed && !completeCarousel)} onClick={onSave}>
+          <button type="button" className="studio-button-secondary" disabled={controlsBusy || (governed && !completeCarousel)} onClick={onSave}>
             {saving ? "Salvando…" : "Salvar versão"}
           </button>
         )}
@@ -283,7 +286,7 @@ export default function StudioReview({
           <button
             type="button"
             className="studio-button"
-            disabled={busy || saving || composing || !completeCarousel || !draft}
+            disabled={controlsBusy || !completeCarousel || !draft}
             aria-describedby={completeCarousel ? undefined : availabilityId}
             onClick={() => { void downloadCarousel(); }}
           >

@@ -7,11 +7,13 @@ const digest = z.string().check(z.regex(/^[a-f0-9]{64}$/));
 const alt = z.string().check(z.maxLength(350),z.refine(value =>
   Boolean(value.trim())&&!/[\u0000-\u001f\u007f]|sk-[^\s]+/i.test(value)));
 
-type Slide = CarouselSlideComposition & {frameId:string};
+type Slide = CarouselSlideComposition & {frameId:string;artSha256?:string};
 function isSlide(value:unknown):value is Slide {
   if (!value || typeof value!=='object' || Array.isArray(value) || !('frameId' in value))return false;
-  const {frameId,...recipe}=value;
-  return uuid.safeParse(frameId).success&&isCarouselSlideComposition(recipe);
+  const {frameId,...slots}=value;
+  const {artSha256,...recipe}=slots as Record<string,unknown>;
+  return uuid.safeParse(frameId).success&&isCarouselSlideComposition(recipe)&&
+    (artSha256===undefined||(digest.safeParse(artSha256).success&&recipe.diagram===undefined&&recipe.layout!=='cta_closing'));
 }
 const slide = z.pipe(z.unknown().check(z.refine(isSlide)),z.transform(value=>value as Slide));
 const tokens = z.pipe(z.unknown().check(z.refine(isCarouselCompositionTokens)),z.transform(value=>value as CarouselCompositionTokens));

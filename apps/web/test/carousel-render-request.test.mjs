@@ -78,3 +78,76 @@ test('enforces the inclusive 32 KiB body limit even without a length header', as
   assert.deepEqual(await readCarouselRenderRequest(request(stream)), tooLarge);
   assert.equal(cancelled, true);
 });
+
+const raster = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+const artSha256 = createHash('sha256').update(raster).digest('hex');
+const artSlide = {id: 'arte', layout: 'framed_plate', headline: 'A arte no plano', alt: 'Uma prancha.', artSha256};
+const artPlan = {...plan, slides: [artSlide, slide]};
+
+function multipart(entries) {
+  const form = new FormData();
+  for (const [name, value] of entries) form.append(name, value);
+  return request(form, {});
+}
+
+test('multipart mantém o digest da arte no plano canônico e separa o arquivo por lâmina', async () => {
+  const artifact = new Blob([raster], {type: 'image/png'});
+  const args = JSON.stringify({projectId: projectId.toUpperCase(), plan: artPlan});
+  const parsed = await readCarouselRenderRequest(multipart([['art:arte', artifact], ['request', args]]));
+  assert.ok(parsed.ok);
+  assert.equal(parsed.projectId, projectId);
+  assert.deepEqual(parsed.plan, artPlan);
+  assert.deepEqual([...parsed.artFiles.keys()], ['arte']);
+  assert.equal(parsed.artFiles.get('arte').type, 'image/png');
+  assert.deepEqual(new Uint8Array(await parsed.artFiles.get('arte').arrayBuffer()), raster);
+  const canonical = JSON.stringify(artPlan, (_key, value) => value && typeof value === 'object' && !Array.isArray(value)
+    ? Object.fromEntries(Object.keys(value).sort().map(key => [key, value[key]])) : value);
+  assert.equal(parsed.planSha256, createHash('sha256').update(canonical).digest('hex'));
+  assert.deepEqual(await readCarouselRenderRequest(request(args)), invalid);
+
+  for (const type of ['image/jpeg', 'image/webp']) {
+    const declared = await readCarouselRenderRequest(multipart([
+      ['request', args], ['art:arte', new Blob([raster], {type})],
+    ]));
+    assert.equal(declared.artFiles.get('arte').type, type);
+  }
+});
+
+test('multipart recusa partes ou identificadores ambíguos, tipos inválidos e arte sem hash', async () => {
+  const payload = JSON.stringify({projectId, plan: artPlan});
+  const image = new Blob([raster], {type: 'image/png'});
+  const requestPart = ['request', payload];
+  const artPart = ['art:arte', image];
+  for (const entries of [
+    [requestPart],
+    [artPart],
+    [requestPart, requestPart, artPart],
+    [requestPart, artPart, artPart],
+    [requestPart, ['art:outro', image]],
+    [requestPart, artPart, ['art:slide-1', image]],
+    [requestPart, ['art:arte', 'https://example.test/image.png']],
+    [requestPart, ['art:arte', new Blob([raster], {type: 'image/svg+xml'})]],
+    [requestPart, ['art:arte', new Blob([], {type: 'image/png'})]],
+    [['request', new Blob([payload], {type: 'application/json'})], artPart],
+    [requestPart, artPart, ['url', 'https://example.test/image.png']],
+    [['request', JSON.stringify({projectId, plan})], artPart],
+    [['request', JSON.stringify({projectId, plan: {...artPlan, slides: [artSlide, artSlide]}})], artPart],
+    [['request', JSON.stringify({projectId, plan: {...artPlan, slides: [{...artSlide, artSha256: artSha256.toUpperCase()}]}})], artPart],
+  ]) assert.deepEqual(await readCarouselRenderRequest(multipart(entries)), invalid);
+});
+
+test('limita a parte JSON a 32 KiB e o multipart completo a 4 MiB', async () => {
+  const payload = JSON.stringify({projectId, plan: artPlan});
+  const limit = 32 * 1024;
+  const padded = payload + ' '.repeat(limit - Buffer.byteLength(payload));
+  const image = new Blob([raster], {type: 'image/png'});
+  const valid = await readCarouselRenderRequest(multipart([['request', padded], ['art:arte', image]]));
+  assert.equal(valid.ok, true);
+  assert.deepEqual(await readCarouselRenderRequest(multipart([['request', padded + ' '], ['art:arte', image]])), tooLarge);
+
+  const full = new Uint8Array(4 * 1024 * 1024);
+  const oversized = multipart([['request', payload], ['art:arte', new Blob([full], {type: 'image/png'})]]);
+  const streamed = request(await oversized.arrayBuffer(), {'content-type': oversized.headers.get('content-type')});
+  assert.equal(streamed.headers.has('content-length'), false);
+  assert.deepEqual(await readCarouselRenderRequest(streamed), tooLarge);
+});

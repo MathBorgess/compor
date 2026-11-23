@@ -194,6 +194,10 @@
     {
       "name": "20261122000048_carousel_composition.sql",
       "sha256": "4b13d5f6f2a536393ed9261b7546a85de7230266aebe79095db5f919e8937ce5"
+    },
+    {
+      "name": "20261123000049_carousel_art_source.sql",
+      "sha256": "c35bf9fe33f83e49c64b73059a5064a1c136fb4d2f61ee83fd498a483b26f938"
     }
   ]
 }

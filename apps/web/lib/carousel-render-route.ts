@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { renderDeckInMemory, validateDeck } from '@compor/carousel-renderer';
 import type { Actor } from './agent-auth.ts';
 import { readCarouselRenderRequest } from './carousel-render-request.ts';
@@ -14,6 +16,27 @@ type Dependencies = {
   ownsProject: (actor: Actor, projectId: string) => Promise<boolean>;
   render?: (plan: unknown, signal: AbortSignal) => Promise<Result>;
 };
+
+type ReadInput = Extract<Awaited<ReturnType<typeof readCarouselRenderRequest>>, { ok: true }>;
+
+async function verifiedRasterPlan({ plan, artFiles }: ReadInput, signal: AbortSignal) {
+  if (!artFiles) return plan;
+  const slides = [];
+  for (const slide of plan.slides) {
+    signal.throwIfAborted();
+    const file = artFiles.get(slide.id);
+    if (!file) {
+      slides.push(slide);
+      continue;
+    }
+    const bytes = Buffer.from(await file.arrayBuffer());
+    if (createHash('sha256').update(bytes).digest('hex') !== slide.artSha256) return null;
+    // The renderer verifies the advertised format and decodes/re-encodes the
+    // raster with Sharp before giving Chromium a normalized PNG.
+    slides.push({ ...slide, art: `data:${file.type};base64,${bytes.toString('base64')}` });
+  }
+  return { ...plan, slides };
+}
 
 function renderCarousel(plan: unknown, requestSignal: AbortSignal) {
   return withCarouselRuntime(({ signal, ...runtime }) =>
@@ -84,10 +107,12 @@ export function createCarouselRenderRoute({ appOrigin, resolveActor, ownsProject
       if (!input.ok) return reply({ error: input.error }, input.status);
       if (!await ownsProject(actor, input.projectId)) return reply({ error: 'not_found' }, 404);
 
-      const checks = validateDeck(input.plan);
+      const plan = await verifiedRasterPlan(input, request.signal);
+      if (!plan) return reply({ error: 'invalid_request' }, 400);
+      const checks = validateDeck(plan);
       if (checks.length) return reply({ error: 'invalid_plan', checks }, 422);
       request.signal.throwIfAborted();
-      const result = await render(input.plan, request.signal);
+      const result = await render(plan, request.signal);
       return await exportCarousel(result, input.planSha256, request);
     } catch (error) {
       if (request.signal.aborted) return reply({ error: 'request_aborted' }, 499);

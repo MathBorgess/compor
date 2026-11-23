@@ -59,6 +59,15 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   await repo.putDraftAsset({...scope,...target,kind:'preview',file:jpeg});
   result.draftReceivesImage=(await repo.getDraftAsset(scope,{...target,kind:'preview'})).file.type==='image/jpeg';
   result.draftLeavesSavedBase=(await repo.getDraftAsset(scope,target)).file.size===png.size;
+  const art={...source,kind:'art-layer',frameId:id(41)};
+  await repo.putDraftAsset({...scope,...art,file:png});
+  result.artImmutable=await expectError(second.putDraftAsset({...scope,...art,file:jpeg}),'studio_draft_asset_exists');
+  result.artScoped=(await repo.getDraftAsset(scope,art)).file.size===png.size
+    && await repo.getDraftAsset(other,art)===null && await repo.getDraftAsset(anotherProject,art)===null
+    && await repo.getDraftAsset(scope,{...art,kind:'preview'})===null;
+  result.artNeedsFrame=await expectError(repo.putDraftAsset({...scope,...art,frameId:undefined,file:png}),'studio_storage_invalid');
+  const oversizedArt=new Blob([new Uint8Array(4*1024*1024+1)],{type:'image/png'});
+  result.artBounded=await expectError(repo.putDraftAsset({...scope,...art,frameId:id(42),file:oversizedArt}),'studio_draft_asset_invalid');
   result.missingAsset=await repo.copyDraftAsset(other,source,target)==='missing';
   const originalAdd=IDBObjectStore.prototype.add;
   IDBObjectStore.prototype.add=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return originalAdd.apply(this,args);};

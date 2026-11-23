@@ -19,6 +19,7 @@ import {
 import { parseImageProposal, type ImageProposal } from "@compor/agents-api/image-proposal";
 import { prepareArtworkTransport, artworkSourceFingerprint, ArtworkTransportRequiredError } from "../lib/studio-artwork-input.ts";
 import { sameCreativeFields } from "../lib/studio-state.ts";
+import {carouselCopyForChat} from '../lib/studio-carousel-client';
 import { loadReadinessFeedback } from '../lib/studio-readiness.ts';
 import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, referenceFingerprint, referenceRoundKey } from '../lib/studio-reference-round.ts';
 import { assessReadiness } from '@compor/agile-deliberation/readiness';
@@ -884,7 +885,7 @@ export default function StudioChat({
         localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch,credentialSource}));
         remember(requestId);setPending(requestId);setPendingSource(credentialSource);availability.current.pending=requestId;
         const draft=getCurrentDraft(next);
-        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),...(conversationId&&conversationId!=='references'?{postContext:postContext(next,conversationId)}:{}),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
+        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:carouselCopyForChat(draft?.content),approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),...(conversationId&&conversationId!=='references'?{postContext:postContext(next,conversationId)}:{}),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
         submitted=true;
         const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:conversationMessages(before,conversationId).filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages,...(visuals??{})});
         await handle(data,requestId);
@@ -1010,7 +1011,7 @@ export default function StudioChat({
           pieceId: draft?.pieceId ?? null,
           baseVersion: draft?.baseVersion ?? 0,
           expectedLatestVersion: draft?.expectedLatestVersion ?? 0,
-          content: draft?.content ?? null,
+          content: carouselCopyForChat(draft?.content),
           approval: draft?.approval ?? null,
           baseImageId: baseId,
           ...(anchorId ? { anchorImageId: anchorId } : {}),

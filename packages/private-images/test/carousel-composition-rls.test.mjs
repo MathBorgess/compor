@@ -202,6 +202,41 @@ test('migração vincula composição, CAS e RLS JPEG e preserva versões e obje
   assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: 'unrelated.png' }]);
 });
 
+test('associa o SHA do raster ao plano sem alterar versões gravadas antes da migração', async t => {
+  const db = await fixture(t);
+  await migrate(db, ['20261122000048_carousel_composition']);
+  const original = renderedContent(governedContent());
+  await identify(db, alice);
+  assert.equal((await save(db, 0, 0, original)).status, 'saved');
+  await db.exec('reset role');
+  await migrate(db, ['20261123000049_carousel_art_source']);
+  await identify(db, alice);
+  const art = 'a'.repeat(64);
+  const draft = governedContent();
+  draft.carouselPlan.slides[0].artSha256 = art;
+  const stale = { ...original, carouselPlan: draft.carouselPlan };
+  await assert.rejects(save(db, 1, 1, stale), { code: '22023' });
+  const rendered = renderedContent(draft);
+  const replaced = structuredClone(rendered);
+  replaced.carouselPlan.slides[0].artSha256 = 'b'.repeat(64);
+  await assert.rejects(save(db, 1, 1, replaced), { code: '22023' });
+  const bodies = [
+    content => { content.carouselPlan.slides[0].artSha256 = 'A'.repeat(64); },
+    content => { content.carouselPlan.slides[0].artSha256 = null; },
+    content => { content.carouselPlan.slides[0].art = 'data:image/png;base64,AA=='; },
+    content => { content.carouselPlan.slides[1].artSha256 = art; },
+    content => { content.carouselPlan.slides[2].artSha256 = art; },
+  ];
+  for (const alter of bodies) {
+    const invalid = structuredClone(draft);
+    alter(invalid);
+    await assert.rejects(save(db, 1, 1, renderedContent(invalid)), { code: '22023' });
+  }
+  assert.equal((await save(db, 1, 1, rendered)).status, 'saved');
+  const { rows } = await db.query('select content from public.piece_versions where project_id=$1 order by version', [project]);
+  assert.deepEqual(rows.map(row => row.content), [original, rendered]);
+});
+
 test('JSONB inválido em composição ou marcador retorna invalid_request sem criar versões', async t => {
   const db = await fixture(t);
   await migrate(db, ['20261122000048_carousel_composition']);

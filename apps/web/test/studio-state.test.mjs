@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,selectDraft,getCurrentDraft,editDraft,setCreativeField,removeCreativeField,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion,pendingSelectionQuestion,REFERENCE_SELECTION_EVENT} from '../lib/studio-state.ts';
+import {setDraftCarouselArt,setDraftCarouselRender} from '../lib/studio-state.ts';
 
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const at='2026-11-05T12:00:00.000Z';
@@ -8,6 +9,29 @@ const content={headline:'Peça sintética',price:'R$ 20',date:'10/11',caption:'L
 const initial=()=>createStudioState({userId:id(1),projectId:id(2)});
 const selected=()=>selectVersion(initial(),{pieceId:id(3),version:2,latestVersion:5,content});
 const reference={id:id(8),name:'sintetica.png',mime:'image/png',size:200,width:10,height:10};
+
+test('arte da lâmina invalida a composição de forma vinculada e conserva o snapshot anterior',()=>{
+ const frameId=id(10), other=id(11), closing=id(12);
+ const layouts=[{layout:'split_horizontal'}, {layout:'svg_diagram',diagram:'flow'}, {layout:'cta_closing'}];
+ const alt='Arte independente da manchete.';
+ const frames=[frameId,other,closing].map((id,index)=>({id,position:index+1,role:'Insight',headline:'Lâmina '+index,body:'',visualCue:'',assetId:null}));
+ const carouselPlan={mode:'editorial_art',slides:frames.map((frame,index)=>({frameId:frame.id,alt,...layouts[index]}))};
+ const receipt={planSha256:'f'.repeat(64),frames:frames.map(({id})=>({frameId:id,sha256:'a'.repeat(64),alt}))};
+ const opened=selectVersion(initial(),{pieceId:id(3),version:1,latestVersion:1,content:{...content,format:'carousel',frames,carouselPlan}});
+ const completed=setDraftCarouselRender(opened,getCurrentDraft(opened),receipt);
+ const source=getCurrentDraft(completed);
+ const input={pieceId:source.pieceId,baseVersion:source.baseVersion,frameId,artSha256:'b'.repeat(64)};
+ const attached=setDraftCarouselArt(completed,input);
+ assert.equal(getCurrentDraft(attached).content.carouselPlan.slides[0].artSha256,input.artSha256);
+ assert.equal(getCurrentDraft(attached).content.carouselRender,undefined);
+ assert.deepEqual(getCurrentDraft(completed).content.carouselRender,receipt);
+ assert.equal(setDraftCarouselArt(attached,input),attached);
+ assert.throws(()=>setDraftCarouselRender(attached,source,receipt), {code:'studio_carousel_changed'});
+ assert.throws(()=>setDraftCarouselArt(attached,{...input,frameId:other}));
+ assert.throws(()=>setDraftCarouselArt(attached,{...input,frameId:closing}));
+ const removed=setDraftCarouselArt(attached,{...input,artSha256:null});
+ assert.deepEqual(getCurrentDraft(removed).content.carouselPlan,carouselPlan);
+});
 
 test('state local é segregado, versionado e imutável, sem campo ou conteúdo de chave',()=>{
  const state=updateBrief(initial(),{offer:'Curso fictício'});

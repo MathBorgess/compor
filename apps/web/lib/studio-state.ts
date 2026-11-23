@@ -227,6 +227,25 @@ export function updateDraftFrame(state: StudioState, { pieceId, baseVersion, fra
     draft.dirty = true;
   });
 }
+export function setDraftCarouselArt(state: StudioState, {pieceId,baseVersion,frameId,artSha256}: {
+  pieceId:string; baseVersion:number; frameId:string; artSha256:string|null;
+}) {
+  const parsed = parseStudioState(state);
+  const index = parsed.drafts.findIndex(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion);
+  const slides = parsed.drafts[index]?.content.carouselPlan?.slides;
+  const position = slides?.findIndex(item=>item.frameId===frameId) ?? -1;
+  const selected = slides?.[position];
+  if (!selected) throw new StudioStateError('studio_draft_unavailable');
+  if (selected.artSha256 === (artSha256 ?? undefined)) return state;
+  return changeStudioState(parsed,next=>{
+    const draft = next.drafts[index];
+    const slide = draft.content.carouselPlan!.slides[position];
+    if (artSha256===null) delete slide.artSha256;
+    else slide.artSha256=artSha256;
+    invalidateCarouselRender(draft.content);
+    draft.dirty=true;
+  });
+}
 export function reorderDraftFrames(state: StudioState, { pieceId, baseVersion, fromIndex, toIndex }: { pieceId: string; baseVersion: number; fromIndex: number; toIndex: number }) {
   return changeStudioState(state, next => {
     const draft = next.drafts.find(item => item.pieceId === pieceId && item.baseVersion === baseVersion);
