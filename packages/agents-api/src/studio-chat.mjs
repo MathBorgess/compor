@@ -148,7 +148,7 @@ async function turnInstructions(body,{automatic,hasLinks,quick,skillBundle}){
  if(!automatic&&body.visualInput)parts.push('Inclua todos os IDs local-upload de visualInput em referenceIds; você pode escolher uma subsequência das demais referências já selecionadas, preservando a ordem. Nunca inclua IDs não selecionados.');
  if(hasLinks)parts.push(linkTurnInstructions);
  if(quick)parts.push(quickReplyInstructions);
- if(!automatic&&!hasLinks&&!quick&&body.context.pieceId&&body.conversationId!=='references'){
+ if(!automatic&&!hasLinks&&!quick&&body.context.pieceId&&body.conversationId!=='references'&&!body.context.content?.carouselPlan){
   parts.push('Quando a pessoa pedir geração ou edição de arte, use as skills abaixo antes de compor o argumento prompt de generate_image. Aplique Criação para uma arte nova ou Edição ao modificar uma arte-base. Use Direção visual de campanha ao propor uma composição nova ou ao alterar sua direção. Mantenha a autorização e os textos literais do estúdio.',await imagePromptSkills('post'));
  }
  return parts.join('\n');

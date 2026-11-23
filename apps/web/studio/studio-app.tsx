@@ -9,7 +9,7 @@ import StudioReview from "./studio-review";
 import VariantCards from "./studio-variant-cards";
 import { useStudioState } from "./use-studio-state";
 import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
-import {imageReviewDisclosure} from './image-review-disclosure.ts';
+import {ReviewDisclosureBadge} from './image-review-disclosure';
 import {updateWorkflow,conversationMessages,postIds,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
 import {createStudioJourneyController,type SaveDraftInput} from '../lib/studio-journey-controller';
 import StudioNavigation from './studio-navigation';
@@ -1957,7 +1957,7 @@ function ProjectStudio({
           setSettings('references');
           journey.updateWorkflow({phase:'ready'});
           if(value.workflow.pendingPost)journey.updateWorkflow({view:'prepare-post'});
-          else journey.preparePost(crypto.randomUUID(),{initialProjectTitle:projectDetails.title});
+          else journey.preparePost(crypto.randomUUID(),{initial:true});
         }
         await local.flush();
       } else {
@@ -2009,8 +2009,11 @@ function ProjectStudio({
   })();
   const confirmedProposals=parallel.progress?.children.filter(item=>item.status==='completed').length??0;
   const proposalDisclosure=usingParallel&&selectedVisualsAvailable&&scopedReferences.some(reference=>reference.source)
-    ? `As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento. Os uploads escolhidos são usados nas três imagens. ${referenceAuthorityEnabled?'O agente pode escolher quais referências externas autorizadas e imagens geradas selecionadas também usará. ':''}A sessão do agente mantém estado e não usa retenção zero. ${imageReviewDisclosure}`
-    : imageReviewDisclosure;
+    ? <>
+        <p>{`As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento. Os uploads escolhidos são usados nas três imagens. ${referenceAuthorityEnabled?'O agente pode escolher quais referências externas autorizadas e imagens geradas selecionadas também usará. ':''}A sessão do agente mantém estado e não usa retenção zero.`}</p>
+        <ReviewDisclosureBadge compact />
+      </>
+    : <ReviewDisclosureBadge compact />;
   const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition||referenceUploading}
     onUpload={files=>{void addFiles(files);}} uploadDisabled={referenceTransition||referenceUploading||selectionBlocked} uploadStatus={referenceUploading?'Adicionando imagens à seleção…':referenceUploadFeedback?.scope===referenceScope?referenceUploadFeedback.message:undefined} selectionStatus={authorityPanel} recovery={parallelRecovery}
     onRequestProposals={requestProposals} proposalsDisabled={referenceTransition||referenceUploading||selectionBlocked||Boolean(proposalBlock)||proposalsRunning} proposalBlock={proposalBlock} proposalDisclosure={proposalDisclosure} proposalsRunning={proposalsRunning} proposalsLocked={proposalsLocked} onPauseProposals={()=>{proposalRequest.current.sequence++;proposalRequest.current.pending=false;setProposalCheck(null);setParallelGesture(null);exploration.pause();}} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':serialInspection?.scope===referenceScope&&proposalBlock?serialInspection.message:checkingProposal||parallelGesture!==null?'Verificando as condições para gerar propostas…':proposalsLocked&&usingParallel&&confirmedProposals>0?`${confirmedProposals} de 3 imagens confirmadas.`:explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{if(referenceUploadLock.current)return;exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
@@ -2044,7 +2047,7 @@ function ProjectStudio({
           <label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" onChange={event=>changePreparation({name:event.target.value})}/></label>
           <PostSettings preparing value={preparedValue} format={preparedFormat} targetFrameCount={preparedFrameCount} legacyAction={s.brief.action} onChange={changePreparation}/>
           <p className="studio-hint">A chamada para ação é opcional.</p>
-          {initialPost&&canGenerateFirstPost&&<p className="studio-hint">{imageReviewDisclosure}</p>}
+          {initialPost&&canGenerateFirstPost&&<ReviewDisclosureBadge compact />}
           <div className="guided-actions">
             <button type="button" className="studio-button-secondary" onClick={()=>{journey.cancelPreparation();showPosts();}}>Cancelar</button>
             <button type="submit" className={initialPost&&canGenerateFirstPost?'studio-button-secondary':'studio-button'} disabled={!validPostName}>{creatingPost?'Criando post…':'Continuar para criação'}</button>

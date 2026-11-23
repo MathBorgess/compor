@@ -8,7 +8,7 @@ type Props={
   onUpload:(files:File[])=>void;uploadDisabled?:boolean;uploadStatus?:string;
   onBack?:()=>void;onContinue?:()=>void;continueLabel?:string;continueDisabled?:boolean;
   onRequestProposals?:()=>void;proposalsDisabled?:boolean;proposalsRunning?:boolean;proposalsLocked?:boolean;
-  selectionStatus?:ReactNode;recovery?:ReactNode;proposalDisclosure?:string;proposalBlock?:{message:string;action?:{label:string;run:()=>void}};
+  selectionStatus?:ReactNode;recovery?:ReactNode;proposalDisclosure?:ReactNode;proposalBlock?:{message:string;action?:{label:string;run:()=>void}};
   onPauseProposals?:()=>void;proposalStatus?:string;proposalPhase?:'idle'|'generating'|'waiting'|'blocked';
   proposalProgress?:ExplorationProgress|null;
 };
@@ -63,7 +63,7 @@ export default function ReferencePanel({projectWide,onScope,entry='post',project
         <p id={uploadHelpId} className="reference-upload-help">PNG ou JPEG, até 8 MB por arquivo e 20 imagens por projeto.</p>
         {selectionStatus}
         {proposalBlock&&<div className="reference-workbench-block"><p id={proposalHelpId} role="status">{proposalBlock.message}</p>{proposalBlock.action&&<button type="button" className="studio-button-secondary" onClick={proposalBlock.action.run}>{proposalBlock.action.label}</button>}</div>}
-        {!proposalBlock&&proposalDisclosure&&<p id={proposalHelpId} className="reference-upload-help">{proposalDisclosure}</p>}
+        {!proposalBlock&&proposalDisclosure&&<div id={proposalHelpId} className="reference-upload-help">{proposalDisclosure}</div>}
         {uploadStatus&&<p role="status" className="reference-upload-feedback">{uploadStatus}</p>}
         {recovery}
         <div className="guided-reference-source reference-workbench-source" id={sourceId}>

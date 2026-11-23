@@ -994,3 +994,23 @@ test('consultas concorrentes são leituras independentes e não persistem o resu
  for(const response of results)assert.deepEqual(await response.json(),{status:'completed',retryAutomatically:false});
  assert.deepEqual(f.records.get(requestId),before);assert.equal(f.calls.length,n+4);assert.ok(f.calls.slice(n).every(call=>call.method==='GET'));
 });
+
+test('plano de carrossel omite instrução de generate_image e não reutiliza sessão anterior ao plano',async()=>{
+ const f=fixture();
+ const prePlanContext={...body.context,pieceId:attemptId,postFormat:'carousel',content:{headline:'Minha oficina',price:'',date:'',caption:'',captionOrigin:'user'}};
+ assert.equal((await f.chat(request({...body,context:prePlanContext,conversationId:attemptId,message:'Monte um carrossel da oficina.'}))).status,202);
+ const firstCreate=f.calls.find(call=>call.method==='POST'&&call.url?.endsWith('/sessions'));
+ assert.match(firstCreate.body.agent.instructions,/antes de compor o argumento prompt de generate_image/);
+ assert.match(firstCreate.body.agent.instructions,promptSkill);
+ f.set({status:'idle',turnState:'completed'});
+ assert.equal((await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:attemptId}))).status,200);
+ const planContext={...prePlanContext,content:{...prePlanContext.content,carouselPlan:{version:1,compositionMode:'editorial_art',slides:[{position:1,role:'Capa',headline:'Luz de janela',body:'',visualCue:''}]}}};
+ const second=await f.chat(request({...body,requestId:request2,previousAttemptKey:requestId,context:planContext,conversationId:attemptId,message:'Gere as lâminas deste plano.'}));
+ assert.equal(second.status,202);
+ assert.equal((await second.json()).sessionReused,false,'alteração para carouselPlan exige nova sessão com instruções atualizadas');
+ const creates=f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions'));
+ assert.equal(creates.length,2);
+ assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0);
+ assert.doesNotMatch(creates[1].body.agent.instructions,/antes de compor o argumento prompt de generate_image/);
+ assert.doesNotMatch(creates[1].body.agent.instructions,promptSkill);
+});

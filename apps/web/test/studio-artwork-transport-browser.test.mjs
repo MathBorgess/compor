@@ -202,11 +202,15 @@ test('chat conserva relato de capa iniciada e mostra proposta de arte integral p
     const imageProposal = {prompt: 'Arte integral para a capa da oficina', operation: 'create',
       frameId: carouselFrames[0].id, frameIndex: 1, referenceIds: []};
     const calls = [];
+    let allowDecline = false;
     await page.route('**/api/**', async route => {
       const request = route.request();
       const path = new URL(request.url()).pathname;
       const body = request.method() === 'POST' ? request.postDataJSON() : null;
       calls.push({path, body});
+      if (path === '/api/studio/action' && allowDecline) {
+        return route.fulfill({status: 202, json: {status: 'completed', text: 'Proposta dispensada.'}});
+      }
       if (path !== '/api/studio/chat') return route.fulfill({status: 500, json: {error: 'unexpected_api'}});
       if (body.op === 'poll' && body.requestId === requestId) {
         return route.fulfill({status: 202, json: {status: 'completed', text: statedProgress}});
@@ -232,9 +236,16 @@ test('chat conserva relato de capa iniciada e mostra proposta de arte integral p
     assert.deepEqual(calls.map(call => call.path), ['/api/studio/chat', '/api/studio/chat']);
     assert.equal(await page.getByRole('button', {name: 'Preparar cópias para envio', exact: true}).count(), 0);
 
-    await t.test('um plano composto oferece a orientação de revisão sem o cartão de arte integral',
-      {todo: 'conflito reproduzido no estúdio'}, async () => {
-        const legacyCard = page.getByRole('heading', {name: 'Gerar a arte completa', exact: true});
-        assert.equal(await legacyCard.isVisible(), false, 'o cartão de arte integral concorre com a orientação de compor');
-      });
+    await t.test('um plano composto oferece a orientação de revisão sem o cartão de arte integral', async () => {
+      const legacyCard = page.getByRole('heading', {name: 'Gerar a arte completa', exact: true});
+      assert.equal(await legacyCard.isVisible(), false, 'o cartão de arte integral concorre com a orientação de compor');
+      assert.equal(await page.locator('.studio-image-consent').count(), 0);
+      allowDecline = true;
+      await page.getByRole('button', {name: 'Recusar proposta', exact: true}).click();
+      await page.getByText('Proposta dispensada.', {exact: true}).waitFor();
+      const actionCall = calls.find(call => call.path === '/api/studio/action');
+      assert.ok(actionCall);
+      assert.equal(actionCall.body.actionBinding, 'synthetic-decline');
+      assert.equal(actionCall.body.result.status, 'declined');
+    });
   });
