@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/probe-carousel-native-build.mjs",
     "start": "next start",
     "test": "node test/run.mjs",
     "typecheck": "tsc --noEmit"
