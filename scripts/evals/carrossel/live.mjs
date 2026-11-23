@@ -31,6 +31,7 @@ const candidateFiles = [
   'packages/agents-api/src/agent-model.mjs',
   'packages/agents-api/src/creative-skills/format-carousel.mjs',
   'packages/carousel-renderer/src/color.mjs',
+  'packages/carousel-renderer/src/contrast-coverage.mjs',
   'packages/carousel-renderer/src/index.mjs',
   'packages/carousel-renderer/src/layouts.mjs',
   'packages/carousel-renderer/src/plan.mjs',
@@ -436,14 +437,14 @@ export async function runLiveCarousel({
   }
 
   const plan = parsePlan(text, testCase, cycle, artBatch);
+  await writeFile(`${caseDirectory}.planner-result.json`, json(plan), { mode: 0o600, flag: 'wx' });
+  if (plan.deck) receipt.planner.planSha256 = sha256(json(plan.deck));
   if (plan.outcome !== 'delivered') {
     const state = plan.outcome ?? 'failed_execution';
-    await writeFile(`${caseDirectory}.planner-result.json`, json(plan), { mode: 0o600, flag: 'wx' });
     await writeOutcome(caseDirectory, testCase, state, plan.reason, plan, execution);
     return finish(state, plan.reason);
   }
 
-  await writeFile(`${caseDirectory}.planner-result.json`, json(plan), { mode: 0o600, flag: 'wx' });
   if (artBatch) {
     const { state, reason, assets } = await runRasterBatch({
       direction: plan.artDirection, receipt: receipt.artBatch, directory: `${caseDirectory}.art`, record,
@@ -482,11 +483,15 @@ export async function runLiveCarousel({
     await record();
   }
 
-  await writeFile(planPath, json(plan.deck), { mode: 0o600, flag: 'wx' });
+  const renderInput = json(plan.deck);
+  await writeFile(planPath, renderInput, { mode: 0o600, flag: 'wx' });
   if (!render) return finish('planned');
   try {
+    receipt.renderInputSha256 = sha256(renderInput);
+    await record();
     const { renderEvidence } = await import('./render-evidence.mjs');
     const manifest = await renderEvidence({ caseId: testCase.id, firstPath: planPath, caseDirectory, executablePath, execution });
+    if (manifest.first_pass.inputSha256 !== receipt.renderInputSha256) return finish('failed_execution', 'render_input_mismatch');
     if (manifest.final.outcome !== 'delivered') return finish(manifest.final.outcome, 'local_renderer_blocked');
   } catch {
     return finish('failed_execution', 'local_renderer_failed');

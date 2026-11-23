@@ -195,6 +195,7 @@ em{font-style:normal;color:var(--ink)}
 .split_vertical .media{grid-column:2;grid-row:1;height:760px;align-self:center}
 .split_vertical h1,.comparison_dual h1{font-size:var(--head,72px)}
 .framed_plate{--media-row:460px;grid-template-rows:minmax(0,var(--media-row)) minmax(0,1fr);gap:44px}
+.framed_plate:not(.cover):has(>.diagram:not(.diagram-demonstration)):has(.list){--media-row:var(--diagram-height)}
 .framed_plate .media{border:4px solid var(--ink);padding:12px}
 .framed_plate .content{justify-content:start}
 .stat_monument .content{border-top:6px solid var(--ink);margin-top:36px}

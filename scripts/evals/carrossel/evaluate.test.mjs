@@ -105,7 +105,7 @@ test('CQS não compensa veto factual e a primeira passagem permanece após repar
   assert.equal(result.firstPassYield.editorial.failed, 1);
   assert.equal(result.repair_count, 1);
 
-  manifest.final.checks.FACT_GROUNDING = { status: 'fail', evidence };
+  manifest.final.checks.FACT_GROUNDING = { status: 'fail', evidence: 'A revisão da versão final encontrou a alegação sem lastro.' };
   await writeManifest();
   assert.equal((await evaluate({ cycle: 2, tests: [testCase], evidenceRoot: root, references: new Map() })).cases[0].verdict, 'fail');
 
@@ -507,7 +507,49 @@ test('C4/C5 exigem shortlist verificada e vinculada ao título renderizado', asy
   await assert.rejects(run(4), /SHA-256 divergente/);
 });
 
-test('a confirmação selada requer recibo do briefing, partição e revisão executados', async t => {
+async function bindRenderedSnapshot(directory, snapshot, plan) {
+  const put = async (name, bytes) => {
+    const file = `first-pass/${name}`;
+    const sha = sha256(bytes);
+    await writeFile(join(directory, file), bytes);
+    snapshot.artifacts = [...snapshot.artifacts.filter(item => item.file !== file), { file, sha256: sha }];
+    return sha;
+  };
+  snapshot.inputSha256 = await put('plan.json', JSON.stringify(plan, null, 2) + '\n');
+  const photos = snapshot.artifacts.filter(item => item.file.endsWith('.jpg') && item.file.includes('/slide-'));
+  snapshot.slideCount = photos.length;
+  const checks = requiredChecks.physical.map(id => ({ id, status: 'pass' }));
+  const slides = photos.map(({ file, sha256 }, index) => ({
+    index: index + 1, file: file.split('/').at(-1), sha256, checks,
+    firstChecks: checks.filter(check => check.id !== 'JPEG_PROFILE'), repairs: [],
+  }));
+  const document = { profile: 'compor-carousel-jpeg-4x5.v1', slides,
+    checks: ['COLLECTION_CADENCE', 'DUPLICATE_VISUAL'].map(id => ({ id, status: 'pass' })) };
+  const write = () => put('render-checks.json', JSON.stringify(document));
+  await write();
+  return { document, write };
+}
+
+test('a leitura impede que notas finais escondam uma falha física original', async t => {
+  const { directory, testCase, manifest, writeManifest } = await example(t);
+  const { document, write } = await bindRenderedSnapshot(directory, manifest.first_pass, { slides: [] });
+  document.slides[0].firstChecks = document.slides[0].firstChecks.map(check =>
+    check.id === 'SAFE_ZONE' ? { ...check, status: 'fail' } : check);
+  await write();
+  manifest.final = structuredClone(manifest.first_pass);
+  await writeManifest();
+  await assert.rejects(readCaseEvidence(directory, testCase), /SAFE_ZONE diverge do recibo/);
+  manifest.first_pass.checks.SAFE_ZONE = { status: 'fail', evidence };
+  manifest.final = structuredClone(manifest.first_pass);
+  await writeManifest();
+  assert.deepEqual((await readCaseEvidence(directory, testCase)).first.staged.physical.failures, ['SAFE_ZONE']);
+  manifest.repair_count = 1;
+  manifest.repairs = [{ stage: 'render', reason: 'Ajuste de margem' }];
+  await writeManifest();
+  await assert.rejects(readCaseEvidence(directory, testCase), /reparo exige dois snapshots/);
+});
+
+test('a confirmação selada vincula briefing, revisão, plano do planejador e render original', async t => {
   const { root, directory, testCase, manifest, writeManifest } = await example(t);
   const sealed = { ...testCase, split: 'independent' };
   const expectation = { cycle: 5, suiteSha256: 'a'.repeat(64), candidateSha256: 'b'.repeat(64), controlOnly: false };
@@ -518,9 +560,24 @@ test('a confirmação selada requer recibo do briefing, partição e revisão ex
   await writeManifest();
   assert.equal((await run(sealed)).execution.status, 'unavailable');
   const receiptPath = join(root, sealed.id + '.live-receipt.json');
-  await writeFile(receiptPath, JSON.stringify({ ...execution, state: 'delivered', planner: {
+  const receipt = { ...execution, state: 'delivered', planner: {
     state: 'completed', sessionId: 'sess_canary', turnId: 'turn_canary', promptSha256: 'c'.repeat(64),
-  } }));
+  } };
+  const writeReceipt = () => writeFile(receiptPath, JSON.stringify(receipt));
+  await writeReceipt();
+  assert.equal((await run(sealed)).execution.status, 'unavailable');
+  const plannerPlan = { slides: [{ id: 'one' }, { id: 'two' }], claims: [] };
+  const renderPlan = structuredClone(plannerPlan);
+  renderPlan.slides[0].art = 'data:image/png;base64,cGl4ZWxz';
+  await bindRenderedSnapshot(directory, manifest.first_pass, renderPlan);
+  manifest.final = structuredClone(manifest.first_pass);
+  await writeManifest();
+  receipt.planner.planSha256 = sha256(JSON.stringify(plannerPlan, null, 2) + '\n');
+  receipt.renderInputSha256 = 'd'.repeat(64);
+  await writeReceipt();
+  assert.equal((await run(sealed)).execution.status, 'fail');
+  receipt.renderInputSha256 = manifest.first_pass.inputSha256;
+  await writeReceipt();
   assert.equal((await run(sealed)).execution.status, 'pass');
   assert.equal((await run({ ...sealed, briefing: 'Outro briefing com o mesmo ID.' })).execution.status, 'fail');
   const report = await evaluate({

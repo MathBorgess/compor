@@ -17,6 +17,7 @@ import {
 const outcomes = ['delivered', 'rejected_claim', 'blocked_plan', 'failed_execution', 'unknown'];
 const checkStatuses = ['pass', 'fail', 'not_run', 'unknown', 'not_applicable'];
 const requiredVisualArtifacts = ['contact-sheet.png', 'cover-grid.png'];
+const renderProfile = 'compor-carousel-jpeg-4x5.v1';
 
 function textEvidence(value) {
   return typeof value === 'string' && value.trim().length > 0;
@@ -121,7 +122,63 @@ async function verifiedNovelty(root, plan, reference) {
   return { result: reviewNovelty(plan, assessment), observations: assessment.value.slides };
 }
 
-async function verifyArtifacts(caseDir, input, testCase, assessment) {
+function renderCheckState(checks, id) {
+  const state = checks?.find(check => check.id === id)?.status;
+  return ['pass', 'fail'].includes(state) ? state : 'not_run';
+}
+
+function physicalState(slide, id, firstPass) {
+  const emitted = renderCheckState(slide.checks, id);
+  if (!firstPass || id === 'JPEG_PROFILE' || slide.firstChecks === undefined) return emitted;
+  const initial = renderCheckState(slide.firstChecks, id);
+  if ([emitted, initial].includes('fail')) return 'fail';
+  return emitted === 'pass' && initial === 'pass' ? 'pass' : 'not_run';
+}
+
+function verifyRenderReceipt(render, input, firstPass, slideHashes) {
+  if (render?.value?.profile !== renderProfile || input.outcome !== 'delivered') return false;
+  const { slides, checks } = render.value;
+  requireCondition(Array.isArray(slides) && slides.length > 0 && slides.length === input.slideCount && Array.isArray(checks),
+    'Recibo de render sem as lâminas e verificações do snapshot.');
+  const jpgs = new Set([...slideHashes.keys()].filter(name => /^slide-\d{2}\.jpg$/.test(name)));
+  const physical = slides.map((slide, index) => {
+    requireCondition(slide?.index === index + 1 && Array.isArray(slide.checks) &&
+      (slide.firstChecks === undefined || Array.isArray(slide.firstChecks)) &&
+      (!firstPass || !slide.repairs?.length), 'A primeira execução do renderer deve preservar as verificações sem reparo.');
+    const jpeg = renderCheckState(slide.checks, 'JPEG_PROFILE');
+    if (slide.file !== undefined || jpeg !== 'not_run') {
+      const filename = `slide-${String(index + 1).padStart(2, '0')}.jpg`;
+      requireCondition(slide.file === filename && jpgs.delete(filename) && slide.sha256 === slideHashes.get(filename),
+        'JPEG do renderer divergente do artefato verificado.');
+    }
+    return Object.fromEntries(requiredChecks.physical.map(id => [id, physicalState(slide, id, firstPass)]));
+  });
+  requireCondition(jpgs.size === 0, 'Artefato sem correspondência no recibo do renderer.');
+  for (const id of requiredChecks.physical) {
+    const states = physical.map(slide => slide[id]);
+    const status = states.includes('fail') ? 'fail' : states.every(state => state === 'pass') ? 'pass' : 'not_run';
+    requireCondition((input.checks?.[id]?.status ?? 'not_run') === status,
+      `Verificação ${id} diverge do recibo do renderer.`);
+  }
+  for (const id of ['COLLECTION_CADENCE', 'DUPLICATE_VISUAL']) {
+    requireCondition((input.checks?.[id]?.status ?? 'not_run') === renderCheckState(checks, id),
+      `Verificação ${id} diverge do recibo do renderer.`);
+  }
+  return true;
+}
+
+function planReceipt(plan) {
+  if (!plan) return null;
+  const { value, digest } = plan;
+  if (!Array.isArray(value?.slides) || !value.slides.some(slide => Object.hasOwn(slide ?? {}, 'art'))) {
+    return { digest, beforeRaster: digest };
+  }
+  const copy = structuredClone(value);
+  for (const slide of copy.slides) if (slide) delete slide.art;
+  return { digest, beforeRaster: sha256(JSON.stringify(copy, null, 2) + '\n') };
+}
+
+async function verifyArtifacts(caseDir, input, testCase, assessment, firstPass = false) {
   const artifacts = input.artifacts ?? [];
   requireCondition(Array.isArray(artifacts), 'Lista de artefatos inválida.');
   if (artifacts.length === 0) {
@@ -179,6 +236,7 @@ async function verifyArtifacts(caseDir, input, testCase, assessment) {
     : null;
   const checkedNovelty = await verifiedNovelty(root, plan, assessment?.noveltyEvidence);
   const slideHashes = new Map(artifacts.map(record => [record.file.split('/').at(-1), record.sha256]));
+  const renderReceiptVerified = verifyRenderReceipt(renderChecks, input, firstPass, slideHashes);
   const jpgHashes = indices.map(name => slideHashes.get(name));
   requireCondition(assessment?.collectionEvidence === undefined || assetsVerified, 'O parecer de coleção exige uma entrega visual verificável.');
   const collectionEvidence = await verifyCollectionReview(root, assessment?.collectionEvidence, {
@@ -191,7 +249,8 @@ async function verifyArtifacts(caseDir, input, testCase, assessment) {
     deckSha256: judgeDeckHash(jpgHashes),
     captionSha256: sha256(plan?.value?.caption ?? ''),
   } : null;
-  const validatedEvidence = { assetsVerified, factualTrace, novelty: checkedNovelty?.result ?? null, judgeInput, collectionEvidence, ...reviews };
+  const validatedEvidence = { assetsVerified, factualTrace, novelty: checkedNovelty?.result ?? null, judgeInput, collectionEvidence,
+    renderReceiptVerified, planReceipt: planReceipt(plan), ...reviews };
   if (!lab) return { ...validatedEvidence, coverLab: null };
   requireCondition(plan && lab.value?.inputSha256 === plan.digest, 'Lab de capas desvinculado do plano renderizado.');
   const observed = coverLabArtifact(plan.value, plan.digest);
@@ -280,7 +339,22 @@ async function readAssessments(directory, manifestSha256) {
   }
 }
 
-async function verifySealedExecution(directory, manifest, testCase, expectation) {
+function verifyLivePlanBinding(first, final, receipt) {
+  const plannerDigest = receipt.planner.planSha256;
+  const initial = first.planReceipt;
+  if (receipt.state === 'rejected_claim') {
+    return !initial && plannerDigest === undefined && receipt.renderInputSha256 === undefined ? 'pass' : 'fail';
+  }
+  if (!initial || !isDigest(plannerDigest)) return 'unavailable';
+  if (plannerDigest !== initial.beforeRaster) return 'fail';
+  const inputDigest = receipt.renderInputSha256 ?? receipt.artBatch?.finalPlanSha256 ?? plannerDigest;
+  if (inputDigest !== initial.digest) return 'fail';
+  if (first.outcome === 'delivered' && (!first.renderReceiptVerified || !isDigest(receipt.renderInputSha256))) return 'unavailable';
+  if (final.outcome === 'delivered' && !final.renderReceiptVerified) return 'unavailable';
+  return 'pass';
+}
+
+async function verifySealedExecution(directory, manifest, testCase, expectation, first, final) {
   if (!expectation || !['holdout', 'independent'].includes(testCase.split)) return null;
   const trace = manifest.execution;
   const required = {
@@ -302,6 +376,9 @@ async function verifySealedExecution(directory, manifest, testCase, expectation)
       !/^turn_[\w-]+$/.test(receipt.planner.turnId ?? '') || !isDigest(receipt.planner.promptSha256)) return { status: 'fail' };
     if (expectation.cycle === 0 && testCase.split === 'holdout') {
       await verifyIntegralControlEvidence(directory, manifest, testCase, receipt);
+    } else {
+      const status = verifyLivePlanBinding(first, final, receipt);
+      if (status !== 'pass') return { status };
     }
     return { status: 'pass', receiptSha256: digest, candidateSha256: receipt.candidateSha256 };
   } catch (error) {
@@ -332,8 +409,8 @@ export async function readCaseEvidence(directory, testCase, expectation) {
   requireCondition(new Set(pairwise.map(pair => pair.againstCycle)).size === pairwise.length,
     'Comparações duplicadas ou inválidas.');
   pairwise.forEach(validatePair);
-  requireCondition(value.repair_count > 0 || isDeepStrictEqual(value.first_pass, value.final),
-    'Snapshots distintos exigem registro de reparo.');
+  requireCondition((value.repair_count === 0) === isDeepStrictEqual(value.first_pass, value.final),
+    'Snapshots distintos exigem registro de reparo e o reparo exige dois snapshots.');
   const sameSnapshot = value.repair_count === 0;
   if (sameSnapshot && assessments?.first_pass && assessments.final) {
     requireCondition(isDeepStrictEqual(assessments.first_pass, assessments.final),
@@ -342,7 +419,7 @@ export async function readCaseEvidence(directory, testCase, expectation) {
   const firstAssessment = assessments?.first_pass ?? (sameSnapshot ? assessments?.final : undefined);
   const first = await verifySnapshotJudge(directory, testCase, {
     ...attachAssessment(value.first_pass, firstAssessment),
-    ...await verifyArtifacts(directory, value.first_pass, testCase, firstAssessment),
+    ...await verifyArtifacts(directory, value.first_pass, testCase, firstAssessment, true),
   });
   const final = sameSnapshot ? first : await verifySnapshotJudge(directory, testCase, {
     ...attachAssessment(value.final, assessments?.final),
@@ -350,7 +427,7 @@ export async function readCaseEvidence(directory, testCase, expectation) {
   });
   return {
     digest, assessmentSha256: assessments?.digest ?? null, repairCount: value.repair_count,
-    execution: await verifySealedExecution(directory, value, testCase, expectation),
+    execution: await verifySealedExecution(directory, value, testCase, expectation, first, final),
     first: summarizeSnapshot(first), final: summarizeSnapshot(final),
     pairwise: await Promise.all(pairwise.map(vote => verifyPairwiseJudge(directory, testCase, vote))),
   };

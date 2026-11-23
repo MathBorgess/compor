@@ -318,7 +318,7 @@ test('capas com diagrama preservam a escala do texto dentro da margem segura', {
   }
 });
 
-test('split básico usa a altura da prova e recusa excesso de copy', { skip, timeout: 60_000 }, async t => {
+test('painéis básicos conservam a margem da copy e recusam excesso de texto', { skip, timeout: 60_000 }, async t => {
   const { chromium } = require('playwright-core');
   const sharp = require('sharp');
   const browser = await chromium.launch({ executablePath, headless: true });
@@ -341,6 +341,16 @@ test('split básico usa a altura da prova e recusa excesso de copy', { skip, tim
   assert.deepEqual(item.checks.find(check => check.id === 'TYPOGRAPHY').observed,
     { headline: 86, body: 46, figure: undefined, lines: 2 });
   assert.equal(item.artAreaFraction, 904 * 360 / (1080 * 1350));
+
+  const framedWithList = slide('framed_plate', 'Devolução de potes começa pelo registro', {
+    body: 'Na ficha fictícia, preencha pessoa, data e quantidade para registrar a devolução.',
+    diagram: { type: 'focus', labels: ['Pessoa', 'Data', 'Quantidade'] },
+    listItems: ['Pessoa: nome fictício', 'Data: data fictícia', 'Quantidade: quantidade fictícia'],
+  });
+  const framed = await renderDeckInMemory(makeDeck(framedWithList), { browser, sharp, fonts, repair: false });
+  assert.ok(framed.slides[1].checks.every(check => check.status === 'pass'));
+  assert.deepEqual(framed.slides[1].repairs, []);
+  assert.equal(framed.slides[1].artAreaFraction, 904 * 360 / (1080 * 1350));
 
   const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
   t.after(() => page.close());

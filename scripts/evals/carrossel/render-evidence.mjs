@@ -117,7 +117,8 @@ export async function renderEvidence({
       ? await captureSnapshot(renderDeck, final, caseDirectory, 'final', browser, sharp, fonts, true)
       : firstSnapshot;
     const repairs = shouldRepair
-      ? [{ stage: 'render', reason: repairReason || `Verificações físicas na primeira passagem: ${failures.join(', ')}.` }]
+      ? [{ stage: first.digest === final.digest ? 'render' : 'plan',
+        reason: repairReason || `Verificações físicas na primeira passagem: ${failures.join(', ')}.` }]
       : [];
     const manifest = {
       version: formatVersion, caseId, mode: first.value.mode,

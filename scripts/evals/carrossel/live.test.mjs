@@ -13,6 +13,7 @@ const fakeKey = 'sk-test-local-fixture-only-never-for-provider';
 const imageFixture = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==';
 const candidateSha256 = await fingerprintLiveCarouselCandidate();
 const devPath = fileURLToPath(new URL('./dev-cases.json', import.meta.url));
+const executablePath = process.env.BROWSER_EXECUTABLE_PATH;
 
 async function writeSuite(path, split, prefix, first = {}) {
   const cases = Array.from({ length: 6 }, (_, index) => ({
@@ -167,6 +168,10 @@ test('gera a âncora S1, registra a onda e envia apenas seu raster como referên
   const planBytes = await readFile(result.planPath);
   const materialized = JSON.parse(planBytes);
   assert.equal(materialized.slides.filter(slide => slide.art).length, 4);
+  const { deck: original } = JSON.parse(await readFile(`${result.caseDirectory}.planner-result.json`));
+  assert.ok(original.slides.every(slide => slide.art === undefined));
+  assert.equal(result.receipt.planner.planSha256, sha256(JSON.stringify(original, null, 2) + '\n'));
+  assert.equal(result.receipt.renderInputSha256, undefined);
   assert.equal(result.receipt.artBatch.finalPlanSha256, sha256(planBytes));
   assert.equal(result.receipt.artBatch.cadence.observed.visualCoverage, 0.8);
   for (const plate of [anchor, ...followers]) {
@@ -265,8 +270,8 @@ test('a opção ausente mantém a capa avulsa de C3 e suas evidências históric
     if (new URL(url).pathname === '/v1/images/generations') return imageResponse(++images);
     return planner.fetchApi(url, options);
   };
-  const { artBatch: _optIn, ...legacy } = artOptions;
-  const result = await runLiveCarousel({ ...legacy, root, fetchApi });
+  const { key, cycle, caseId, render } = artOptions;
+  const result = await runLiveCarousel({ key, cycle, caseId, render, root, fetchApi });
   assert.equal(result.state, 'planned');
   assert.equal(result.receipt.artBatch, undefined);
   assert.equal(result.receipt.image.state, 'completed');
@@ -311,7 +316,10 @@ test('congela partições, conserva recibos e só envia o caso selecionado', asy
   assert.match(submitted.agent.instructions, /exatamente dez strings diferentes/);
   assert.doesNotMatch(submitted.agent.instructions, /"coverOptions":\[\]/);
   assert.match(submitted.agent.instructions, /diagramas demonstrativos.*split_horizontal.*hierarchy/);
-  const { coverLab } = JSON.parse(await readFile(first.planPath, 'utf8'));
+  const planBytes = await readFile(first.planPath);
+  assert.equal(first.receipt.planner.planSha256, sha256(planBytes));
+  assert.equal(first.receipt.renderInputSha256, undefined);
+  const { coverLab } = JSON.parse(planBytes);
   assert.equal(coverLab.options.length, 10);
   assert.equal(coverLab.ranking.order[0], 1);
   assert.deepEqual(JSON.parse(submitted.input), {
@@ -348,6 +356,68 @@ test('congela partições, conserva recibos e só envia o caso selecionado', asy
 });
 
 
+test('liga o recibo selado ao plano original e ao primeiro render com ou sem capa raster',
+  { skip: !executablePath, timeout: 60_000 }, async t => {
+    const directory = await mkdtemp(join(tmpdir(), 'compor-render-input-'));
+    t.after(() => rm(directory, { recursive: true, force: true }));
+    const sealedSuite = await writeSuite(join(directory, 'holdout.json'), 'holdout', 'render-input');
+    for (const generateCover of [false, true]) {
+      const cycle = generateCover ? 3 : 4;
+      const { fetchApi: mockPlan } = scenario(cover => ({
+        ...cover,
+        coverArtBrief: 'Papel de cor clara dobrado em ondas.',
+        deck: { mode: 'editorial_art', slides: [
+          { id: 'capa', headline: cover.coverOptions[0], alt: 'Uma abertura editorial.',
+            ...(generateCover ? { layout: 'hero_bleed' } : { layout: 'framed_plate', diagram: 'focus' }) },
+          { id: 'explicacao', layout: 'svg_diagram', headline: 'As escolhas mudam o mural', diagram: 'steps', alt: 'Um percurso em etapas.' },
+          { id: 'fecho', layout: 'cta_closing', headline: 'Salve para revisar o mural', alt: 'Um convite para salvar.' },
+        ] },
+      }));
+      let images = 0;
+      const fetchApi = (url, options) => {
+        if (new URL(url).pathname === '/v1/images/generations') return imageResponse(++images);
+        return mockPlan(url, options);
+      };
+      const result = await runLiveCarousel({ key: fakeKey, root: join(directory, `cycle-${cycle}`), cycle, sealedSuite,
+        candidateSha256, controlOnly: generateCover, generateCover, executablePath, fetchApi });
+      assert.equal(result.state, 'delivered');
+      assert.equal(images, generateCover ? 1 : 0);
+      const receipt = JSON.parse(await readFile(result.receiptPath));
+      const { deck: planned } = JSON.parse(await readFile(`${result.caseDirectory}.planner-result.json`));
+      const manifest = JSON.parse(await readFile(join(result.caseDirectory, 'qa-manifest.json')));
+      const firstPlan = await readFile(join(result.caseDirectory, 'first-pass/plan.json'));
+      const input = await readFile(result.planPath);
+      assert.deepEqual(input, firstPlan);
+      assert.equal(receipt.renderInputSha256, manifest.first_pass.inputSha256);
+      assert.equal(receipt.renderInputSha256, sha256(input));
+      assert.equal(receipt.planner.planSha256, sha256(JSON.stringify(planned, null, 2) + '\n'));
+      const materialized = JSON.parse(firstPlan);
+      if (generateCover) {
+        assert.equal(receipt.image.sha256, sha256(Buffer.from(imageFixture, 'base64')));
+        assert.equal(materialized.slides[0].art, `data:image/png;base64,${imageFixture}`);
+        assert.notEqual(receipt.planner.planSha256, receipt.renderInputSha256);
+        delete materialized.slides[0].art;
+      } else {
+        assert.equal(receipt.planner.planSha256, receipt.renderInputSha256);
+      }
+      assert.deepEqual(materialized, planned);
+    }
+  });
+
+test('recusa explícita sem plano preserva a evidência sem hashes de render ou de plano', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'compor-rejected-claim-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const { fetchApi } = scenario(() => ({ outcome: 'rejected_claim', reason: 'Promessa de rendimento sem fonte.',
+    deck: undefined, claims: undefined }));
+  const result = await runLiveCarousel({ key: fakeKey, root, cycle: 2, caseId: 'dev-juros-inventados', render: false, fetchApi });
+  assert.equal(result.state, 'rejected_claim');
+  assert.equal(result.receipt.planner.planSha256, undefined);
+  assert.equal(result.receipt.renderInputSha256, undefined);
+  const manifest = JSON.parse(await readFile(join(result.caseDirectory, 'qa-manifest.json')));
+  assert.equal(manifest.first_pass.inputSha256, undefined);
+  assert.deepEqual(manifest.first_pass.artifacts, []);
+});
+
 test('Lab C4/C5 bloqueia a falha de primeira passagem e mantém suas opções verificáveis', async t => {
   const directory = await mkdtemp(join(tmpdir(), 'compor-cover-lab-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
@@ -375,6 +445,8 @@ test('Lab C4/C5 bloqueia a falha de primeira passagem e mantém suas opções ve
       assert.deepEqual(snapshot.artifacts.map(item => item.file), ['first-pass/plan.json', 'first-pass/cover-lab.json']);
       const plan = await readFile(join(result.caseDirectory, 'first-pass/plan.json'));
       assert.equal(sha256(plan), snapshot.inputSha256);
+      assert.equal(result.receipt.planner.planSha256, snapshot.inputSha256);
+      assert.equal(result.receipt.renderInputSha256, undefined);
       assert.equal(JSON.parse(plan).coverLab.options?.length ?? null, optionCount);
       const labFile = await readFile(join(result.caseDirectory, 'first-pass/cover-lab.json'));
       assert.equal(sha256(labFile), snapshot.artifacts[1].sha256);

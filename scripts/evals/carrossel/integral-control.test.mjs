@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -10,6 +10,7 @@ import { readCaseEvidence } from './evidence.mjs';
 import { evaluate } from './evaluate.mjs';
 import { integralControlSha256, runIntegralControl, verifyIntegralControlEvidence } from './integral-control.mjs';
 import { readSuite, sha256 } from './protocol.mjs';
+import { writeRenderFixture } from './render-evidence.fixture.mjs';
 
 const repository = fileURLToPath(new URL('../../../', import.meta.url));
 const require = createRequire(new URL('../../../apps/web/package.json', import.meta.url));
@@ -138,15 +139,18 @@ test('C0 recompõe a prova a partir dos PNGs integrais do pin e liga a comparaç
 
   const candidateRoot = join(options.root, 'c4');
   const candidateDirectory = join(candidateRoot, testCase.id);
-  await cp(caseDirectory, candidateDirectory, { recursive: true });
+  const { snapshot } = await writeRenderFixture(candidateDirectory, { mode: testCase.mode, caption: caption + '\n', salt: 'c4-candidate' });
   const manifestFile = join(candidateDirectory, 'qa-manifest.json');
-  const manifest = JSON.parse(await readFile(manifestFile, 'utf8'));
-  const receipt = JSON.parse(await readFile(caseDirectory + '.live-receipt.json', 'utf8'));
-  Object.assign(manifest.execution, { cycle: 4, controlOnly: false, candidateSha256: 'd'.repeat(64) });
-  manifest.pairwise = [{ againstCycle: 0, candidateFirst: 'first', controlFirst: 'second',
-    controlManifestSha256: observed.digest, evaluator: 'test', evidence: 'Dupla ordenação simulada.' }];
+  const execution = { caseId: testCase.id, caseSha256: sha256(JSON.stringify(testCase)), split: testCase.split,
+    cycle: 4, suiteSha256: options.suiteSha256, candidateSha256: 'd'.repeat(64), controlOnly: false };
+  const manifest = { version: 1, caseId: testCase.id, mode: testCase.mode, execution,
+    first_pass: snapshot, final: snapshot, repair_count: 0, repairs: [], pairwise: [{ againstCycle: 0,
+      candidateFirst: 'first', controlFirst: 'second', controlManifestSha256: observed.digest,
+      evaluator: 'test', evidence: 'Dupla ordenação simulada.' }] };
   await writeFile(manifestFile, JSON.stringify(manifest));
-  await writeFile(candidateDirectory + '.live-receipt.json', JSON.stringify({ ...receipt, ...manifest.execution }));
+  await writeFile(candidateDirectory + '.live-receipt.json', JSON.stringify({ ...execution, state: 'delivered',
+    renderInputSha256: snapshot.inputSha256, planner: { state: 'completed', sessionId: 'sess_candidate_mock',
+      turnId: 'turn_candidate_mock', promptSha256: sha256('prompt da candidata'), planSha256: snapshot.inputSha256 } }));
   const comparison = await evaluate({ cycle: 4, tests: [testCase], evidenceRoot: candidateRoot,
     references: new Map([[0, baseline]]), controlOnly: false, suiteDigests: { holdout: options.suiteSha256 },
     candidateSha256: manifest.execution.candidateSha256 });

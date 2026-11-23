@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -11,6 +11,7 @@ import { evaluate } from './evaluate.mjs';
 import { readCaseEvidence } from './evidence.mjs';
 import { judgeBriefing, judgeDeckHash, judgeInstructions, judgeModel, judgeRubricSha256, validateJudgeResult } from './judge-evidence.mjs';
 import { judgeWeights, readDocument, sha256 } from './protocol.mjs';
+import { writeRenderFixture } from './render-evidence.fixture.mjs';
 
 const dimensions = Object.keys(judgeWeights);
 const evidence = 'Simulação offline para testar a validação.';
@@ -155,15 +156,8 @@ test('calibração rejeita rótulos trocados, sessões reaproveitadas e recibos 
 
 async function renderedFixture(root, testCase, salt) {
   const directory = join(root, testCase.id);
-  await mkdir(directory, { recursive: true });
-  const files = ['slide-01.jpg', 'slide-02.jpg', 'art-sheet.jpg', 'contact-sheet.png', 'cover-grid.png'];
-  const artifacts = await Promise.all(files.map(async file => {
-    const bytes = salt + file;
-    await writeFile(join(directory, file), bytes);
-    return { file, sha256: sha256(bytes) };
-  }));
-  const deckSha256 = judgeDeckHash(artifacts.slice(0, 2).map(item => item.sha256));
-  const snapshot = { outcome: 'delivered', artifacts };
+  const { snapshot, jpgHashes } = await writeRenderFixture(directory, { mode: testCase.mode, salt });
+  const deckSha256 = judgeDeckHash(jpgHashes);
   const manifest = { version: 1, caseId: testCase.id, mode: testCase.mode, repair_count: 0, repairs: [], first_pass: snapshot, final: snapshot };
   const manifestSha256 = await jsonFile(directory, 'qa-manifest.json', manifest);
   return { directory, deckSha256, manifestSha256, manifest };
@@ -200,8 +194,9 @@ test('C4 exige avaliação rastreável e recusa coorte sobreposta mesmo para um 
 async function sealFixture(root, output, testCase, { cycle, suiteSha256, candidateSha256, controlOnly }) {
   const execution = { caseId: testCase.id, caseSha256: sha256(JSON.stringify(testCase)), split: testCase.split,
     cycle, suiteSha256, candidateSha256, controlOnly };
-  await jsonFile(root, testCase.id + '.live-receipt.json', { ...execution, state: 'delivered',
-    planner: { state: 'completed', sessionId: 'sess_canary', turnId: 'turn_canary', promptSha256: sha256('prompt') } });
+  const planSha256 = output.manifest.first_pass.inputSha256;
+  await jsonFile(root, testCase.id + '.live-receipt.json', { ...execution, state: 'delivered', renderInputSha256: planSha256,
+    planner: { state: 'completed', sessionId: 'sess_canary', turnId: 'turn_canary', promptSha256: sha256('prompt'), planSha256 } });
   return jsonFile(output.directory, 'qa-manifest.json', { ...output.manifest, execution });
 }
 
