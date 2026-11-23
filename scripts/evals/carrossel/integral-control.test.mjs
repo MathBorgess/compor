@@ -8,7 +8,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { readCaseEvidence } from './evidence.mjs';
 import { evaluate } from './evaluate.mjs';
-import { integralControlSha256, runIntegralControl } from './integral-control.mjs';
+import { integralControlSha256, runIntegralControl, verifyIntegralControlEvidence } from './integral-control.mjs';
 import { readSuite, sha256 } from './protocol.mjs';
 
 const repository = fileURLToPath(new URL('../../../', import.meta.url));
@@ -17,7 +17,7 @@ const revision = '720628ebc4c32b41ab8fdc0c1b1a4f8f62511a79';
 const key = 'sk-local-control-offline-no-provider-credential';
 const caption = 'Legenda complementar ao controle integral.';
 
-async function fixture(t) {
+async function checkoutFixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'compor-integral-c0-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const git = (args, cwd = repository) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
@@ -25,6 +25,11 @@ async function fixture(t) {
   const baselineCheckout = join(root, 'baseline');
   git(['clone', '--quiet', '--shared', '--no-checkout', sourceRepo, baselineCheckout]);
   git(['checkout', '--quiet', '--detach', revision], baselineCheckout);
+  return { root, baselineCheckout };
+}
+
+async function fixture(t) {
+  const { root, baselineCheckout } = await checkoutFixture(t);
   const cases = Array.from({ length: 6 }, (_, index) => ({
     id: 'publico-' + index, mode: 'editorial_art', briefing: 'Canário público ' + index,
     facts: ['Material confirmado ' + index], expected: 'deliver_deck', strata: ['controle'],
@@ -160,6 +165,49 @@ test('C0 recompõe a prova a partir dos PNGs integrais do pin e liga a comparaç
   }
   await writeFile(realManifestFile, JSON.stringify(realManifest));
   await assert.rejects(evidence(), /JPEG comparado diverge/);
+});
+
+test('C0 dev verifica a suíte pública e preserva bytes para comparar a costura', async t => {
+  const options = await checkoutFixture(t);
+  const dev = await readSuite(new URL('./dev-cases.json', import.meta.url), 'dev');
+  const testCase = dev.cases.find(item => item.id === 'dev-seam-autonoma');
+  const control = await provider();
+  const params = { ...options, split: 'dev', suiteSha256: dev.digest, caseId: testCase.id, fetchApi: control.fetchApi };
+  const inspection = await runIntegralControl({ ...params, preflightOnly: true });
+  assert.equal(inspection.revision, revision);
+  assert.equal(inspection.candidateSha256, integralControlSha256);
+  assert.equal(inspection.suiteSha256, dev.digest);
+  assert.equal(inspection.split, 'dev');
+  assert.equal(inspection.maximumPlannerSessions, 1);
+  assert.equal(inspection.maximumImages, 4);
+  await assert.rejects(runIntegralControl({ ...params, preflightOnly: true, suiteSha256: 'a'.repeat(64) }), /SHA-256/);
+  await assert.rejects(runIntegralControl({ ...params, preflightOnly: true, caseId: 'dev-prova-falsa' }), /entrega prevista/);
+  await assert.rejects(runIntegralControl({ ...params, preflightOnly: true, caseId: undefined }), /entrega prevista/);
+  await assert.rejects(runIntegralControl({ ...params, preflightOnly: true, suitePath: join(options.root, 'ausente.json') }), /usa apenas dev-cases/);
+  assert.deepEqual(control.calls, { plans: [], images: [], reads: 0 });
+
+  const result = await runIntegralControl({ ...params, key });
+  assert.equal(result.state, 'delivered');
+  assert.equal(control.calls.plans.length, 1);
+  assert.equal(control.calls.plans[0].idea, testCase.briefing);
+  assert.deepEqual(control.calls.plans[0].offerFacts.map(item => item.value), testCase.facts);
+  assert.equal(control.calls.images.length, 4);
+  const manifest = JSON.parse(await readFile(join(result.caseDirectory, 'qa-manifest.json'), 'utf8'));
+  const receipt = JSON.parse(await readFile(result.caseDirectory + '.live-receipt.json', 'utf8'));
+  assert.deepEqual(manifest.execution, { cycle: 0, caseId: testCase.id, split: 'dev', suiteSha256: dev.digest,
+    controlOnly: true, candidateSha256: integralControlSha256, caseSha256: sha256(JSON.stringify(testCase)) });
+  for (const [field, value] of Object.entries(manifest.execution)) assert.equal(receipt[field], value);
+  await verifyIntegralControlEvidence(result.caseDirectory, manifest, testCase, receipt);
+  await assert.rejects(readFile(join(options.root, 'sealed-holdout.json')), { code: 'ENOENT' });
+  await assert.rejects(readFile(join(options.root, 'paid-active.json')), { code: 'ENOENT' });
+
+  const baseline = await evaluate({ cycle: 0, tests: [testCase], evidenceRoot: join(options.root, 'c0'),
+    references: new Map(), controlOnly: true, suiteDigests: { dev: dev.digest }, candidateSha256: integralControlSha256 });
+  const [observed] = baseline.cases;
+  assert.equal(observed.caseFingerprint, manifest.execution.caseSha256);
+  assert.equal(observed.final.assetsVerified, true);
+  assert.equal(observed.final.judgeInput.captionSha256, sha256(caption + '\n'));
+  assert.equal(observed.final.cqs, null);
 });
 
 test('uma imagem incerta retém a trava e impede a submissão de outras lâminas', async t => {

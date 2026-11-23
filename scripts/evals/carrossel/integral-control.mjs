@@ -62,12 +62,31 @@ async function pinnedRunner(directory) {
 }
 
 function executionFor(testCase, suiteSha256) {
-  return { cycle: 0, caseId: testCase.id, split: 'holdout', suiteSha256, controlOnly: true,
+  return { cycle: 0, caseId: testCase.id, split: testCase.split, suiteSha256, controlOnly: true,
     candidateSha256: integralControlSha256, caseSha256: sha256(JSON.stringify(testCase)) };
 }
 
 function briefingKey(value) {
   return value.normalize('NFC').trim();
+}
+
+async function selectSuite(split, suitePath, suiteSha256) {
+  if (split === 'dev') {
+    requireCondition(suitePath === undefined, 'O controle dev usa apenas dev-cases.json do repositório.');
+    const dev = await readSuite(devSuite, 'dev');
+    requireCondition(isDigest(suiteSha256) && suiteSha256 === dev.digest, 'O SHA-256 da suíte dev diverge do valor congelado.');
+    return dev;
+  }
+  const [holdout, dev] = await Promise.all([
+    privatePath(suitePath).then(path => readSuite(path, 'holdout', suiteSha256)),
+    readSuite(devSuite, 'dev'),
+  ]);
+  const { cases } = holdout;
+  requireCondition(new Set(cases.map(item => briefingKey(item.briefing))).size === cases.length
+    && cases.every(item => item.id !== 'ext-carousel-ux-dev' && dev.cases.every(known =>
+      item.id !== known.id && briefingKey(item.briefing) !== briefingKey(known.briefing))),
+  'A reserva repete um caso ou briefing de desenvolvimento.');
+  return holdout;
 }
 
 async function freezeHoldout(root, cases, suiteSha256) {
@@ -248,22 +267,19 @@ export async function verifyIntegralControlEvidence(directory, manifest, testCas
 }
 
 export async function runIntegralControl({
-  key, root, baselineCheckout, suitePath, suiteSha256, caseId, preflightOnly = false, fetchApi = fetch,
+  key, root, baselineCheckout, split = 'holdout', suitePath, suiteSha256, caseId, preflightOnly = false, fetchApi = fetch,
 }) {
-  const [outputRoot, runner, suiteFile] = await Promise.all([privatePath(root), pinnedRunner(baselineCheckout), privatePath(suitePath)]);
+  requireCondition(['dev', 'holdout'].includes(split), 'Selecione a partição dev ou holdout para o controle integral.');
+  const [outputRoot, runner] = await Promise.all([privatePath(root), pinnedRunner(baselineCheckout)]);
   requireCondition((await lstat(outputRoot)).isDirectory(), 'A saída do controle integral precisa ser um diretório.');
-  const [{ cases, digest }, dev] = await Promise.all([readSuite(suiteFile, 'holdout', suiteSha256), readSuite(devSuite, 'dev')]);
-  requireCondition(new Set(cases.map(item => briefingKey(item.briefing))).size === cases.length
-    && cases.every(item => item.id !== 'ext-carousel-ux-dev' && dev.cases.every(known =>
-      item.id !== known.id && briefingKey(item.briefing) !== briefingKey(known.briefing))),
-  'A reserva repete um caso ou briefing de desenvolvimento.');
+  const { cases, digest } = await selectSuite(split, suitePath, suiteSha256);
   const testCase = cases.find(item => item.id === caseId);
-  requireCondition(testCase?.expected === 'deliver_deck', 'Selecione um caso reservado com entrega prevista.');
+  requireCondition(testCase?.expected === 'deliver_deck', 'Selecione um caso com entrega prevista na partição.');
   const fixture = fixtureFor(testCase);
   const lockPath = join(outputRoot, 'paid-active.json');
   const lock = await lstat(lockPath).catch(error => { if (error.code !== 'ENOENT') throw error; });
   requireCondition(!lock, 'Uma execução anterior aguarda reconciliação neste diretório.');
-  if (preflightOnly) return { state: 'preflight', caseId, candidateSha256: integralControlSha256,
+  if (preflightOnly) return { state: 'preflight', caseId, split, suiteSha256: digest, candidateSha256: integralControlSha256,
     revision, maximumPlannerSessions: 1, maximumImages: fixture.expectedFrames };
   requireCondition(/^sk-[^\s]{20,300}$/.test(key ?? ''), 'Credencial inválida.');
   require('sharp');
@@ -283,7 +299,7 @@ export async function runIntegralControl({
       await mkdir(path, { recursive: true, mode: 0o700 });
       requireCondition(await realpath(path) === path, 'A saída do controle integral está redirecionada.');
     }
-    await freezeHoldout(outputRoot, cases, digest);
+    if (split === 'holdout') await freezeHoldout(outputRoot, cases, digest);
     await mkdir(working, { mode: 0o700 });
     const fixturesPath = join(working, 'fixture.json');
     await writeFile(fixturesPath, json([fixture]), { flag: 'wx', mode: 0o600 });
