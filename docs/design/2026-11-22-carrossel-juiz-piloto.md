@@ -23,3 +23,19 @@ Em 23/11/2026, oito sessões independentes de Codex CLI avaliaram o mesmo par de
 | Maior desvio-padrão e maior erro médio entre dimensões | 0,354 e 1,0 | 0,354 e 1,0 |
 
 A métrica primária de divergências críticas empatou. A âncora expressa o teto já definido para arte decorativa e corrigiu a aderência das notas dessa dimensão neste par. A repetibilidade global ainda excedeu 0,35. A referência veio de outro modelo e o transporte deste ensaio foi Codex CLI. O ensaio preservou os casos reservados. [Rubrica do juiz](../../scripts/evals/carrossel/judge-evidence.mjs)
+
+## Calibração pela Agents API
+
+Em 23/11/2026, a Agents API executou 24 sessões distintas de `gpt-6.2-astra` em uma coorte nova de seis pares. Cada caso teve duas repetições em cada ordem. Os 48 JPEGs foram renderizados em Chromium. Uma leitura independente dos JPEGs congelou os oito escores, a preferência e os defeitos críticos antes do primeiro envio. Os casos reservados permaneceram fora do lote. Quatorze recibos trouxeram dados de uso, cobertura insuficiente para um total de consumo.
+
+| Medida | Observado | Limite |
+| --- | ---: | ---: |
+| Concordância nas quatro sessões do caso | 5/6 (83,3%) | ≥ 80% |
+| Defeitos críticos omitidos | 0 | 0 |
+| Classificações críticas fora da referência congelada | 8 | 0 |
+| Maior desvio-padrão de repetição | 0,323 em arte–mensagem | < 0,35 em cada dimensão |
+| Erro médio em hierarquia, ritmo e voz | 0,917 / 1,000 / 0,833 | ≤ 0,75 em cada dimensão |
+
+O gate reprovou a calibração. O único desacordo de preferência ocorreu no caso de empate, com um voto isolado pela candidata. Quatro classificações críticas extras apontaram a mesma seta entre duas categorias do mural, que podia representar transferência entre colunas. Duas apontaram triângulos na mesma orientação em um slide sobre posição invertida. As duas restantes apontaram a ausência da prova de rascunho em uma das capas. As primeiras seis observações expõem deficiências potenciais dos diagramas compartilhados, que a leitura de referência não marcou. O relatório mantém a comparação com os rótulos congelados.
+
+O SHA-256 dos rótulos foi `0d465a21aaa571494ea681224abd801bb232aa756b7cbe468bbeb694cdbc0493`. A rubrica da execução tem o digest `8ffaa85c31f1d542d21efea60338f66032fd4e2c3fa86a4fed8391c6545d5bb6`. O relatório verificável tem SHA-256 `9067070f304e27c2c3faaf3954bb0ce6a66019211589b28d62b1b6ce9a3764f3`. Rótulos, entradas e recibos foram preservados fora do Git. [Protocolo de calibração](../../scripts/evals/carrossel/README.md#calibração-do-juiz-visual)
