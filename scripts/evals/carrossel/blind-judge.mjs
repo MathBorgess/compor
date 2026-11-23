@@ -15,17 +15,25 @@ function receiptFor(state, response) {
   return { state, httpStatus: response?.status ?? null, requestId: /^[\w-]{1,128}$/.test(requestId ?? '') ? requestId : null };
 }
 
-async function panels(sharp, files) {
+export async function renderJudgePanels(files) {
+  requireCondition(Array.isArray(files) && files.length >= 2 && files.length <= 20, 'judge_invalid_input');
+  const sharp = require('sharp');
   const raw = await Promise.all(files.map(file => readFile(file)));
   const [first, second] = await Promise.all(raw.slice(0, 2).map(bytes => sharp(bytes).resize(540, 675).jpeg({ quality: 90 }).toBuffer()));
   const coverFull = await sharp(raw[0]).resize(1080, 1350).png().toBuffer();
   const cover = await sharp(coverFull).extract({ left: 34, top: 0, width: 1012, height: 1350 }).resize(270, 360).png().toBuffer();
+  const columns = Math.min(5, raw.length);
+  const rows = Math.ceil(raw.length / columns);
+  const gap = 8;
+  const tileWidth = 272;
+  const tileHeight = 340;
   const tiles = await Promise.all(raw.map(async (bytes, index) => ({
-    input: await sharp(bytes).resize(216, 270).jpeg({ quality: 85 }).toBuffer(),
-    top: Math.floor(index / 5) * 270,
-    left: (index % 5) * 216,
+    input: await sharp(bytes).resize(tileWidth, tileHeight).jpeg({ quality: 88 }).toBuffer(),
+    top: Math.floor(index / columns) * (tileHeight + gap),
+    left: (index % columns) * (tileWidth + gap),
   })));
-  const overview = await sharp({ create: { width: Math.min(5, tiles.length) * 216, height: Math.ceil(tiles.length / 5) * 270, channels: 3, background: '#e9e4de' } }).composite(tiles).jpeg({ quality: 88 }).toBuffer();
+  const overview = await sharp({ create: { width: columns * (tileWidth + gap) - gap,
+    height: rows * (tileHeight + gap) - gap, channels: 3, background: '#e9e4de' } }).composite(tiles).jpeg({ quality: 88 }).toBuffer();
   return { first, second, cover, overview, hashes: raw.map(bytes => sha256(bytes)) };
 }
 
@@ -98,7 +106,6 @@ export async function runBlindCarouselPair({ key, root, baseline, candidate, bri
     side.files.every(file => typeof file === 'string' && !isAbsolute(file) && !file.split('/').includes('..')) &&
     typeof side.caption === 'string' && side.caption.length <= 2400;
   requireCondition(safeSide(baseline) && safeSide(candidate) && typeof briefing === 'string' && briefing.length <= 6000, 'judge_invalid_input');
-  const sharp = require('sharp');
   const canonicalRoot = await realpath(root);
   const trustedFiles = async files => Promise.all(files.map(async file => {
     const path = await realpath(resolve(canonicalRoot, file));
@@ -108,7 +115,7 @@ export async function runBlindCarouselPair({ key, root, baseline, candidate, bri
     requireCondition(info.isFile() && info.size <= 8_000_000, 'judge_file_invalid');
     return path;
   }));
-  const [a, b] = await Promise.all([baseline, candidate].map(async side => panels(sharp, await trustedFiles(side.files))));
+  const [a, b] = await Promise.all([baseline, candidate].map(async side => renderJudgePanels(await trustedFiles(side.files))));
   const [baselineHash, candidateHash] = [a, b].map(side => judgeDeckHash(side.hashes));
   const input = {
     baselineHash, candidateHash, briefingSha256: sha256(briefing),

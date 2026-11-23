@@ -114,6 +114,8 @@ node scripts/evals/carrossel/cli.mjs diagram-preflight \
 
 O comando verifica a associação de cada rótulo ao exemplo. A ordem das duas placas pode mudar. Uma lâmina sem expectativa fica `unchecked`. Para plantar uma associação errada, declare `--expect-mismatch caso:B:lamina` para aquele lado e ID de lâmina. A saída registra `expected_mismatch` apenas quando encontra a divergência declarada e preserva a presença da regra na cópia. A pré-verificação cobre associações explícitas. A revisão cega das imagens continua responsável por colocação, efeito visual e ambiguidades. Confira também os controles compartilhados em ambos os lados e a legibilidade das mesmas miniaturas que o juiz recebe.
 
+O juiz recebe a segunda lâmina isolada, a capa, o recorte 3:4 e a folha em ordem de leitura. A folha usa miniaturas de 272 × 340 px e intervalos de 8 px. Para confrontar leituras independentes antes do congelamento, compare a relação entre briefing e pixels de cada lado, inclusive nas lâminas compartilhadas. Registre a evidência de desacordo em arte, ritmo, veredito ou severidade antes de reconciliar as notas.
+
 | Campo de cada caso | Conteúdo |
 | --- | --- |
 | `id`, `briefing`, `facts` | Identificador inédito, briefing sintético e lista de fatos. Use `judgeBriefing(caso)` como texto de entrada do juiz. |
