@@ -6,7 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { AGENT_MODEL } from '../../../packages/agents-api/src/agent-model.mjs';
 import {
   CAROUSEL_ALT_GUIDANCE, CAROUSEL_CLOSING_GUIDANCE, CAROUSEL_EDITORIAL_VISUAL_GUIDANCE, CAROUSEL_NATIVE_READABILITY_GUIDANCE,
-  CAROUSEL_OPENING_GUIDANCE, CAROUSEL_VISUAL_SLOT_GUIDANCE,
+  CAROUSEL_OPENING_GUIDANCE, CAROUSEL_SPACING_GUIDANCE, CAROUSEL_VISUAL_SLOT_GUIDANCE,
 } from '../../../packages/agents-api/src/creative-skills/format-carousel.mjs';
 import { createImageHandler } from '../../../packages/images-api/src/index.mjs';
 import { cadence, demonstrationLayouts, diagrams, layouts, validateDeck } from '../../../packages/carousel-renderer/src/plan.mjs';
@@ -91,7 +91,7 @@ function plannerBody(testCase, cycle, artBatch) {
     CAROUSEL_CLOSING_GUIDANCE,
     'Para comparar uma amostra em pé e de cabeça para baixo, use orientation em vez de balance. Envie {"type":"orientation","labels":["Em pé","De cabeça para baixo"],"sample":"Página de zine"} com os rótulos literais nessa ordem e uma amostra única de até 18 caracteres e 4 palavras. O compositor aplica a rotação.',
     ...(cycle >= 4 && testCase.mode === 'native_serial' ? [CAROUSEL_NATIVE_READABILITY_GUIDANCE] : []),
-    ...(cycle >= 4 && testCase.mode === 'editorial_art' ? [CAROUSEL_EDITORIAL_VISUAL_GUIDANCE] : []),
+    ...(cycle >= 4 && testCase.mode === 'editorial_art' ? [CAROUSEL_EDITORIAL_VISUAL_GUIDANCE, CAROUSEL_SPACING_GUIDANCE] : []),
     'Cada slide tem id único, layout, headline, alt e opcionalmente body, kicker, listItems, source, accentPhrase, figure, bridge, diagram e polarity. Use bridge hairline_thread ou color_band_echo, polarity base ou inverted. O highlight, se houver, deve ocorrer literalmente na manchete e ter 1 a 3 palavras.',
     CAROUSEL_ALT_GUIDANCE,
     CAROUSEL_VISUAL_SLOT_GUIDANCE,

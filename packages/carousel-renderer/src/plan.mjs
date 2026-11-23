@@ -59,8 +59,10 @@ function copyIssues(slide, index) {
 
 export function isDiagram(spec) {
   if (diagrams.includes(spec)) return true;
-  if (!spec || typeof spec !== 'object') return false;
-  if (spec.type === 'readability_matrix') return Object.keys(spec).length === 1 && Object.hasOwn(spec, 'type');
+  if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return false;
+  if (spec.type === 'readability_matrix' || spec.type === 'spacing') {
+    return Object.keys(spec).length === 1 && Object.hasOwn(spec, 'type');
+  }
   if (demonstrationDiagrams.includes(spec.type)) return isDemonstration(spec);
   return Boolean(diagrams.includes(spec.type) &&
     Array.isArray(spec.labels) && spec.labels.length >= 1 && spec.labels.length <= 3 &&
@@ -99,7 +101,7 @@ function isDemonstration(spec) {
     demonstrationText(spec.sample, 18, 4);
 }
 
-function slideIssues(slide, index, allowsMatrix) {
+function slideIssues(slide, index, deck) {
   if (!slide || typeof slide !== 'object' || Array.isArray(slide)) return [issue('SLIDE', index, 'Lâmina inválida.')];
   const findings = copyIssues(slide, index);
   if (typeof slide.id !== 'string' || !ID.test(slide.id)) findings.push(issue('SLIDE_ID', index, 'ID inválido.'));
@@ -110,14 +112,17 @@ function slideIssues(slide, index, allowsMatrix) {
   }
   const validDiagram = isDiagram(slide.diagram);
   if (slide.diagram !== undefined && !validDiagram) findings.push(issue('DIAGRAM', index, 'Diagrama não permitido.'));
-  const matrix = slide.diagram?.type === 'readability_matrix';
-  const demonstration = validDiagram && (matrix || demonstrationDiagrams.includes(slide.diagram?.type));
+  const type = slide.diagram?.type;
+  const matrix = type === 'readability_matrix';
+  const spacing = type === 'spacing';
+  const comparison = demonstrationDiagrams.includes(type);
+  const demonstration = validDiagram && (matrix || spacing || comparison);
   if (validDiagram && !demonstration && slide.layout === 'cta_closing') {
     findings.push(issue('CTA_DIAGRAM', index, 'Mova o diagrama básico para uma lâmina de conteúdo ou remova-o do fechamento.'));
   }
-  const supportsDemonstration = matrix
-    ? allowsMatrix && slide.layout === 'native_serial'
-    : demonstrationLayouts.includes(slide.layout);
+  const supportsDemonstration = (matrix && deck.mode === 'native_serial' && deck.slides.length >= 4 && slide.layout === 'native_serial') ||
+    (spacing && deck.mode === 'editorial_art' && slide.layout === 'svg_diagram') ||
+    (comparison && demonstrationLayouts.includes(slide.layout));
   if (demonstration && (!supportsDemonstration || slide.art !== undefined)) {
     findings.push(issue('DEMONSTRATION_LAYOUT', index, 'A comparação exige painel largo e arte exclusiva do diagrama.'));
   }
@@ -140,8 +145,7 @@ export function validateDeck(deck) {
     !Array.isArray(deck.slides) || deck.slides.length < 3 || deck.slides.length > 10) {
     return [issue('DECK', null, 'Formato ou quantidade de lâminas incompatível com o Compor.')];
   }
-  const allowsMatrix = deck.mode === 'native_serial' && deck.slides.length >= 4;
-  const findings = deck.slides.flatMap((slide, position) => slideIssues(slide, position + 1, allowsMatrix));
+  const findings = deck.slides.flatMap((slide, position) => slideIssues(slide, position + 1, deck));
   if (new Set(deck.slides.map(slide => slide?.id)).size !== deck.slides.length) {
     findings.push(issue('DUPLICATE_ID', null, 'IDs de lâminas devem ser únicos.'));
   }

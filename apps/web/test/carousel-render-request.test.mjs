@@ -129,6 +129,30 @@ test('aceita a matriz nativa na composição e no plano salvo com a mesma receit
   }
 });
 
+test('espaçamento é aceito no SVG editorial e no plano salvo com os mesmos limites', async () => {
+  const diagram = {type: 'spacing'};
+  const layout = 'svg_diagram';
+  const alt = 'Os vizinhos se afastam da mesma forma central.';
+  const read = (mode, slots = {}) => readCarouselRenderRequest(request(JSON.stringify({
+    projectId, plan: {mode, slides: [{...slide, layout, diagram, alt, ...slots}]},
+  })));
+  const forStorage = (mode, slots = {}) => carouselPlanSchema.safeParse({
+    mode, slides: [1, 2, 3].map(index => ({frameId: `00000000-0000-4000-8000-00000000000${index}`, layout, alt,
+      ...(index === 2 && {diagram, ...slots})})),
+  }).success;
+  const editorial = await read('editorial_art');
+  assert.ok(editorial.ok);
+  assert.deepEqual(editorial.plan.slides[0].diagram, diagram);
+  assert.equal(forStorage('editorial_art'), true);
+  assert.equal(carouselPlanSchema.safeParse({mode: 'editorial_art', slides: new Array(3)}).success, false);
+  assert.deepEqual(await read('native_serial'), invalid);
+  assert.equal(forStorage('native_serial'), false);
+  for (const slots of [{layout: 'cta_closing'}, {diagram: 'spacing'}, {diagram: {...diagram, sample: 'troca'}}, {artSha256: 'f'.repeat(64)}]) {
+    assert.deepEqual(await read('editorial_art', slots), invalid);
+    assert.equal(forStorage('editorial_art', slots), false);
+  }
+});
+
 test('enforces the inclusive 32 KiB body limit even without a length header', async () => {
   const body = JSON.stringify(input);
   const byteLimit = 32 * 1024;

@@ -206,6 +206,10 @@
     {
       "name": "20261123000051_carousel_readability_matrix.sql",
       "sha256": "ffd4ed29559a28c4a3cb4da3302edf2281bf471f032b030623ff0475267dfa5f"
+    },
+    {
+      "name": "20261123000052_carousel_spacing_diagram.sql",
+      "sha256": "96aa09c0ed7eb03b897ef46acd5bccf1a518c447cc6efd336192400d0d357fe7"
     }
   ]
 }

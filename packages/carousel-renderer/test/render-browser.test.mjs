@@ -457,6 +457,85 @@ test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { s
   }
 });
 
+function colorHex(value) {
+  const channels = value.match(/[\d.]+/g).slice(0, 3).map(Number);
+  return '#' + channels.map(channel => Math.round(value.startsWith('color(srgb') ? channel * 255 : channel)
+    .toString(16).padStart(2, '0')).join('');
+}
+
+test('prova de respiro muda apenas a posição dos vizinhos e mantém rótulos legíveis', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  const fonts = { 400: regular, 700: bold };
+  const tokens = { light: '#f4f0e8', dark: '#20242a', accent: '#e85a3f' };
+  const alt = 'Duas placas mostram o mesmo losango e quatro formas vizinhas. Na placa "Vizinhos afastados", há mais espaço em volta do losango.';
+  const cover = slide('framed_plate', 'Organize as formas antes do texto', { diagram: 'focus' });
+  const closing = slide('cta_closing', 'Salve para sua próxima ilustração');
+  const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
+  t.after(() => page.close());
+
+  for (const polarity of ['base', 'inverted']) {
+    const proof = slide('svg_diagram', 'O espaço livre reforça o foco', {
+      body: 'Observe o espaço ao redor da forma principal. Afaste as formas vizinhas para abrir espaço em torno dela.',
+      diagram: { type: 'spacing' }, polarity, alt,
+    });
+    const result = await renderDeckInMemory({ mode:'editorial_art', tokens, slides:[cover, proof, closing] },
+      { browser, sharp, fonts, repair:false });
+    const item = result.slides[1];
+    assert.ok(item.firstChecks.every(check => check.status === 'pass'));
+    assert.ok(item.checks.every(check => check.status === 'pass'));
+    assert.deepEqual(item.repairs, []);
+    assert.equal(item.artAreaFraction, 904 * 360 / (1080 * 1350));
+    const cadence = result.checks.find(check => check.id === 'COLLECTION_CADENCE');
+    assert.equal(cadence.status, 'pass');
+    assert.equal(cadence.observed.visualCoverage, 2 / 3);
+    assert.deepEqual(result.altTexts[1], { index: 2, alt });
+
+    await page.setContent(slideDocument(proof, { index:2, palette:paletteFor(tokens), fonts }));
+    await page.evaluate(() => document.fonts.ready);
+    const panel = page.getByRole('img', { name:alt });
+    assert.deepEqual(await panel.boundingBox(), { x:88, y:156, width:904, height:360 });
+    const background = colorHex(await page.locator('main').evaluate(main => getComputedStyle(main).backgroundColor));
+    const plates = await panel.locator('figure').evaluateAll(figures => figures.map(figure => {
+      const frame = figure.querySelector('.spacing-frame');
+      const focus = figure.querySelector('.spacing-focus');
+      const context = figure.querySelector('.spacing-context');
+      const center = focus.getBBox();
+      const caption = figure.querySelector('figcaption');
+      const captionStyle = getComputedStyle(caption);
+      return {
+        label: caption.textContent, region: caption.dataset.region,
+        labelColor: captionStyle.color, fontSize: Number.parseFloat(captionStyle.fontSize),
+        frame: frame.outerHTML, focus: focus.outerHTML, focusColor: getComputedStyle(focus).fill,
+        stroke: getComputedStyle(context).stroke, strokeWidth: getComputedStyle(context).strokeWidth,
+        neighbors: [...context.children].map(neighbor => {
+          const { e:x, f:y } = neighbor.transform.baseVal.getItem(0).matrix;
+          return { shape: neighbor.innerHTML, offset: Math.hypot(x - center.x - center.width / 2, y - center.y - center.height / 2) };
+        }),
+      };
+    }));
+    const [near, far] = plates;
+    assert.deepEqual(plates.map(plate => plate.label), ['Vizinhos próximos', 'Vizinhos afastados']);
+    assert.ok(plates.every(plate => plate.fontSize / 3 >= 12 && plate.region === 'diagram-label' && contrast(colorHex(plate.labelColor), background) >= 4.5));
+    assert.equal(near.frame, far.frame);
+    assert.equal(near.focus, far.focus);
+    assert.equal(near.focusColor, far.focusColor);
+    assert.equal(near.stroke, far.stroke);
+    assert.equal(near.strokeWidth, far.strokeWidth);
+    assert.ok(contrast(colorHex(near.focusColor), background) >= 3);
+    assert.ok(contrast(colorHex(near.stroke), background) >= 3);
+    assert.equal(near.neighbors.length, 4);
+    assert.deepEqual(near.neighbors.map(neighbor => neighbor.shape), far.neighbors.map(neighbor => neighbor.shape));
+    assert.ok(far.neighbors.every((neighbor, index) => neighbor.offset > near.neighbors[index].offset));
+  }
+});
+
 test('matriz de leitura mantém a série legível e distingue o espécime de baixo contraste', { skip, timeout: 60_000 }, async t => {
   const { chromium } = require('playwright-core');
   const sharp = require('sharp');
@@ -480,11 +559,6 @@ test('matriz de leitura mantém a série legível e distingue o espécime de bai
     slide('native_serial', 'Compare texto e fundo', {id:'contraste', kicker:'Nota 02', body:'Mude a cor das letras para separar texto e fundo.'}),
   ];
   const closing = slide('cta_closing', 'Revise antes de publicar', {body:'Salve estas notas para revisar seu próximo anúncio.'});
-  const colorHex = value => {
-    const channels = value.match(/[\d.]+/g).slice(0, 3).map(Number);
-    return '#' + channels.map(channel => Math.round(value.startsWith('color(srgb') ? channel * 255 : channel)
-      .toString(16).padStart(2, '0')).join('');
-  };
   const page = await browser.newPage({viewport:{width:1080,height:1350}});
   t.after(() => page.close());
 

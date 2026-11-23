@@ -131,6 +131,25 @@ test('fechamento recusa diagramas básicos antes de renderizar', async () => {
   }
 });
 
+test('comparação de respiro tem shape fechada e ocupa apenas um diagrama editorial sem raster', async () => {
+  const diagram = { type: 'spacing' };
+  const plan = deck();
+  const proof = makeSlide('two', 'svg_diagram', 'Espaço livre reforça o foco', { diagram });
+  plan.slides[1] = proof;
+  assert.deepEqual(validateDeck(plan), []);
+  assert.ok(!demonstrationDiagrams.includes(diagram.type));
+  for (const invalid of ['spacing', { ...diagram, labels: ['Perto', 'Longe'] }, { ...diagram, offset: 40 }]) {
+    assert.equal(isDiagram(invalid), false);
+  }
+  assert.deepEqual(validateDeck({ ...plan, mode: 'native_serial' }).map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+  for (const invalid of [{ layout: 'cta_closing' }, { layout: 'comparison_dual' }, { art: 'data:image/png;base64,AA==' }]) {
+    plan.slides[1] = { ...proof, ...invalid };
+    const refused = await renderDeckInMemory(plan, {});
+    assert.deepEqual(refused.slides, []);
+    assert.deepEqual(refused.checks.map(check => check.id), ['DEMONSTRATION_LAYOUT']);
+  }
+});
+
 test('matriz de leitura tem exemplo fixo e só ocupa a nota seriada sem raster em quatro ou mais lâminas', async () => {
   const diagram = { type: 'readability_matrix' };
   const native = { mode: 'native_serial', slides: [

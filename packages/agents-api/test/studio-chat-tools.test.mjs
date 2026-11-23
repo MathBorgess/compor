@@ -232,3 +232,15 @@ test('matriz de legibilidade tem uma receita fechada para notas seriadas', () =>
     assert.equal(isCarouselSlideComposition({ ...composition, ...slots }), false);
   }
 });
+
+test('espaçamento tem receita fechada para SVG editorial', () => {
+  const base = compositionPlan();
+  const frame = base.frames[1];
+  const composition = { layout: 'svg_diagram', diagram: { type: 'spacing' }, alt: 'Os vizinhos se afastam da mesma forma central.' };
+  const plan = { ...base, frames: [base.frames[0], { ...frame, composition }, base.frames[2]] };
+  const parse = value => parseStudioAction('compor_definir_plano_laminas', value);
+  assert.deepEqual(parse(plan), plan);
+  assert.throws(() => parse({ ...plan, compositionMode: 'native_serial' }), /invalid_action/);
+  assert.equal(isCarouselSlideComposition({ ...composition, layout: 'cta_closing' }), false);
+  assert.equal(isCarouselSlideComposition({ ...composition, diagram: { ...composition.diagram, labels: ['Customizado'] } }), false);
+});

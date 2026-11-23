@@ -66,6 +66,7 @@ export type CarouselDiagram =
   | { type: 'hierarchy'; labels: [string, string]; items: [string, string, string] }
   | { type: 'category_split'; labels: [string, string]; items: [string, string] }
   | { type: 'orientation'; labels: ['Em pé', 'De cabeça para baixo']; sample: string }
+  | { type: 'spacing' }
   | { type: 'readability_matrix' };
 
 export const layouts: readonly string[];

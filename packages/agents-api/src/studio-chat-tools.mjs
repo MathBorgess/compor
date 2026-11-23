@@ -24,6 +24,7 @@ const semanticDiagramSchemas = {
     sample: string(18),
   }),
   readability_matrix: fields({ type: { enum: ['readability_matrix'] } }),
+  spacing: fields({ type: { enum: ['spacing'] } }),
 };
 const compositionDiagramSchema = { anyOf: [
   { enum: diagramShapes },
@@ -172,6 +173,7 @@ export function allowsCarouselSemanticDiagram(diagram, layout, hasRaster = false
   if (type === 'readability_matrix') {
     return layout === 'native_serial' && (deck === undefined || (deck.mode === 'native_serial' && deck.slideCount >= 4));
   }
+  if (type === 'spacing') return layout === 'svg_diagram' && (deck === undefined || deck.mode === 'editorial_art');
   if (!demonstrationLayouts.includes(layout)) return false;
   if (type === 'orientation') {
     return orientationLabels.every((label, index) => diagram.labels[index] === label)

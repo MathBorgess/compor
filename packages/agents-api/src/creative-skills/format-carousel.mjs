@@ -9,11 +9,12 @@ export const CAROUSEL_NATIVE_READABILITY_GUIDANCE = 'Em uma série de quatro ou 
 export const CAROUSEL_ALT_GUIDANCE = 'Escreva uma frase de alt por lâmina com a informação que se perderia se a imagem estivesse oculta. Confira a receita final antes de mencionar um objeto, uma cena ou um quadro. Em lâminas tipográficas sem arte ou diagrama, descreva a informação e a ação escritas.';
 export const CAROUSEL_CLOSING_GUIDANCE = 'Use cta_closing com manchete e uma chamada à ação no corpo. Omita diagram no fechamento tipográfico. Inclua diagram no fechamento somente para concluir uma demonstração pedida no briefing com contrast, type_scale, hierarchy, category_split ou orientation. Use flow, balance, steps e focus nas lâminas de conteúdo anteriores ao fechamento. O alt do fechamento descreve o que aparece no quadro e o pedido de interação.';
 export const CAROUSEL_EDITORIAL_VISUAL_GUIDANCE = 'Em editorial_art, planeje mídia visível com função de evidência, comparação ou explicação em 65–90% da coleção. Em cinco lâminas, dê essa função visual a quatro. Use painéis largos e amostras concretas que mostrem a diferença descrita na copy. Se o fechamento for tipográfico, concentre as demonstrações nas lâminas anteriores.';
+export const CAROUSEL_SPACING_GUIDANCE = 'Em editorial_art, se a lição for afastar elementos vizinhos para criar espaço em torno do foco, use svg_diagram com diagram {"type":"spacing"}. O quadro mantém tamanho, cor e posição da forma central e afasta somente as vizinhas. Os rótulos “Vizinhos próximos” e “Vizinhos afastados” são fixos. Descreva no alt como a distância muda a leitura. Use o quadro sem outra mídia na mesma lâmina.';
 export const CAROUSEL_VISUAL_SLOT_GUIDANCE = 'Reserve figure para um número ou marcador visível de até 18 caracteres, como “12%” ou “02”. No alt, descreva o que o diagrama escolhido mostra e inclua a instrução prática resumida. Em contrast e type_scale, use uma amostra textual curta iniciada por letra ou algarismo. A amostra compara luminância em contrast e tamanho de texto em type_scale. Use um painel que mostre a propriedade ensinada e descreva no corpo o critério que o leitor pode observar.';
 
 export const POST_CAROUSEL_SKILL = Object.freeze({
   id: 'carrossel-narrativo.v1',
-  version: '4.2.6',
+  version: '4.2.7',
   format: 'carousel',
   chat: [
     'Skill carrossel-narrativo.v1 (Carrossel 4:5 · 3 a 10 lâminas · Instagram):',
@@ -25,6 +26,7 @@ export const POST_CAROUSEL_SKILL = Object.freeze({
     CAROUSEL_VISUAL_SLOT_GUIDANCE,
     CAROUSEL_CLOSING_GUIDANCE,
     CAROUSEL_EDITORIAL_VISUAL_GUIDANCE,
+    CAROUSEL_SPACING_GUIDANCE,
     'Em testes e comparações, aplique aos dois exemplos o mesmo critério de decisão do briefing e da cópia. Leia cada placa sozinha. Se o exemplo introduzir uma condição adicional, reformule o rótulo ou o exemplo para ficar fiel ao teste descrito.',
     'Antes da revisão, verifique o Gate 0: cada lâmina entrega uma ideia sustentada pelo briefing, por fonte citada ou por evidência real. Cite a fonte de números ou resultados em qualquer lâmina; preserve fatos declarados e retire números, depoimentos ou supostas provas sem lastro. Dê à Lâmina 2 uma manchete autônoma e a primeira entrega concreta. Reserve uma única chamada à ação no fechamento e use no máximo uma menção sustentada ao produto.',
     '2. Lâmina 1 é thumbnail, âncora visual e abertura causal: manchete de 2 a 6 palavras + sub-gancho curto + objeto/cena que cria tensão ou apresenta a situação inicial completa para puxar o arraste — sem adiantar resultados, cálculos ou etapas que só aparecem nas lâminas seguintes, preservando coerência lógica estrita da capa ao fechamento. Se o briefing exigir um artefato ou suporte concreto na prova, nomeie-o na manchete.',

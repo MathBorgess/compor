@@ -65,6 +65,27 @@ function demonstration({ type, labels, sample, items }) {
   return `<div class="media diagram diagram-demonstration" data-demonstration="${type}">${panels.join('')}</div>`;
 }
 
+function spacingPlate(label, dx, dy) {
+  const positions = [[-dx, -dy], [dx, -dy], [-dx, dy], [dx, dy]];
+  const neighbors = positions.map(([x, y], index) => {
+    const shape = index % 2 === 0 ? '<circle r="17"/>' : '<rect x="-16" y="-16" width="32" height="32" rx="6"/>';
+    return `<g class="spacing-neighbor" transform="translate(${210 + x} ${96 + y})">${shape}</g>`;
+  }).join('');
+  return `<figure class="diagram-panel">
+    <svg viewBox="0 0 420 192" aria-hidden="true">
+      <rect class="spacing-frame" x="1.5" y="1.5" width="417" height="189" rx="20"/>
+      <path class="spacing-focus" d="M210 53l43 43-43 43-43-43z"/>
+      <g class="spacing-context">${neighbors}</g>
+    </svg>
+    <figcaption data-region="diagram-label">${label}</figcaption>
+  </figure>`;
+}
+
+function spacingComparison(alt) {
+  return `<div class="media diagram diagram-demonstration spacing-proof" role="img" aria-label="${escape(alt)}">` +
+    spacingPlate('Vizinhos próximos', 53, 32) + spacingPlate('Vizinhos afastados', 104, 53) + '</div>';
+}
+
 function readabilityMatrix(alt) {
   const label = (copy, kind = '') => `<span class="matrix-label ${kind}" data-region="diagram-label">${copy}</span>`;
   const panel = (copy, kind = '') => `<div class="matrix-panel ${kind}"${kind === 'low-contrast' ? '' : ' data-region="diagram-proof"'}>${copy}</div>`;
@@ -80,6 +101,7 @@ function readabilityMatrix(alt) {
 function media(slide) {
   if (slide.art) return '<div class="media"><img src="' + escape(slide.art) + '" alt=""></div>';
   if (!slide.diagram) return '';
+  if (slide.diagram.type === 'spacing') return spacingComparison(slide.alt);
   if (slide.diagram.type === 'readability_matrix') return readabilityMatrix(slide.alt);
   if (demonstrationDiagrams.includes(slide.diagram.type)) return demonstration(slide.diagram);
   const { type, labels = [] } = typeof slide.diagram === 'string' ? { type: slide.diagram } : slide.diagram;
@@ -113,6 +135,10 @@ em{font-style:normal;color:var(--ink)}
 .diagram-panel{display:grid;gap:12px;min-width:0;margin:0}
 .diagram-panel svg{display:block}
 .diagram-panel figcaption{padding:0 8px;color:var(--fg);font-size:32px;line-height:1.23;text-align:center;overflow-wrap:anywhere}
+.spacing-proof figcaption{font-size:36px}
+.spacing-frame{fill:var(--bg);stroke:var(--ink);stroke-width:2;stroke-opacity:.64}
+.spacing-focus{fill:var(--ink)}
+.spacing-context{fill:none;stroke:color-mix(in srgb,var(--fg) 64%,var(--bg));stroke-width:4}
 .diagram-sample-panel{aspect-ratio:420/192;display:grid;align-items:center;min-width:0;padding:16px;border:3px solid color-mix(in srgb,var(--fg) 45%,var(--bg));border-radius:20px}
 .diagram-sample{min-width:0;color:var(--fg);font-size:38px;line-height:1.22;font-weight:700;text-align:center;overflow-wrap:anywhere}
 .diagram-sample.rotated{transform:rotate(180deg)}

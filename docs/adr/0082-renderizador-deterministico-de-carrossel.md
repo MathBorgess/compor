@@ -34,6 +34,12 @@ O modo `native_serial` admite `{"type":"readability_matrix"}` em uma lâmina do 
 
 A migração `20261123000051` valida a forma exata do diagrama, o modo e o arquétipo. O quadro é composição do renderer. A validação de `artSha256` continua exigindo que o raster ocupe um slot de mídia próprio. O digest guarda a escolha de diagrama. As palavras fixas dispensam campos editáveis de rótulo e amostra nesse contrato.
 
+## Comparação de espaçamento
+
+`editorial_art` admite `{"type":"spacing"}` no layout `svg_diagram`, com um par de placas e rótulos fixos. A forma central se repete na mesma escala, posição e cor. Só as coordenadas dos elementos vizinhos mudam. O `alt` da lâmina descreve a mudança. O painel usa as cores de texto e destaque da mesma paleta, sujeitas aos gates do renderer.
+
+A migração `20261123000052` admite a receita exata na persistência. O quadro ocupa o slot de composição do SVG, com JPEG, descrição e digest vinculados à versão como nos demais painéis. O fluxo autenticado local com identidade simulada conferiu o ZIP e a integridade do JPEG. O teste em PGlite verificou a receita, as restrições do arquivo, o vínculo ao recibo e a leitura de versões anteriores.
+
 ## Evidência para habilitação
 
 Executar o fluxo autenticado da rota em Linux no Preview da Vercel. Verificar o fechamento do Chromium em falha, os arquivos presentes no trace, o orçamento de tamanho do ZIP e o comportamento para planos recusados. Vínculo à versão e recuperação em outro navegador exigem mais uma verificação depois que o estúdio consumir esse contrato.

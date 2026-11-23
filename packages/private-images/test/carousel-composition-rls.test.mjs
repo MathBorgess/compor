@@ -361,6 +361,10 @@ test('matriz de leitura nativa aceita receita fixa e vincula o JPEG à versão i
   await assert.rejects(save(db, 2, 2, stale), { code: '22023' });
 
   assert.deepEqual((await save(db, 2, 2, draft)).version.content, draft);
+  await db.exec('reset role');
+  await migrate(db, ['20261123000052_carousel_spacing_diagram']);
+  await identify(db, alice);
+  await assert.rejects(save(db, 3, 3, renderedContent(shortMatrix)), { code: '22023' });
   assert.deepEqual((await save(db, 3, 3, rendered)).version.content, rendered);
   const jpegName = storagePath(alice, project, 4, jpegId(2) + '.jpg');
   await writeObject(db, jpegBucket, jpegName);
@@ -371,6 +375,55 @@ test('matriz de leitura nativa aceita receita fixa e vincula o JPEG à versão i
   assert.deepEqual(await save(db, 4, 4, rendered), { status: 'not_found' });
   await assert.rejects(writeObject(db, jpegBucket, jpegName), { code: '42501' });
   assert.deepEqual((await db.query('select name from storage.objects where bucket_id=$1', [jpegBucket])).rows, []);
+});
+
+test('diagrama de espaçamento editorial preserva o plano e o recibo com receita fechada', async t => {
+  const db = await fixture(t);
+  await migrate(db, [
+    '20261122000048_carousel_composition',
+    '20261123000049_carousel_art_source',
+    '20261123000050_carousel_semantic_diagrams',
+    '20261123000051_carousel_readability_matrix',
+  ]);
+  const previous = governedContent();
+  const draft = structuredClone(previous);
+  const spacing = { type: 'spacing' };
+  Object.assign(draft.carouselPlan.slides[1], { layout: 'svg_diagram', diagram: spacing });
+  const previousRendered = renderedContent(previous);
+
+  await identify(db, alice);
+  assert.deepEqual((await save(db, 0, 0, previousRendered)).version.content, previousRendered);
+  await assert.rejects(save(db, 1, 1, draft), { code: '22023' });
+  await db.exec('reset role');
+  await migrate(db, ['20261123000052_carousel_spacing_diagram']);
+  await identify(db, alice);
+
+  for (const fields of [
+    { layout: 'comparison_dual' },
+    { layout: 'cta_closing' },
+    { artSha256: 'a'.repeat(64) },
+    { diagram: 'spacing' },
+    { diagram: { ...spacing, labels: ['Sem espaçamento', 'Com espaçamento'] } },
+    { diagram: { ...spacing, sample: 'Oferta' } },
+    { diagram: { ...spacing, items: ['Oferta', 'Detalhes'] } },
+    { diagram: { ...spacing, color: null } },
+  ]) {
+    const invalid = structuredClone(draft);
+    Object.assign(invalid.carouselPlan.slides[1], fields);
+    await assert.rejects(save(db, 1, 1, renderedContent(invalid)), { code: '22023' }, JSON.stringify(fields));
+  }
+  const wrongMode = structuredClone(draft);
+  wrongMode.carouselPlan.mode = 'native_serial';
+  await assert.rejects(save(db, 1, 1, renderedContent(wrongMode)), { code: '22023' });
+  const rendered = renderedContent(draft);
+  const stale = structuredClone(rendered);
+  stale.carouselPlan.slides[1].diagram = 'steps';
+  await assert.rejects(save(db, 1, 1, stale), { code: '22023' });
+
+  assert.deepEqual((await save(db, 1, 1, draft)).version.content, draft);
+  assert.deepEqual((await save(db, 2, 2, rendered)).version.content, rendered);
+  const history = await db.query('select public.list_project_piece_versions_v3($1) result', [project]);
+  assert.deepEqual(history.rows[0].result.map(version => version.content), [previousRendered, draft, rendered]);
 });
 
 test('JSONB inválido em composição ou marcador retorna invalid_request sem criar versões', async t => {

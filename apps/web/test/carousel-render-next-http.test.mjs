@@ -186,6 +186,9 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
         diagram: { type: 'category_split', labels: ['Texto', 'Imagem'], items: ['Título', 'Desenho'] } },
       { id: 'orientacao', layout: 'comparison_dual', headline: 'Confira a orientação da página', alt: 'A palavra Página aparece em pé e de cabeça para baixo.',
         diagram: { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Página' } },
+      { id: 'espacamento', layout: 'svg_diagram', headline: 'Aproxime título e subtítulo',
+        body: 'Deixe mais espaço entre blocos para distinguir assuntos.',
+        alt: 'Os elementos próximos formam grupos visuais distintos.', diagram: { type: 'spacing' } },
       { id: 'final', layout: 'cta_closing', headline: 'Destaque o título da página', body: 'Salve para a próxima impressão.',
         alt: 'A comparação destaca o título e termina com o convite para salvar.',
         diagram: { type: 'hierarchy', labels: ['Peso igual', 'Título em destaque'], items: ['Título', 'Página', 'Selo'] } },
@@ -193,13 +196,19 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
   };
   const semanticResponse = await post({ projectId, plan: semanticPlan });
   assert.equal(semanticResponse.status, 200, semanticResponse.ok ? undefined : await semanticResponse.text());
+  assert.equal(semanticResponse.headers.get('content-type'), 'application/zip');
   const semanticFiles = storedMembers(Buffer.from(await semanticResponse.arrayBuffer()));
   const semanticManifest = JSON.parse(semanticFiles.get('qa-manifest.json'));
   assert.deepEqual(semanticManifest.final.slides.map(slide => slide.id), semanticPlan.slides.map(slide => slide.id));
+  assert.deepEqual(JSON.parse(semanticFiles.get('alt-text.json')),
+    semanticPlan.slides.map(({ alt }, offset) => ({ index: offset + 1, alt })));
   for (const slide of semanticManifest.final.slides.slice(1)) {
     assert.ok(slide.checks.every(check => check.status === 'pass'));
     assert.equal(createHash('sha256').update(semanticFiles.get(slide.file)).digest('hex'), slide.sha256);
   }
+  const spacing = semanticManifest.final.slides.find(slide => slide.id === 'espacamento');
+  const spacingImage = await sharp(semanticFiles.get(spacing.file)).metadata();
+  assert.deepEqual([spacingImage.width, spacingImage.height, spacingImage.format, spacingImage.space], [1080, 1350, 'jpeg', 'srgb']);
 
   const source = await sharp({create:{width:320,height:240,channels:3,background:'#87815b'}}).jpeg().toBuffer();
   const artSha256 = createHash('sha256').update(source).digest('hex');
