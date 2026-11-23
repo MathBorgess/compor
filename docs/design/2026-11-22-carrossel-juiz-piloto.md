@@ -75,3 +75,19 @@ Um replay de desenvolvimento substituiu as placas do guia por “Furo encoberto�
 No replay cego desse caso conhecido, as duas ordens preferiram a correção. O juiz deu 2 em arte–mensagem às duas apresentações da versão original e 5 às duas da versão corrigida. O original recebeu um apontamento crítico sobre a lâmina 3 em cada sessão. A correção recebeu zero apontamentos críticos. As outras três lâminas e a legenda foram conferidas byte a byte. O relatório pareado tem SHA-256 `be381495886d906d34708913e35d447e74897966458d4f72e1e3bad0a6618f87`. A calibração continua reprovada com os rótulos e as notas originais.
 
 O preflight optativo de autoria agora compara as associações de `category_split` com um contrato privado, vinculado ao SHA-256 do plano. Em uma reconstrução dos planos do bordado, identificou a versão original como divergente e aprovou os pares do replay. As lâminas sem associações declaradas ficaram sem verificação. A próxima referência cega pode revisar as lâminas compartilhadas em ambos os contextos e resolver desacordos de nota ou severidade antes de congelar os rótulos. [Protocolo de calibração](../../scripts/evals/carrossel/README.md#calibração-do-juiz-visual)
+
+## Terceira calibração
+
+Dois autores criaram uma coorte de seis pares e 56 JPEGs inéditos. Dois revisores Codex inspecionaram a capa recortada, as segundas lâminas isoladas, as legendas e as folhas produzidas pelo próprio juiz. Ambos localizaram os mesmos três defeitos críticos. As divergências de nota e a preferência de um par foram reconciliadas antes de congelar a referência `e6fefe7ae4df0d2846285514212b8fcaadf4235410d84d1edb22f1a769e982df`. As folhas passaram a usar miniaturas de 272 × 340 px com oito pixels de separação. A rubrica pede evidência das decisões centrais do briefing e da sequência de leitura no miolo. Seu SHA-256 é `e8ec2d3e7277cd721d173dc37352ab2f7fcd47371f6cab69231094160dce7aa7`.
+
+As 24 sessões distintas completaram dois pares por caso com a ordem invertida. A leitura da 14ª sessão expirou e a consulta à mesma sessão recuperou exatamente o turno já identificado, com preservação do recibo original. Dez sessões foram iniciadas depois da reconciliação, dentro do teto inicial. Quatorze recibos informaram uso. O relatório verificado recalcula os resultados a partir dos rótulos, das observações e dos hashes dos recibos.
+
+| Medida | Observado | Limite |
+| --- | ---: | ---: |
+| Concordância nas quatro sessões do caso | 5/6 (83,3%) | ≥ 80% |
+| Defeitos críticos omitidos | 0 | 0 |
+| Classificações críticas fora da referência | 0 | 0 |
+| Maior desvio-padrão entre repetições | 0,102 em arte–mensagem e voz | < 0,35 |
+| Maior erro absoluto médio | 0,458 em editorial | ≤ 0,75 |
+
+A calibração passou. O desacordo ocorreu no par de devolução de uma ferramenta. Nas duas repetições, uma ordem empatou e a inversa preferiu a representação da sequência. O relatório tem SHA-256 `f32ac34150247356ddefd19ebd458b96ffc24e5f683ef03ecbdc5c6aef962288`. A medida caracteriza a rubrica nesses seis pares sintéticos. A reserva e a confirmação ficaram fechadas durante a calibração. [Protocolo de promoção](../../scripts/evals/carrossel/README.md#reserva-confirmação-e-calibração)
