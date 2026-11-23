@@ -200,6 +200,15 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
     sha256:artSha256, format:'jpeg', width:320, height:240, bytes:source.length,
     embeddedSha256:createHash('sha256').update(normalized).digest('hex'),
   });
+  const rasterSlide = artManifest.final.slides[0];
+  const { clip, text } = rasterSlide.artPlacement;
+  assert.equal(clip.left, 104);
+  assert.equal(clip.right, 976);
+  assert.ok(text.some(line => line.region === 'headline' && line.top >= clip.bottom));
+  const contrast = rasterSlide.checks.find(check => check.id === 'TEXT_CONTRAST');
+  assert.equal(contrast.observed.samplingStep, 1);
+  assert.equal(contrast.observed.requiredCoverage, 0.9);
+  assert.equal(artManifest.final.slides[1].artPlacement, undefined);
   assert.ok(withArtMembers.has('art-sheet.jpg'));
   assert.equal(requests.every(request => request.startsWith('GET ')), true);
 });

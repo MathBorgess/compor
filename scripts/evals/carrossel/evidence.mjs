@@ -4,6 +4,7 @@ import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { coverLabArtifact } from './cover-lab.mjs';
+import { verifyArtFocus } from './art-focus.mjs';
 import { verifyArtPurity } from './art-purity.mjs';
 import { judgeBriefing, judgeDeckHash, judgeSideScores, readBlindJudgePair } from './judge-evidence.mjs';
 import {
@@ -49,6 +50,7 @@ export function summarizeSnapshot(snapshot) {
   requireCondition(outcomes.includes(snapshot.outcome), 'Desfecho de avaliação inválido.');
   const checks = { ...(snapshot.checks ?? {}) };
   const artPurity = snapshot.artPurity;
+  const artFocus = snapshot.artFocus;
   if (artPurity?.sha256) {
     checks.ART_PURITY = artPurity.status === 'unavailable'
       ? { status: 'unknown' }
@@ -80,6 +82,7 @@ export function summarizeSnapshot(snapshot) {
     requireCondition(value === undefined || bounded(value, 1), 'MIG ou DDR fora da escala [0, 1].');
   }
   const dimensions = Object.fromEntries(Object.keys(judgeWeights).map(key => [key, snapshot.judgeScores?.[key]?.score ?? null]));
+  const focalFailures = artFocus?.results?.flatMap(item => item.findings.map(finding => finding.code)) ?? [];
   return {
     outcome: snapshot.outcome, reason: snapshot.reason ?? null, staged, sDet, sCol, sVlm, cqs, dimensions,
     migMean: snapshot.migMean ?? null,
@@ -88,11 +91,12 @@ export function summarizeSnapshot(snapshot) {
     coverLab: snapshot.coverLab ?? null,
     factualTrace: snapshot.factualTrace ?? null,
     artPurity: artPurity ?? null,
+    artFocus: artFocus ?? null,
     judgeInput: snapshot.judgeInput ?? null,
     judgeTrace: snapshot.judgeTrace ?? null,
     novelty: snapshot.novelty ?? null,
     retainedFiles: snapshot.artifacts?.map(artifact => artifact.file) ?? [],
-    hardFails: [...new Set([...planFailures, ...Object.values(staged).flatMap(stage => stage.failures), ...(snapshot.coverLab?.violations ?? []), ...(snapshot.factualTrace?.issues.map(issue => issue.id) ?? []), ...(snapshot.novelty?.status === 'fail' ? ['NOVELTY'] : []), ...(artPurity?.status === 'fail' ? ['TEXT_IN_ART_LAYER'] : [])])],
+    hardFails: [...new Set([...planFailures, ...Object.values(staged).flatMap(stage => stage.failures), ...(snapshot.coverLab?.violations ?? []), ...(snapshot.factualTrace?.issues.map(issue => issue.id) ?? []), ...(snapshot.novelty?.status === 'fail' ? ['NOVELTY'] : []), ...(artPurity?.status === 'fail' ? ['TEXT_IN_ART_LAYER'] : []), ...focalFailures])],
   };
 }
 
@@ -112,8 +116,8 @@ async function verifyArtifacts(caseDir, input, facts, assessment) {
   const artifacts = input.artifacts ?? [];
   requireCondition(Array.isArray(artifacts), 'Lista de artefatos inválida.');
   if (artifacts.length === 0) {
-    const artPurity = await verifyArtPurity(caseDir, assessment?.artPurityEvidence, { rasterDeclared: input.artSheetApplicable === true });
-    return { assetsVerified: false, coverLab: null, judgeInput: null, artPurity };
+    const reviews = await readRasterReviews(caseDir, assessment, { rasterDeclared: input.artSheetApplicable === true });
+    return { assetsVerified: false, coverLab: null, judgeInput: null, ...reviews };
   }
   const root = await realpath(caseDir);
   const seen = new Set();
@@ -165,18 +169,26 @@ async function verifyArtifacts(caseDir, input, facts, assessment) {
     : null;
   const novelty = await verifiedNovelty(root, plan, assessment?.noveltyEvidence);
   const slideHashes = new Map(artifacts.map(record => [record.file.split('/').at(-1), record.sha256]));
-  const artPurity = await verifyArtPurity(root, assessment?.artPurityEvidence, {
+  const reviews = await readRasterReviews(root, assessment, {
     planSha256: input.inputSha256, artSheetSha256: slideHashes.get('art-sheet.jpg'), renderChecks, rasterDeclared,
   });
   const judgeInput = assetsVerified ? {
     deckSha256: judgeDeckHash(indices.map(name => slideHashes.get(name))),
     captionSha256: sha256(plan?.value?.caption ?? ''),
   } : null;
-  if (!lab) return { assetsVerified, coverLab: null, factualTrace, novelty, judgeInput, artPurity };
+  if (!lab) return { assetsVerified, coverLab: null, factualTrace, novelty, judgeInput, ...reviews };
   requireCondition(plan && lab.value?.inputSha256 === plan.digest, 'Lab de capas desvinculado do plano renderizado.');
   const observed = coverLabArtifact(plan.value, plan.digest);
   requireCondition(observed && isDeepStrictEqual(lab.value, observed), 'O Lab de capas diverge dos dados verificados do plano.');
-  return { assetsVerified, coverLab: observed, factualTrace, novelty, judgeInput, artPurity };
+  return { assetsVerified, coverLab: observed, factualTrace, novelty, judgeInput, ...reviews };
+}
+
+async function readRasterReviews(directory, assessment, snapshot) {
+  const [artPurity, artFocus] = await Promise.all([
+    verifyArtPurity(directory, assessment?.artPurityEvidence, snapshot),
+    verifyArtFocus(directory, assessment?.artFocusEvidence, snapshot),
+  ]);
+  return { artPurity, artFocus };
 }
 
 function validatePair(pair) {
@@ -188,7 +200,7 @@ function validatePair(pair) {
 }
 
 const annotatableChecks = new Set(['FACT_GROUNDING', 'S2_STANDALONE', 'CTA_SINGLE', 'ART_PURITY']);
-const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr', 'noveltyEvidence', 'judgeEvidence', 'artPurityEvidence']);
+const annotationFields = new Set(['checks', 'collectionScores', 'judgeScores', 'migMean', 'ddr', 'noveltyEvidence', 'judgeEvidence', 'artPurityEvidence', 'artFocusEvidence']);
 
 async function caseJudgePair(directory, testCase, reference) {
   const pair = await readBlindJudgePair(directory, reference);

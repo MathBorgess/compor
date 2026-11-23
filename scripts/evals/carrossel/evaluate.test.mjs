@@ -324,6 +324,80 @@ test('replay com recusa de plano retém primeira passagem sem pontuação visual
   assert.equal(result.repair_count, 1);
 });
 
+test('a promoção C3 exige foco conclusivo e uma colisão vinculada vence a pontuação do caso', async t => {
+  const { root, directory, testCase, manifest, writeManifest } = await example(t);
+  const snapshot = manifest.first_pass;
+  snapshot.inputSha256 = sha256('plano com foto e título');
+  const artSheet = snapshot.artifacts.find(artifact => artifact.file.endsWith('art-sheet.jpg'));
+  const artSource = {
+    sha256: sha256('fonte'), embeddedSha256: sha256('foto incorporada'),
+    bytes: 4096, format: 'jpeg', width: 800, height: 800,
+  };
+  const image = { left: 100, top: 200, right: 900, bottom: 1000 };
+  const renderChecks = JSON.stringify({
+    artifacts: [{
+      file: 'art-sheet.jpg', sha256: artSheet.sha256,
+      tiles: [{ slideIndex: 2, slideId: 'meio', column: 0, row: 0 }],
+    }],
+    slides: [{ id: 'capa', index: 1 }, { id: 'meio', index: 2, artSource, artPlacement: {
+      image, clip: image, text: [{ region: 'headline', left: 300, top: 390, right: 500, bottom: 410 }],
+    } }],
+  });
+  const renderFile = 'first-pass/render-checks.json';
+  await writeFile(join(directory, renderFile), renderChecks);
+  snapshot.artifacts.push({ file: renderFile, sha256: sha256(renderChecks) });
+  manifest.final = structuredClone(snapshot);
+  await writeManifest();
+  const manifestSha256 = sha256(JSON.stringify(manifest));
+  const file = 'art-focus-final.json';
+  const observation = {
+    slideIndex: 2, slideId: 'meio', embeddedSha256: artSource.embeddedSha256, verdict: 'complete',
+    evidence, faces: [], focalPoints: [],
+  };
+  const review = {
+    version: 1, scope: 'raster-focus', planSha256: snapshot.inputSha256, artSheetSha256: artSheet.sha256,
+    renderChecksSha256: sha256(renderChecks), reviewer: { method: 'human', identity: 'referência sintética' },
+    observations: [observation],
+  };
+  const writeReview = async () => {
+    const bytes = JSON.stringify(review);
+    await writeFile(join(directory, file), bytes);
+    await writeFile(join(directory, 'qa-assessments.json'), JSON.stringify({
+      version: 1, manifestSha256, final: { artFocusEvidence: { file, sha256: sha256(bytes) } },
+    }));
+  };
+  const evaluateCase = cycle => evaluate({ cycle, tests: [testCase], evidenceRoot: root, references: new Map() });
+  const focusCheck = result => result.checks.find(check => check.name === 'foco_raster_verificado');
+  const legacy = await evaluateCase(3);
+  assert.equal(legacy.cases[0].final.cqs, 88);
+  assert.equal(focusCheck(legacy).status, 'unavailable');
+  assert.equal(focusCheck(await evaluateCase(2)), undefined);
+
+  await writeReview();
+  assert.equal(focusCheck(await evaluateCase(3)).status, 'pass');
+  observation.verdict = 'unknown';
+  await writeReview();
+  assert.equal(focusCheck(await evaluateCase(3)).status, 'unavailable');
+  observation.faces = [{ left: 0.25, top: 0.25, right: 0.5, bottom: 0.5 }];
+  await writeReview();
+  const rejected = await evaluateCase(3);
+  assert.equal(focusCheck(rejected).status, 'fail');
+  assert.equal(rejected.cases[0].verdict, 'fail');
+  assert.equal(rejected.cases[0].final.cqs, 88);
+  assert.deepEqual(rejected.cases[0].final.hardFails, ['FACE_TEXT_COLLISION']);
+  assert.deepEqual(rejected.cases[0].final.artFocus.results[0].findings[0].box,
+    { left: 300, top: 400, right: 500, bottom: 410 });
+  assert.equal(focusCheck(await evaluateCase(2)).status, 'fail');
+
+  observation.embeddedSha256 = sha256('imagem de outra revisão');
+  await writeReview();
+  await assert.rejects(evaluateCase(3), /Observação raster sem vínculo/);
+  observation.embeddedSha256 = artSource.embeddedSha256;
+  review.renderChecksSha256 = sha256('posicionamento adulterado');
+  await writeReview();
+  await assert.rejects(evaluateCase(3), /parecer de face e foco da arte diverge dos hashes/);
+});
+
 
 test('C4/C5 exigem shortlist verificada e vinculada ao título renderizado', async t => {
   const { root, directory, testCase, manifest, writeManifest } = await example(t);

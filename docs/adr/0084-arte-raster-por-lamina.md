@@ -19,3 +19,11 @@ Verificar troca de arquivo durante uma revisão, vínculo entre o SHA e o recibo
 O canário da rota passou no Next com Chromium local. PGlite confirmou a preservação de versões anteriores e a recusa de recibos com o digest de outra fonte. O teste de estúdio usou render e Storage simulados. Ele descartou respostas antigas após edição ou logout e recuperou o ZIP em um contexto sem cache.
 
 O primeiro build passou de 300.000 bytes gzip. Agrupar a recuperação de propostas no chunk autenticado do estúdio eliminou um chunk separado. A condição de montagem da recuperação permaneceu a mesma. O build local final mediu 298.495 bytes gzip, com LCP mediano de 622 ms em cinco execuções Lighthouse na entrada pública.
+
+## Contraste e áreas protegidas na arte
+
+O renderer confere o contraste de cada fragmento de texto contra os pixels do fundo compostos com scrim. Cada fragmento precisa atingir sua razão mínima em pelo menos 90% dos pixels dentro da caixa. O perfil JPEG exige de 15.000 a 8.000.000 bytes por lâmina.
+
+O manifesto também registra a extensão do raster na lâmina, seu recorte visível e as caixas de texto medidas no Chromium. A bancada vincula ao manifesto um parecer que localiza rostos e pontos focais no PNG incorporado. Ela projeta as regiões no recorte visível, mede interseções com o texto e verifica a faixa de 48 px da costura entre S1 e S2. Um veto observado bloqueia a promoção, e a falta de parecer conclusivo impede promover raster em C3 ou nos ciclos posteriores.
+
+No canário sintético, a mesma arte passou em painel separado e falhou quando duas linhas cobriram o rosto e o foco. Um segundo ensaio obteve a região do rosto de uma fotografia pública com Apple Vision, conferiu o SHA-256 do PNG incorporado e observou o mesmo resultado em dois layouts. São verificações geométricas pontuais. A cobertura da localização de rostos e focos continua sujeita à avaliação multimodal. [Fotografia usada no ensaio](https://scikit-image.org/docs/0.26.x/api/skimage.data.html#skimage.data.astronaut) · [Apple Vision](https://developer.apple.com/documentation/vision/vndetectfacerectanglesrequest)

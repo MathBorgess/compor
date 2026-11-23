@@ -106,6 +106,8 @@ test('Chromium renderiza os doze arquétipos em JPEG sRGB e registra o fit', {sk
   assert.ok(fit, 'o texto longo na coluna exerce a recuperação de fit');
   assert.ok(fit.firstChecks.some(check => check.status === 'fail'));
   assert.ok(fit.checks.every(check => check.status === 'pass'));
+  const finalTypography = fit.checks.find(check => check.id === 'TYPOGRAPHY');
+  assert.equal(fit.artPlacement.text.filter(box => box.region === 'headline').length, finalTypography.observed.lines);
 });
 
 test('folha raster preserva bordas e vincula os pixels à lâmina correta', { skip, timeout: 60_000 }, async t => {
@@ -139,6 +141,7 @@ test('folha raster preserva bordas e vincula os pixels à lâmina correta', { sk
   }).png().toBuffer();
   assert.equal(embeddedSha256, createHash('sha256').update(normalized).digest('hex'));
   assert.equal(result.slides[2].file, undefined);
+  assert.equal(result.slides[2].artPlacement, undefined);
   assert.equal(result.slides[2].checks[0].id, 'ASSET_DECODE');
   assert.equal(result.slides[2].checks[0].status, 'fail');
   const sheet = result.artifacts.find(item => item.file === 'art-sheet.jpg');
@@ -150,6 +153,78 @@ test('folha raster preserva bordas e vincula os pixels à lâmina correta', { sk
   const [redRight, , blueRight] = pixel(352);
   assert.ok(redLeft > 220 && blueLeft < 35, 'a borda esquerda permanece na folha');
   assert.ok(blueRight > 220 && redRight < 35, 'a borda direita permanece na folha');
+});
+
+test('geometria raster usa o recorte real, o enquadramento e as linhas finais de texto', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+  ]);
+  const wideArt = async background => 'data:image/png;base64,' + (await sharp({
+    create: { width: 480, height: 120, channels: 3, background },
+  }).png().toBuffer()).toString('base64');
+
+  // Use Chromium's normal layout with one test-only positioning rule. The
+  // compositor's production CSS position and choices stay unchanged.
+  const positionedBrowser = {
+    async newContext(options) {
+      const context = await browser.newContext(options);
+      const newPage = context.newPage.bind(context);
+      context.newPage = async () => {
+        const page = await newPage();
+        const setContent = page.setContent.bind(page);
+        page.setContent = (html, settings) => setContent(html.replace('</style>',
+          '.framed_plate .media img{object-position:right 14px top 6px}</style>'), settings);
+        return page;
+      };
+      return context;
+    },
+  };
+  const result = await renderDeckInMemory({ mode: 'editorial_art', slides: [
+    slide('hero_bleed', 'Luz da manhã', { art: await wideArt('#6d4028') }),
+    slide('framed_plate', 'Luz da manhã\nEnquadre o café', {
+      art: await wideArt('#c23d62'), accentPhrase: 'da manhã', body: 'Compare as sombras.\nFaça uma nova foto.',
+    }),
+    slide('artifact_proof', 'O detalhe cabe na foto', { art: await wideArt('#2361b3'), source: 'Foto do briefing' }),
+    slide('bento_grid', 'Ajustes que mudam a cena', {
+      art: await wideArt('#34755e'), listItems: ['Só a luz', 'Sem flash'],
+    }),
+    slide('cta_closing', 'Salve para praticar'),
+  ] }, { browser: positionedBrowser, sharp, fonts: { 400: regular, 700: bold }, repair: false });
+
+  const [hero, framed, proof, bento, closing] = result.slides;
+  assert.deepEqual(hero.artPlacement.image, { left: -2160, top: 0, right: 3240, bottom: 1350 });
+  assert.deepEqual(hero.artPlacement.clip, { left: 0, top: 0, right: 1080, bottom: 1350 });
+  // The image box begins at 104 × 172, inside the 4 px border and 12 px
+  // padding. Cover overflows horizontally and the position shifts both axes.
+  assert.deepEqual(framed.artPlacement.image, { left: -750, top: 178, right: 962, bottom: 606 });
+  assert.deepEqual(framed.artPlacement.clip, { left: 104, top: 178, right: 962, bottom: 600 });
+  assert.deepEqual(proof.artPlacement.image, { left: 88, top: 917, right: 992, bottom: 1143 });
+  assert.deepEqual(proof.artPlacement.clip, proof.artPlacement.image, 'o contain exclui o espaço vazio');
+  assert.equal(closing.artPlacement, undefined);
+
+  const headline = framed.artPlacement.text.filter(box => box.region === 'headline');
+  const body = framed.artPlacement.text.filter(box => box.region === 'body');
+  assert.equal(headline.length, 2, 'os trechos acentuado e regular da primeira linha compartilham a caixa');
+  assert.equal(body.length, 2);
+  assert.ok(headline[0].top < headline[1].top && headline[1].bottom < body[0].top,
+    JSON.stringify({headline, body}));
+  assert.ok(framed.artPlacement.text.every(box => box.left >= 88 && box.right <= 992 && box.top > framed.artPlacement.clip.bottom));
+  assert.equal(proof.artPlacement.text.filter(box => box.region === 'source').length, 1);
+  const list = bento.artPlacement.text.filter(box => box.region === 'list');
+  assert.equal(list.length, 2);
+  assert.equal(list[0].top, list[1].top);
+  assert.ok(list[0].right < list[1].left, 'cada célula mantém sua caixa mesmo na mesma linha visual');
+
+  const decoded = await sharp(framed.data).raw().toBuffer({ resolveWithObject: true });
+  const sample = (x,y) => [...decoded.data.subarray((y * decoded.info.width + x) * 3, (y * decoded.info.width + x) * 3 + 3)];
+  const isRaster = ([red, green, blue]) => Math.abs(red - 194) < 12 && Math.abs(green - 61) < 12 && Math.abs(blue - 98) < 12;
+  assert.equal(isRaster(sample(112, 190)), true, 'o raster pinta dentro do recorte');
+  assert.equal(isRaster(sample(970, 280)), false, 'o deslocamento deixa espaço à direita');
 });
 
 const demonstrationSlides = [

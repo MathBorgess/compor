@@ -58,6 +58,16 @@ Para cada snapshot com raster, anexe `artPurityEvidence: {file, sha256}` em `qa-
 
 O leitor confere a identidade de cada lâmina e o hash do raster incorporado. Um `TEXT_IN_ART_LAYER` localizado é veto mesmo quando o CQS é alto. A promoção de uma entrega raster exige parecer conclusivo vinculado. O `ART_PURITY` histórico permanece disponível para diagnóstico. Este parecer descreve a inspeção de texto na folha. Autorização de seleção, procedência, sobreposição com faces e qualidade editorial da imagem têm evidências próprias.
 
+### Faces e pontos focais
+
+Salve `art-focus-first-pass.json` ou `art-focus-final.json` no diretório do caso e anexe `artFocusEvidence: {file, sha256}` ao snapshot em `qa-assessments.json`. O parecer usa `version: 1`, `scope: "raster-focus"`, `planSha256`, `artSheetSha256`, `renderChecksSha256` e `reviewer: {method, identity}`, seguindo a mesma vinculação da revisão de texto.
+
+Cada recorte precisa de uma observação com `{slideIndex, slideId, embeddedSha256, verdict, evidence, faces, focalPoints}`. Use `complete` quando a inspeção foi conclusiva e `unknown` quando faltou visibilidade ou evidência. Em `faces` e `focalPoints`, cada caixa `{left, top, right, bottom}` usa coordenadas de 0 a 1 no PNG incorporado, com origem no canto superior esquerdo. A referência espacial é o PNG inteiro, sem as margens da folha. Use listas vazias para ausência observada.
+
+O avaliador projeta as caixas em `artPlacement.image`, recorta a área visível por `artPlacement.clip` e pelo canvas e compara com cada linha em `artPlacement.text`. A sobreposição de área positiva gera `FACE_TEXT_COLLISION` ou `FOCAL_TEXT_COLLISION`. Uma face visível dentro dos 48 px finais de S1 ou dos 48 px iniciais de S2 gera `FACE_S1_S2_SEAM`. O relatório conserva a interseção CSS e a contagem de regiões observadas, visíveis e em colisão. A colisão observada prevalece quando o restante da inspeção é parcial.
+
+Entregas raster exigem cobertura conclusiva de foco a partir de C3. Um recibo sem posicionamento permanece avaliável para diagnóstico e deixa a cobertura de foco indisponível. O veredito geométrico usa as caixas fornecidas pelo parecer.
+
 O FPY usa como denominador os casos de entrega previstos na suíte. O numerador conta os casos que passaram a etapa na primeira passagem. Reporte também casos com falha observada e casos indisponíveis. A recusa correta conta no desfecho esperado do caso adversarial. Ela fica fora do denominador físico. Comparações com a baseline histórica do Marco 5 podem partir dos dois carrosséis arquivados. A avaliação histórica usou outra rubrica e expôs o conjunto reservado. [Marco 5](../../../docs/evals/pr61/05-post.md)
 
 ## Lab de dez capas

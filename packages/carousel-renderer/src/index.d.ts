@@ -13,6 +13,12 @@ export type CarouselFinding = {
 type Asset = { file: string; bytes: number; sha256: string };
 type ArtworkTile = { slideIndex: number; slideId: string; column: number; row: number };
 type Artifact = Asset & { tiles?: ArtworkTile[] };
+type ArtBounds = { left: number; top: number; right: number; bottom: number };
+export type CarouselArtPlacement = {
+  image: ArtBounds;
+  clip: ArtBounds;
+  text: (ArtBounds & { region: string })[];
+};
 type RenderedSlide = {
   id: string;
   index: number;
@@ -20,6 +26,7 @@ type RenderedSlide = {
   firstChecks?: CarouselFinding[];
   repairs?: string[];
   artAreaFraction?: number;
+  artPlacement?: CarouselArtPlacement;
   artSource?: {
     sha256: string;
     bytes: number;

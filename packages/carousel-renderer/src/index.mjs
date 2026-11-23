@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { cssRgbLuminance, luminance, paletteFor, ratio } from './color.mjs';
+import { paletteFor } from './color.mjs';
+import { reviewTextContrast } from './contrast-coverage.mjs';
 import { slideDocument } from './layouts.mjs';
 import { cadence, validateDeck } from './plan.mjs';
 import { compareArtwork } from './visuals.mjs';
@@ -24,12 +25,16 @@ async function captureGeometry(page) {
     await Promise.all([document.fonts.load('400 46px "DM Sans"'), document.fonts.load('700 86px "DM Sans"')]);
     await document.fonts.ready;
     const canvas = document.querySelector('main');
-    const rect = (bounds) => ({ left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom });
+    const media = canvas.querySelector('.media');
+    const img = media?.querySelector('img');
+    const rect = bounds => ({ left: bounds.left, top: bounds.top, right: bounds.right, bottom: bounds.bottom });
+    const text = [];
     const regions = Array.from(document.querySelectorAll('[data-region]'), element => {
       const name = element.dataset.region;
       const style = getComputedStyle(element);
       const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
       const snippets = [];
+      const linesBySlot = new Map();
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
         if (!node.textContent.trim()) continue;
         const range = document.createRange();
@@ -37,20 +42,79 @@ async function captureGeometry(page) {
         const parent = node.parentElement;
         const colors = getComputedStyle(parent);
         const prominence = Number.parseFloat(colors.fontSize) >= 64 && Number(colors.fontWeight) >= 700;
+        const slot = parent.closest('li') ?? element;
         for (const item of range.getClientRects()) {
-          if (item.width && item.height) snippets.push({ ...rect(item), color: colors.color, minimum: prominence ? 3 : 4.5 });
+          if (!item.width || !item.height) continue;
+          const box = rect(item);
+          snippets.push({ ...box, color: colors.color, minimum: prominence ? 3 : 4.5 });
+          if (!img) continue;
+          const lines = linesBySlot.get(slot) ?? new Map();
+          linesBySlot.set(slot, lines);
+          const row = Math.round(box.top);
+          const existing = lines.get(row);
+          lines.set(row, existing ? {
+            left: Math.min(box.left, existing.left), top: Math.min(box.top, existing.top),
+            right: Math.max(box.right, existing.right), bottom: Math.max(box.bottom, existing.bottom),
+          } : box);
         }
+      }
+      for (const lines of linesBySlot.values()) {
+        for (const box of lines.values()) text.push({ region: name, ...box });
       }
       return {
         name, ...rect(element.getBoundingClientRect()), size: Number.parseFloat(style.fontSize), snippets,
         lineCount: new Set(snippets.map(box => Math.round(box.top))).size,
       };
     });
-    const media = canvas.querySelector('.media');
+
+    function innerBox(element, includePadding) {
+      const bounds = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const inset = side => Number.parseFloat(style.getPropertyValue('border-' + side + '-width')) +
+        (includePadding ? 0 : Number.parseFloat(style.getPropertyValue('padding-' + side)));
+      return {
+        left: bounds.left + inset('left'), top: bounds.top + inset('top'),
+        right: bounds.right - inset('right'), bottom: bounds.bottom - inset('bottom'),
+      };
+    }
+
+    function intersect(bounds, clip) {
+      const left = Math.min(Math.max(bounds.left, clip.left), clip.right);
+      const top = Math.min(Math.max(bounds.top, clip.top), clip.bottom);
+      return {
+        left, top, right: Math.max(left, Math.min(bounds.right, clip.right)),
+        bottom: Math.max(top, Math.min(bounds.bottom, clip.bottom)),
+      };
+    }
+
+    function rasterPlacement(img) {
+      const content = innerBox(img, false);
+      const availableWidth = content.right - content.left;
+      const availableHeight = content.bottom - content.top;
+      const fit = getComputedStyle(img).objectFit;
+      if (availableWidth <= 0 || availableHeight <= 0 || !['cover', 'contain'].includes(fit)) return;
+      const position = img.computedStyleMap?.().get('object-position');
+      if (!position?.x?.toSum || !position?.y?.toSum) return;
+      const scale = (fit === 'contain' ? Math.min : Math.max)(
+        availableWidth / img.naturalWidth, availableHeight / img.naturalHeight);
+      const width = img.naturalWidth * scale;
+      const height = img.naturalHeight * scale;
+      // Chromium resolves keywords and edge offsets into percentages and px.
+      // Cover can give negative free space, which reverses percentage offsets.
+      const offset = (axis, free) => Array.from(axis.toSum('percent', 'px').values)
+        .reduce((value, term) => value + (term.unit === 'percent' ? term.value * free / 100 : term.value), 0);
+      const left = content.left + offset(position.x, availableWidth - width);
+      const top = content.top + offset(position.y, availableHeight - height);
+      const image = { left, top, right: left + width, bottom: top + height };
+      const panel = intersect(innerBox(media, true), rect(canvas.getBoundingClientRect()));
+      return { image, clip: intersect(image, intersect(content, panel)), text };
+    }
+
     const mediaRect = media?.getBoundingClientRect();
     const mediaArea = mediaRect && getComputedStyle(media).display !== 'none' ? mediaRect.width * mediaRect.height : 0;
+    const artPlacement = img?.naturalWidth > 0 && img.naturalHeight > 0 ? rasterPlacement(img) : undefined;
     return {
-      regions, mediaArea,
+      regions, mediaArea, artPlacement,
       fonts: Array.from(document.fonts, font => font.status),
       decoded: Array.from(document.images).every(image => image.complete && image.naturalWidth > 0),
       scrollWidth: canvas.scrollWidth, scrollHeight: canvas.scrollHeight,
@@ -92,30 +156,9 @@ async function gradeContrast(page, sharp, regions) {
   await page.evaluate(() => document.documentElement.classList.add('measure'));
   const background = await page.screenshot({ type: 'png', scale: 'css', animations: 'disabled' });
   await page.evaluate(() => document.documentElement.classList.remove('measure'));
-  const { data, info } = await sharp(background).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  const failures = [];
-  for (const region of regions) {
-    let minimum = Infinity;
-    let passing = true;
-    for (const box of region.snippets) {
-      const textLuminance = cssRgbLuminance(box.color);
-      if (!Number.isFinite(textLuminance)) {
-        passing = false;
-        continue;
-      }
-      for (let y = Math.max(0, Math.ceil(box.top)); y < Math.min(info.height, box.bottom); y += 4) {
-        for (let x = Math.max(0, Math.ceil(box.left)); x < Math.min(info.width, box.right); x += 4) {
-          const offset = (y * info.width + x) * info.channels;
-          const backgroundLuminance = luminance([data[offset], data[offset + 1], data[offset + 2]]);
-          const contrast = ratio(textLuminance, backgroundLuminance);
-          minimum = Math.min(minimum, contrast);
-          passing &&= contrast >= box.minimum;
-        }
-      }
-    }
-    if (!passing) failures.push({ region: region.name, minimum: Number.isFinite(minimum) ? minimum : null });
-  }
-  return check('TEXT_CONTRAST', failures.length === 0, { failures, samplingStep: 4, method: 'solid foreground against text-hidden line region' });
+  const pixels = await sharp(background).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const observed = reviewTextContrast(pixels, regions);
+  return check('TEXT_CONTRAST', observed.failures.length === 0, observed);
 }
 
 function fitFor(slide, index) {
@@ -180,12 +223,16 @@ async function renderSlide({ page, sharp, slide, index, fonts, palette, incoming
   const jpeg = await sharp(capture).resize(WIDTH, HEIGHT).withIccProfile('srgb').jpeg(JPEG).toBuffer();
   const meta = await sharp(jpeg).metadata();
   const jpegCheck = check('JPEG_PROFILE', meta.width === WIDTH && meta.height === HEIGHT && meta.format === 'jpeg' &&
-    meta.space === 'srgb' && meta.hasProfile && !meta.isProgressive && meta.chromaSubsampling === '4:4:4' && jpeg.length <= 8_000_000,
+    meta.space === 'srgb' && meta.hasProfile && !meta.isProgressive && meta.chromaSubsampling === '4:4:4' &&
+    jpeg.length >= 15_000 && jpeg.length <= 8_000_000,
   { width: meta.width, height: meta.height, bytes: jpeg.length, chroma: meta.chromaSubsampling, smallFile: jpeg.length < 15_000 });
   checks.push(jpegCheck);
   const asset = describeAsset('slide-' + String(index).padStart(2, '0') + '.jpg', jpeg);
   const result = { id: slide.id, index, ...asset, checks, firstChecks, repairs, artAreaFraction: geometry.mediaArea / (WIDTH * HEIGHT) };
-  if (raster) result.artSource = raster.source;
+  if (raster) {
+    result.artSource = raster.source;
+    if (geometry.artPlacement) result.artPlacement = geometry.artPlacement;
+  }
   return { result, jpeg, sourceArt };
 }
 
