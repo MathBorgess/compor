@@ -182,7 +182,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   const versions = [], renders = [], uploads = [], reads = [], errors = [];
   const privateImages = new Map();
   const art = await sharp({create:{width:384,height:256,channels:3,background:'#123456'}}).png().toBuffer();
-  let projects = [], catalog, interrupted = false, delayRender;
+  let projects = [], catalog, interrupted = false, delayRender, versionWrites = 0;
   const compositionRejections = [
     {error: 'invalid_plan', checks: [{id: 'HEADLINE_BUDGET', index: 2, status: 'fail', detail: 'Diagnóstico interno do render'}]},
     {error: 'archive_too_large'},
@@ -225,6 +225,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
     }
     if (pathname === '/api/pieces') {
       if (request.method() === 'GET') return route.fulfill({json: {versions, posts: [...catalog.records.values()]}});
+      versionWrites++;
       const body = request.postDataJSON();
       const latest = versions.at(-1)?.version ?? 0;
       if (latest !== body.expectedVersion) return route.fulfill({status: 409, json: {status: 'conflict', currentVersion: latest}});
@@ -289,6 +290,10 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   await openConversation(page);
   await button('Começar sem IA, no editor').click();
   const pieceId = await applyStudioPlan(page);
+  const toolbarSave=page.getByRole('toolbar',{name:'Ações deste post'}).getByRole('button',{name:'Salvar versão',exact:true});
+  await page.getByText('Componha as lâminas na revisão antes de salvar esta versão.',{exact:true}).waitFor();
+  assert.equal(await toolbarSave.isDisabled(),true);
+  assert.equal(versionWrites,0);
   await button('Textos').click();
   await page.getByLabel('Legenda', {exact: true}).fill(caption);
   await button('Revisar post').click();
@@ -307,8 +312,11 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   assert.equal(renders.length, 1);
 
   await button('Pedir ajuste no estúdio').click();
+  assert.equal(await toolbarSave.isEnabled(),true);
   const artSha256=await attachArt(page,{pieceId,frameId:planFrames[0].id,bytes:art});
   await button('Remover arte da lâmina').waitFor();
+  assert.equal(await toolbarSave.isDisabled(),true,'a barra bloqueia salvamento após a invalidação da composição');
+  assert.equal(versionWrites,0);
   await button('Revisar post').click();
   assert.equal(await exportZip.isDisabled(),true,'anexar arte invalida a composição anterior');
   let entered, release;
@@ -344,6 +352,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   assert.deepEqual(JSON.parse(draftZip.get('alt-text.json').toString('utf8')),
     planFrames.map(frame => ({index: frame.position, alt: frame.composition.alt})));
   assert.equal(privateImages.size, 0);
+  assert.equal(versionWrites,0,'recompor e baixar não persistem versões');
 
   await save.click();
   await page.getByRole('status').filter({hasText: 'O resultado do salvamento é desconhecido.'}).waitFor();

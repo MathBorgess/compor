@@ -88,6 +88,7 @@ import type { StudioState, StudioReference, ActionResult, PieceFrame, PieceConte
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
+const carouselSaveHint='Componha as lâminas na revisão antes de salvar esta versão.';
 type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;carouselRenderAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;awaitConfirmedIdentity?:()=>Promise<boolean>;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
@@ -1174,7 +1175,7 @@ function ProjectStudio({
   }
   async function saveCurrent(args?:SaveDraftInput):Promise<ActionResult> {
     const selected=getCurrentDraft(local.get());
-    if(!selected||saveLock.current||carouselRequest.current||carouselArtBusy.current||(args?.operation&&selected.content.carouselPlan))throw Error("save_unavailable");
+    if(!selected||saveLock.current||carouselRequest.current||carouselArtBusy.current)throw Error("save_unavailable");
     setSaving(true);setNotice("");
     try {
       const outcome=await journey.saveCurrent({
@@ -1263,6 +1264,7 @@ function ProjectStudio({
       },args);
       const notices={
         saved:'Nova versão salva.',
+        composition_required:carouselSaveHint,
         recovered:'Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',
         conflict:'Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',
         image_unsupported:'Seu rascunho foi preservado. Para salvar a versão, use uma imagem de até 2048 × 2048 pixels que resulte em um PNG de até 4 MB.',
@@ -1636,6 +1638,7 @@ function ProjectStudio({
   const activeFormatOption = postFormatOption(activeFormat);
   const activeFrames = draft?.content.frames ?? [];
   const carouselPlan=draft?.content.carouselPlan;
+  const compositionPending=Boolean(carouselPlan&&!draft?.content.carouselRender);
   const artSlide=carouselPlan?.slides.find(slide=>slide.frameId===activeFrameId);
   const canAttachArt=carouselRenderAvailable&&artSlide&&artSlide.layout!=='cta_closing'&&!artSlide.diagram;
   const triggerChatAction = (text: string) => {
@@ -1917,8 +1920,9 @@ function ProjectStudio({
             <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" aria-label="Escolher mais referências" title="Escolher mais referências" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}><PostActionIcon path="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5a1 1 0 1 0 0-.01"/>Referências</button>
             <button type="button" className="studio-button-secondary" aria-label="Configurações do Post" title="Configurações do Post" onClick={()=>setPostSettingsOpen(true)}><PostActionIcon path="M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"/>Configurações</button>
             <button type="button" className="studio-button-secondary" aria-label="Revisar post" title="Revisar post" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}><PostActionIcon path="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/>Revisar</button>
-            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} title="Salvar versão" disabled={versionBusy||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
+            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} aria-describedby={compositionPending?'studio-carousel-save-hint':undefined} title="Salvar versão" disabled={versionBusy||compositionPending||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
 
+          {compositionPending&&<p id="studio-carousel-save-hint" className="studio-hint">{carouselSaveHint}</p>}
           <div className="guided-artwork-editor">
           {editor}
         </div>

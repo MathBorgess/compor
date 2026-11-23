@@ -6,6 +6,9 @@ import {selectScopedReference,unselectScopedReference,updatePostContext} from '.
 import type {ActionResult,BrandVoice,DraftContext,PieceContent,PostContext,PostFormat,StudioState} from './studio-domain';
 import type {DraftAssetAddress, createStudioStorage} from './studio-storage';
 import type {ImageProposal} from '@compor/agents-api/image-proposal';
+import {carouselPlanFor} from './studio-carousel-client';
+import {carouselPlanJson} from './carousel-plan-json';
+import {sha256Hex} from './browser-bytes';
 
 type Lock={current:boolean};
 type RetainedProposal={result:'retained'|'preserved'|'none';hasImage:boolean};
@@ -39,7 +42,8 @@ type SavePorts={
   onVersionsChanging:()=>void;
   onVersionSaved:(version:PieceVersion)=>void;
 };
-export type SaveResult={result:ActionResult;notice:'saved'|'recovered'|'conflict'|'image_unsupported'|'unknown'|'inactive'};
+export type SaveResult={result:ActionResult;notice:'saved'|'recovered'|'conflict'|'image_unsupported'|'unknown'|'inactive'|'composition_required'};
+const compositionRequired:SaveResult={result:{status:'declined'},notice:'composition_required'};
 
 export function createStudioJourneyController(port:StatePort) {
   const locks=port.locks??{creation:{current:false},save:{current:false}};
@@ -134,6 +138,7 @@ export function createStudioJourneyController(port:StatePort) {
     const source:DraftAssetAddress={pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'};
     let prepared:PreparedVersionImage|undefined;
     let savedContent=draft.content;
+    const governed=Boolean(draft.content.carouselPlan);
     async function adopt(version:PieceVersion,recovered:boolean):Promise<SaveResult> {
       if(!sameScope(current))return unknown('inactive');
       if(version.project_id!==current.projectId||version.piece_id!==draft.pieceId||version.version!==draft.expectedLatestVersion+1)throw Error('save_unconfirmed');
@@ -174,13 +179,22 @@ export function createStudioJourneyController(port:StatePort) {
     }
     try {
       if(!sameScope(current))return unknown('inactive');
+      if(governed&&(!draft.content.carouselRender||args?.operation))return compositionRequired;
       await port.flush();options.onVersionsChanging();
       if(!sameScope(current))return unknown('inactive');
       if(!args?.operation&&options.prepareVersionImage){
         prepared=await options.prepareVersionImage({userId:current.userId,projectId:current.projectId,pieceId:draft.pieceId,version:draft.expectedLatestVersion+1,source,content:draft.content});
         if(!sameScope(current))return unknown('inactive');
-        if(prepared.status==='image_unsupported'||prepared.status==='unknown')return unknown(prepared.status);
+        if(prepared.status==='image_unsupported'||prepared.status==='unknown'){
+          return governed&&prepared.status==='image_unsupported'?compositionRequired:unknown(prepared.status);
+        }
         if(prepared.status==='ready'&&prepared.content)savedContent=prepared.content;
+      }
+      if(governed||savedContent.carouselPlan){
+        const plan=carouselPlanFor(savedContent),receipt=savedContent.carouselRender;
+        if(prepared?.status!=='ready'||!prepared.content||!plan||!receipt||!savedContent.frames?.every(frame=>frame.assetId)||
+          await sha256Hex(carouselPlanJson(plan))!==receipt.planSha256)return compositionRequired;
+        if(!sameScope(current))return unknown('inactive');
       }
       const response=await fetchImpl('/api/pieces',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
         projectId:current.projectId,pieceId:draft.pieceId,expectedVersion:draft.expectedLatestVersion,baseVersion:draft.baseVersion,content:savedContent,

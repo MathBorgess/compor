@@ -12,6 +12,8 @@ Falhas parciais mantêm o rascunho da composição e permitem repetir a publica�
 
 O histórico de variantes usa a primeira lâmina JPEG vinculada à versão composta como miniatura. A leitura reaproveita a verificação de identidade e do digest pelas imagens da versão. A revisão traduz as recusas conhecidas de composição em instruções de ajuste. Relata a lâmina afetada quando o servidor identifica a posição e indica quando o conjunto ultrapassa o limite do ZIP.
 
+O salvamento pelo botão da barra, pela revisão ou pela ferramenta do agente exige os JPEGs de todas as lâminas e o digest do plano final igual ao do recibo. A conferência ocorre antes da escrita da versão. O estúdio indica a revisão quando a edição exige nova composição. O rascunho permanece editável e a leitura continua aceitando versões históricas gravadas antes dos JPEGs.
+
 ## Evidência de habilitação
 
 Verificar atualização e descarte por troca do plano, validação física em Chromium, upload parcial, reabertura em outro navegador sem cache, ZIP JPEG e leitura dos PNGs legados. Em Linux, confirmar a abertura do Chromium empacotado e a execução no Preview. Gate 0 editorial, direção de arte limpa e promoção por avaliação continuam regidos pela especificação de carrosséis.

@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createStudioJourneyController} from '../lib/studio-journey-controller.ts';
-import {createStudioState,getCurrentDraft,parseStudioState} from '../lib/studio-state.ts';
+import {createStudioState,getCurrentDraft,parseStudioState,selectVersion,setDraftCarouselRender} from '../lib/studio-state.ts';
+import {carouselPlanFor} from '../lib/studio-carousel-client.ts';
+import {carouselPlanJson} from '../lib/carousel-plan-json.ts';
+import {sha256Hex} from '../lib/browser-bytes.ts';
 import {effectiveReferences} from '../lib/studio-post-context.ts';
 
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -309,6 +312,54 @@ test('referências compartilhadas e locais mantêm escopo ao alternar posts',asy
   f.controller.unselectReference(id(20),id(4));
   assert.deepEqual(effectiveReferences(f.state,id(4)),[]);
   assert.equal(effectiveReferences(f.state,id(3)).length,2);
+});
+
+test('salvar carrossel governado exige a composição dos bytes vinculados ao plano final antes do POST',async()=>{
+  const f=fixture();
+  await f.create();
+  const pieceId=id(3),baseVersion=1,expectedLatestVersion=1;
+  f.controller.setPostFormat(pieceId,'carousel',3);
+  const source=getCurrentDraft(f.state).content;
+  const carouselPlan={mode:'editorial_art',slides:source.frames.map((frame,index)=>({
+    frameId:frame.id,layout:index===2?'cta_closing':'split_horizontal',alt:`Arte da lâmina ${index+1}.`,
+  }))};
+  f.setState(selectVersion(f.state,{pieceId,version:baseVersion,latestVersion:expectedLatestVersion,content:{...source,carouselPlan}}));
+  const planOnly=getCurrentDraft(f.state);
+  assert.deepEqual(planOnly.content.carouselPlan,carouselPlan,'uma versão histórica só com plano continua legível');
+  const denied={result:{status:'declined'},notice:'composition_required'};
+  const saveFromTool={pieceId,baseVersion,expectedLatestVersion};
+  let preflights=0;
+  const prepare=(patch={})=>async ({content})=>{
+    preflights++;
+    return {status:'ready',content:{...content,frames:content.frames.map((frame,index)=>({...frame,assetId:id(600+index)})),...patch},
+      publish:async()=> 'published'};
+  };
+  f.saving.prepareVersionImage=prepare();
+  assert.deepEqual(await f.controller.saveCurrent(f.saving),denied);
+  assert.deepEqual(await f.controller.saveCurrent(f.saving,saveFromTool),denied);
+  assert.equal(preflights,0,'a composição ausente bloqueia até a preparação de imagens');
+
+  const currentDigest=await sha256Hex(carouselPlanJson(carouselPlanFor(planOnly.content)));
+  const receipt={planSha256:currentDigest,frames:carouselPlan.slides.map(({frameId,alt})=>({frameId,alt,sha256:'a'.repeat(64)}))};
+  f.setState(setDraftCarouselRender(f.state,planOnly,{...receipt,planSha256:'0'.repeat(64)}));
+  assert.deepEqual(await f.controller.saveCurrent(f.saving),denied,'um recibo com SHA divergente não despacha salvamento');
+
+  f.setState(setDraftCarouselRender(f.state,getCurrentDraft(f.state),receipt));
+  const preparedCount=preflights;
+  assert.deepEqual(await f.controller.saveCurrent(f.saving,{...saveFromTool,operation:'create'}),denied);
+  assert.equal(preflights,preparedCount,'a geração não contorna o guard ao pular a preparação');
+  f.saving.prepareVersionImage=prepare({caption:'Outra legenda'});
+  assert.deepEqual(await f.controller.saveCurrent(f.saving,saveFromTool),denied,'o guard confere os dados efetivamente enviados');
+  f.saving.prepareVersionImage=prepare({frames:planOnly.content.frames});
+  assert.deepEqual(await f.controller.saveCurrent(f.saving),denied,'somente o recibo não substitui os IDs dos JPEGs');
+  assert.equal(f.calls.filter(call=>call.url==='/api/pieces').length,0);
+  assert.equal(getCurrentDraft(f.state).baseVersion,baseVersion);
+  assert.equal(getCurrentDraft(f.state).content.carouselRender.planSha256,currentDigest);
+
+  f.saving.prepareVersionImage=prepare();
+  assert.equal((await f.controller.saveCurrent(f.saving,saveFromTool)).notice,'saved');
+  assert.equal(f.calls.filter(call=>call.url==='/api/pieces').length,1);
+  assert.equal(getCurrentDraft(f.state).baseVersion,2);
 });
 
 test('salvamento de lâminas vincula os arquivos no conteúdo adotado e não copia outros pixels locais',async()=>{
