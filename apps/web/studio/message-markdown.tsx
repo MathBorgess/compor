@@ -49,6 +49,7 @@ function renderInline(text: string, depth = 0): ReactNode[] {
 }
 
 const HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
+const matchHeading = (line: string) => /^(#{1,6})\s+(\S.*)$/.exec(line.trimEnd());
 
 /** Assistant text is Markdown without raw HTML; links open safely and images become their alt text. */
 export default function MessageMarkdown({ text }: { text: string }) {
@@ -74,7 +75,7 @@ export default function MessageMarkdown({ text }: { text: string }) {
       blocks.push(createElement("pre", { key: key++ }, createElement("code", null, codeLines.join("\n"))));
       continue;
     }
-    const heading = /^(#{1,6})\s+(.+)$/.exec(line);
+    const heading = matchHeading(line);
     if (heading) {
       const tag = HEADING_TAGS[Math.min(heading[1].length, 6) - 1];
       blocks.push(createElement(tag, { key: key++ }, ...renderInline(heading[2].trim())));
@@ -104,10 +105,14 @@ export default function MessageMarkdown({ text }: { text: string }) {
       i < lines.length &&
       lines[i].trim() &&
       !lines[i].trimStart().startsWith("```") &&
-      !/^(#{1,6})\s+/.test(lines[i]) &&
+      !matchHeading(lines[i]) &&
       !/^\s*[-*+]\s+/.test(lines[i]) &&
       !/^\s*\d+\.\s+/.test(lines[i])
     ) {
+      para.push(lines[i]);
+      i++;
+    }
+    if (!para.length) {
       para.push(lines[i]);
       i++;
     }

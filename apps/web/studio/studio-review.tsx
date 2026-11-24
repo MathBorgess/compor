@@ -77,6 +77,7 @@ export default function StudioReview({
   saving = false,
   composing = false,
   uploadingArt = false,
+  hasLocalPreview = false,
   onCompose,
   onSave,
   onApprove,
@@ -93,6 +94,7 @@ export default function StudioReview({
   saving?: boolean;
   composing?: boolean;
   uploadingArt?: boolean;
+  hasLocalPreview?: boolean;
   onCompose?: () => void;
   onSave?: () => void;
   onApprove?: () => void;
@@ -127,8 +129,8 @@ export default function StudioReview({
   const caption = draft?.content.caption ?? '';
   const paragraphCount = caption ? caption.split(/\n\s*\n/).map(block => block.trim()).filter(Boolean).length : 0;
   const filenameTitle = isCarousel ? downloadTitle : title;
-  const isSaved = Boolean(draft && !draft.dirty && draft.baseVersion >= 1);
-  const isApproved = draft?.approval?.status === 'approved';
+  const isSaved = Boolean(draft && !draft.dirty && !hasLocalPreview && draft.baseVersion >= 1);
+  const isApproved = Boolean(isSaved && draft?.approval?.status === 'approved');
   const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   useLayoutEffect(() => {
@@ -299,10 +301,15 @@ export default function StudioReview({
         </span>
       </div>
       <ol className="studio-review-checklist" aria-label="Passos do kit para postar">
-        <li data-done={isSaved ? 'true' : 'false'}>{isSaved ? `1. Salvo na nuvem · v${draft?.baseVersion} ✓` : '1. Rascunho local'}</li>
+        <li data-done={isSaved ? 'true' : 'false'}>{isSaved ? `1. Salvo na nuvem · v${draft?.baseVersion} ✓` : hasLocalPreview ? '1. Nova imagem local ainda não salva' : '1. Rascunho local'}</li>
         <li data-done={downloaded ? 'true' : 'false'}>{downloaded ? '2. Arte baixada ✓' : '2. Baixar arte'}</li>
         <li data-done={copied ? 'true' : 'false'}>{copied ? '3. Legenda copiada ✓' : '3. Copiar legenda'}</li>
       </ol>
+      {hasLocalPreview && (
+        <p className="studio-hint" role="status">
+          Você trocou a imagem neste navegador. Salve como nova versão antes de marcar como pronto para postar.
+        </p>
+      )}
       {confirmedFacts.length > 0 && (
         <div className="studio-review-facts" role="group" aria-label="Conferência de fatos confirmados">
           <p className="studio-hint">Confira estes dados na arte antes de postar:</p>
@@ -370,7 +377,7 @@ export default function StudioReview({
             {composing ? 'Compondo…' : 'Compor lâminas'}
           </button>
         )}
-        {isCarousel && draft && onSave && (
+        {(isCarousel || hasLocalPreview) && draft && onSave && (
           <button type="button" className="studio-button-secondary" disabled={controlsBusy || (governed && !completeCarousel)} onClick={onSave}>
             {saving ? "Salvando…" : "Salvar versão"}
           </button>

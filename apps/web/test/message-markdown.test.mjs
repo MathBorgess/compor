@@ -51,3 +51,21 @@ test('MessageMarkdown renderiza blocos e inline seguros e neutraliza HTML bruto,
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   assert.match(html, /&lt;a href=&quot;javascript:alert\(1\)&quot;&gt;HTML bruto&lt;\/a&gt;/);
 });
+
+test('MessageMarkdown avança normalmente diante de títulos vazios, listas vazias e blocos de código sem fechamento', () => {
+  const edgeCases = [
+    '# ',
+    '##\t',
+    '###   ',
+    '- ',
+    '1. ',
+    'Parágrafo após cabeçalhos vazios.',
+    '```',
+    'linha sem fechamento',
+  ].join('\n');
+
+  const html = renderToStaticMarkup(createElement(MessageMarkdown, { text: edgeCases }));
+  assert.match(html, /<p># <br\/>##\t<br\/>###   <\/p>/);
+  assert.match(html, /Parágrafo após cabeçalhos vazios\./);
+  assert.match(html, /<pre><code>linha sem fechamento<\/code><\/pre>/);
+});

@@ -124,6 +124,11 @@ test('salvar no navegador A mostra a imagem num navegador B limpo e não troca a
  assert.deepEqual(await pixel(page,'Arte integral da versão selecionada'),blue);
  assert.deepEqual(await pixel(page,'Arte da versão 1'),red,'Imagem-base não substitui a versão salva');
  assert.equal(uploads.length,2,'trocar a imagem-base não envia outro PNG');
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ await page.getByText('1. Nova imagem local ainda não salva',{exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'★ Marcar como pronto para postar',exact:true}).count(),0,'substituição local não libera aprovação da versão anterior na revisão');
+ assert.equal(await page.getByRole('button',{name:'Salvar versão',exact:true}).isVisible(),true,'revisão oferece salvar a nova imagem local como nova versão');
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  const postUrl=page.url();
  assert.match(postUrl,/\/projetos\/[^/]+\/posts\/[^/]+$/);
  const contextB=await browser.newContext({viewport:{width:1440,height:1000}});
@@ -139,7 +144,11 @@ test('salvar no navegador A mostra a imagem num navegador B limpo e não troca a
  privateImagesDisabled=true;
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();
  await page.getByText('Nova versão salva.',{exact:true}).waitFor();
+ if(await versionsButton.getAttribute('aria-expanded')!=='true')await versionsButton.click();
  assert.deepEqual(await pixel(page,'Arte da versão 2'),blue,'salvar localmente preserva o PNG com envio desativado');
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ await page.getByText('1. Salvo na nuvem · v2 ✓',{exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'★ Marcar como pronto para postar',exact:true}).isVisible(),true,'versão 2 salva libera aprovação na revisão');
  assert.equal(versions.length,2);assert.equal(uploads.length,2);assert.equal(links.size,1);
  assert.deepEqual(errorsA,[]);assert.deepEqual(errorsB,[]);
 });
