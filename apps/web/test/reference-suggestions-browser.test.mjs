@@ -46,12 +46,10 @@ async function fixture(t,{holdFirst=false}={}) {
   await page.goto(origin);return {page,searches,previews,external,release,generations};
 }
 const options={skip:!browserPath||!existsSync(browserPath),timeout:30000};
-test('sugestões aguardam permissão; histórico aprovado vem primeiro e só a escolha inclui a imagem',options,async t=>{
-  const {page,searches,previews,external}=await fixture(t);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();
-  assert.equal(searches.length,0);assert.equal(external.length,0);assert.equal(previews.length,0);assert.equal(await page.locator('img').count(),0);
-  assert.deepEqual(JSON.parse(await page.locator('#used').textContent()),[]);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
+test('busca automática avisa a pessoa, prioriza o histórico e só inclui imagens escolhidas',options,async t=>{
+  const {page,searches,previews}=await fixture(t);
+  await page.getByText(/busca no Pinterest e o carregamento de prévias são permitidos automaticamente/).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);
   await page.getByRole('heading',{name:'Usadas em posts que você aprovou'}).waitFor();
   await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
   assert.equal(searches.length,1);assert.equal(searches[0].query,'Quero divulgar uma aula de cerâmica');assert.equal(await page.getByLabel('O que você quer explorar?').inputValue(),'');
@@ -60,19 +58,21 @@ test('sugestões aguardam permissão; histórico aprovado vem primeiro e só a e
   await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência',checked:true}).waitFor();
   assert.equal(previews.length,1);assert.equal(JSON.parse(await page.locator('#used').textContent()).length,1);
 });
-test('permissão resiste à troca de projeto e é apagada na troca de conta ou saída',options,async t=>{
+test('busca reinicia no novo escopo após troca de projeto, conta e sessão',options,async t=>{
   const {page,searches}=await fixture(t);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
-  await page.getByRole('button',{name:'Outro projeto',exact:true}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
-  assert.equal(searches.length,2);assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);
-  await page.getByRole('button',{name:'Outra conta',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,2);assert.equal(await page.locator('img').count(),0);
-  await page.getByRole('button',{name:'Conta inicial',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,2);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
-  await page.getByRole('button',{name:'Sair e entrar',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,3);assert.equal(await page.locator('img').count(),0);
+  const result=page.getByRole('checkbox',{name:'Escolher referência: Nova referência'});
+  await result.waitFor();
+  for(const [name,count] of [['Outro projeto',2],['Outra conta',3],['Conta inicial',4],['Sair e entrar',5]]){
+    await page.getByRole('button',{name,exact:true}).click();
+    await result.waitFor();
+    await assertEventually(()=>searches.length===count);
+  }
+  assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);
 });
+async function assertEventually(predicate){const until=Date.now()+5000;while(!predicate()){if(Date.now()>until)throw Error('busca esperada não observada');await new Promise(resolve=>setTimeout(resolve,25));}}
 test('digitar durante sugestão pendente não prende a busca manual',options,async t=>{
   const {page,searches,release}=await fixture(t,{holdFirst:true});
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('status').filter({hasText:'Buscando referências'}).waitFor();
+  await page.getByRole('status').filter({hasText:'Buscando referências'}).waitFor();
   await page.getByLabel('O que você quer explorar?').fill('gravura');await page.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();assert.equal(searches.length,2);assert.equal(searches[1].query,'gravura');release();
 });

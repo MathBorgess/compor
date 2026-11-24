@@ -3,12 +3,21 @@
 import { useEffect,useRef,useState,type FormEvent,type ReactNode } from 'react';
 import { referenceHistoryResponseSchema,referenceSearchResponseSchema,type ExploredReference,type ReferenceHistoryEntry } from '../lib/reference-exploration-contract.ts';
 import { grantReferenceAuthorityConsent,readReferenceAuthorityConsent,readReferenceAuthorityWithdrawal,withdrawReferenceAuthorityConsent,inspectReferenceAuthorityWithdrawal,subscribeReferenceAuthorityConsent } from '../lib/reference-authority-consent.ts';
-import { grantReferenceConsent,referenceConsentGranted,syncReferenceConsentAccount } from '../lib/reference-session-consent.ts';
+import { grantReferenceConsent,syncReferenceConsentAccount } from '../lib/reference-session-consent.ts';
+import type { PostFormat } from '../lib/studio-domain.ts';
 import ReferencePreview from './reference-preview';
 
-type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onContinue?:()=>void;onRemoveReference?:(originUrl:string)=>Promise<void>;sourceControl?:ReactNode;authorityConsentRequired?:boolean};
+const DISCOVERY_PRESETS:[string,string][]=[
+  ['Post de feed','post instagram feed marca criativo'],
+  ['Carrossel educativo','carrossel educativo dicas passo a passo slides'],
+  ['Story 9:16','story vertical 9:16 interativo instagram'],
+  ['Foto de produto','fotografia produto editorial colecao'],
+  ['Anúncio de oferta','anuncio promocao oferta vendas conversao'],
+];
+
+type Props={userId:string;projectId:string;idea:string;postFormat?:PostFormat;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onContinue?:()=>void;onRemoveReference?:(originUrl:string)=>Promise<void>;sourceControl?:ReactNode;authorityConsentRequired?:boolean};
 type SearchState={status:'idle'|'loading'|'empty'|'unavailable'|'ok';references:ExploredReference[]};
-export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onContinue,onRemoveReference,sourceControl,authorityConsentRequired=false}:Props) {
+export default function ReferenceExploration({userId,projectId,idea,postFormat,selectedOrigins,onUseReference,onRemoveReference,sourceControl,authorityConsentRequired=false}:Props) {
   const [query,setQuery]=useState(''),[consentOwner,setConsentOwner]=useState<string|null>(null);
   const [search,setSearch]=useState<SearchState>({status:'idle',references:[]});
   const [history,setHistory]=useState<{scope:string;references:ReferenceHistoryEntry[]}|null>(null),[historyUnavailable,setHistoryUnavailable]=useState(false);
@@ -26,8 +35,9 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
   const suggestedQuery=idea.trim().slice(0,1000);
   useEffect(()=>()=>{scope.current='';searchRequest.current?.abort();},[]);
   useEffect(()=>{
-    try {syncReferenceConsentAccount(sessionStorage,userId);setConsentOwner(referenceConsentGranted(sessionStorage,userId)?userId:null);}
-    catch {setConsentOwner(null);}
+    try {syncReferenceConsentAccount(sessionStorage,userId);grantReferenceConsent(sessionStorage,userId);}
+    catch { /* A busca continua disponível nesta tela mesmo sem sessionStorage. */ }
+    setConsentOwner(userId);
   },[userId]);
   useEffect(()=>{
     if(!consent){setHistory(null);return;}
@@ -49,7 +59,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     const requestedScope=currentScope;
     setNotice('');setSearch({status:'loading',references:[]});
     try {
-      const response=await fetch('/api/studio/references/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId,query:value.trim(),consentExternalSearch:true,discoveryOnly:true}),signal:cancel.signal});
+      const response=await fetch('/api/studio/references/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId,query:value.trim(),consentExternalSearch:true,discoveryOnly:true,...(postFormat?{postFormat}:{})}),signal:cancel.signal});
       if(!response.ok)throw Error('unavailable');
       const data=referenceSearchResponseSchema.parse(await response.json());
       if(!cancel.signal.aborted&&scope.current===requestedScope)setSearch(data);
@@ -59,11 +69,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
   useEffect(()=>{
     if(consent&&!query.trim()&&suggestedQuery)void searchFor(suggestedQuery);
     return()=>{searchRequest.current?.abort();};
-  },[consent,userId,projectId,suggestedQuery,query]);
-  function allowSession() {
-    try {grantReferenceConsent(sessionStorage,userId);} catch { /* Explicit consent remains valid while this screen is open. */ }
-    setConsentOwner(userId);
-  }
+  },[consent,userId,projectId,suggestedQuery,postFormat,query]);
   async function allowExternalForGeneration(){
     if(authorityAttempt.current.pending)return;
     const requestedScope=currentScope,version=authorityAttempt.current.version;
@@ -132,8 +138,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
   const approved=ordered.filter(item=>item.approvedVersions>0),selected=ordered.filter(item=>item.approvedVersions===0);
   return <section className="reference-exploration" aria-label="Buscar referências visuais">
     <div className="reference-search-heading"><h2>Sugestões do Pinterest</h2>
-      {!consent&&<div className="reference-session-consent"><p>O Compor pode consultar o Pinterest e carregar prévias para esta sessão. As imagens só guiam o post quando você as escolhe.</p><button type="button" className="studio-button-secondary" onClick={allowSession}>Permitir nesta sessão</button>{onContinue&&<button type="button" onClick={onContinue}>Continuar sem referências</button>}</div>}
-      {consent&&<p className="reference-consent-status">Pinterest permitido nesta sessão. Só as escolhidas entram na conversa.</p>}
+      <p className="reference-consent-status">A busca no Pinterest e o carregamento de prévias são permitidos automaticamente nesta sessão. Só as imagens que você escolher podem orientar o post.</p>
       {authorityOwner===userId&&<div className="reference-session-consent"><p className="reference-consent-status">Referências externas escolhidas podem orientar a geração nesta página.</p><button type="button" className="studio-button-secondary" disabled={authorityBusy} onClick={()=>void withdrawExternalGeneration()}>Retirar permissão de geração</button></div>}
       {authorityWithdrawal?.userId===userId&&<div className="reference-session-consent">
         <p role="status">{authorityWithdrawal.status==='withdrawing'?'Retirando permissão de uso na geração…':authorityWithdrawal.status==='revoked'?'Permissão de uso na geração retirada. Pedidos já enviados podem terminar.':authorityWithdrawal.status==='active'?'O uso está bloqueado nesta página, mas a permissão ainda está ativa no servidor.':'O uso está bloqueado nesta página. Ainda não confirmamos a retirada no servidor. Pedidos já enviados podem terminar.'}</p>
@@ -147,6 +152,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
       <label>O que você quer explorar?<input value={query} onChange={event=>setQuery(event.target.value)} maxLength={1000} placeholder="Ex.: tipografia acolhedora para uma aula" /></label>
       <button type="submit" disabled={!query.trim()||!consent||busy||search.status==='loading'}>Buscar referências</button>
     </form>
+    {consent&&<div className="guided-context-examples" aria-label="Exemplos por formato"><span>Explorar formato:</span>{DISCOVERY_PRESETS.map(([label,preset])=><button key={label} type="button" className="studio-button-secondary guided-chip" disabled={busy||search.status==='loading'} onClick={()=>{setQuery(preset);void searchFor(preset);}}>{label}</button>)}</div>}
     {historyUnavailable&&<p role="status">Seu histórico de referências não está disponível. As sugestões continuam independentes dele.</p>}
     {search.status==='loading'&&<p role="status">Buscando referências…</p>}
     {search.status==='empty'&&<p>Nenhuma referência encontrada. Você pode tentar outro assunto ou continuar conversando.</p>}

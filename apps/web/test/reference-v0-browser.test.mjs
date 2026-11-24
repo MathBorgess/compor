@@ -77,7 +77,7 @@ for(const entry of ['button','chat','ready-chat','project-exit-x','project-exit-
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await waitStored(page,value=>value.state?.workflow.latestExplorations?.references?.ordinal===103);
  assert.equal(generation.length,3);await page.getByRole('button',{name:'Pausar exploração',exact:true}).click();
- await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');await page.getByRole('button',{name:'Permitir nesta sessão',exact:true}).click();
+ await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');
  await page.getByRole('checkbox',{name:'Escolher referência: Editorial acolhedor',exact:true}).click();await page.getByRole('checkbox',{name:'Escolher referência: Editorial acolhedor',checked:true,exact:true}).waitFor();
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');await page.locator('.reference-step input[type="file"]').setInputFiles({name:'minha-referencia.png',mimeType:'image/png',buffer:referencePixels});
  await waitStored(page,value=>value.state?.references.length===3&&value.state.adjustments.every(item=>['completed','failed'].includes(item.status)));

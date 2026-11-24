@@ -337,7 +337,6 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
-  await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await panel.getByRole('link',{name:'Ver origem'}).waitFor();
   assert.equal(await panel.getByRole('button',{name:'Me interessa'}).count(),0);
@@ -373,7 +372,6 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
-  await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await panel.getByRole('checkbox',{name:'Escolher referência: Tipografia'}).click();
   await openConversation(page);const recovery=page.locator('.studio-exploration-recovery');

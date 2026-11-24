@@ -28,6 +28,8 @@ for(const width of [1440,390])test(`configurações usam janela modal com abas e
   if(path==='/api/projects')return route.fulfill({json:{projects:[{id:project,title:'Mentoria Veloz — Campanha 1',revision:1}]}});
   if(path==='/api/ai/credential-status')return route.fulfill({json:{defaultAvailable:false}});
   if(path==='/api/pieces')return route.fulfill({json:{versions:[]}});
+  if(path==='/api/studio/references/history')return route.fulfill({json:{references:[]}});
+  if(path==='/api/studio/references/search')return route.fulfill({json:{status:'empty',references:[]}});
   return route.fulfill({status:503,json:{error:'unexpected'}});
  });
  const button=name=>page.getByRole('button',{name,exact:true});
@@ -86,6 +88,6 @@ for(const width of [1440,390])test(`configurações usam janela modal com abas e
    assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Uma estratégia de porcentagem');
    assert.equal(await (await openConversation(page)).inputValue(),'Rascunho não enviado do meu post');
   }
-  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(calls.some(call=>call.method==='POST'&&call.path!=='/api/projects'),false);assert.deepEqual(errors,[]);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(calls.some(call=>call.method==='POST'&&!['/api/projects','/api/studio/references/history','/api/studio/references/search'].includes(call.path)),false);assert.deepEqual(errors,[]);
  }finally{await page.close();}
 });

@@ -215,3 +215,52 @@ test('imagem escolhida mantém origem no contexto congelado e pode servir de exe
   assert.equal(state.adjustments[0].context.references[0].source.originUrl,originUrl);
   assert.equal(state.direction.criteria[0].example.referenceId,ref.id);
 });
+
+test('catálogo curado amplia boards por formato e intercala resultados entre fontes diversas',async()=>{
+  const {CURATED_PINTEREST_CATALOG,selectCuratedPinterestBoards}=await import('../lib/curated-pinterest-catalog.ts');
+  assert.ok(CURATED_PINTEREST_CATALOG.length>=75,'base curada ampliada com boards verificados');
+
+  const storyBoards=selectCuratedPinterestBoards({query:'bastidores e enquete para lançamento',postFormat:'story'});
+  assert.ok(storyBoards.some(slug=>slug.startsWith('latermedia/instagram-stor')),`formato story prioriza boards 9:16: ${storyBoards.join(', ')}`);
+
+  const collectionBoards=selectCuratedPinterestBoards({query:'ensaio editorial de cerâmica artesanal',postFormat:'collection'});
+  assert.ok(collectionBoards.some(slug=>slug.includes('photography')||slug.includes('packaging')||slug.includes('mockups')),`formato collection prioriza fotografia e produto: ${collectionBoards.join(', ')}`);
+
+  const carouselBoards=selectCuratedPinterestBoards({query:'mentoria de matemática para o ENEM passo a passo',postFormat:'carousel'});
+  assert.ok(carouselBoards.some(slug=>slug.includes('canva/')||slug.includes('planoly/')||slug.includes('latermedia/')||slug.includes('piktochart/')||slug.includes('vistacreate/')),`formato carousel prioriza posts e templates educativos: ${carouselBoards.join(', ')}`);
+
+  const fetchedUrls=[];
+  const result=await searchReferences({
+    projectId,
+    query:'oficina presencial de cerâmica aos sábados',
+    postFormat:'single',
+    signals:[],
+    fetchApi:async url=>{
+      const textUrl=String(url);
+      fetchedUrls.push(textUrl);
+      const slug=textUrl.replace('https://www.pinterest.com/','').replace('.rss','');
+      const safeId=slug.replace(/[^a-z0-9]/gi,'_');
+      const items=[1,2,3,4].map(n=>`<item><title>English design post ${n} from ${slug}</title><link>https://www.pinterest.com/pin/${safeId}_${n}/</link><description>https://i.pinimg.com/236x/aa/${safeId}_${n}.jpg</description></item>`).join('');
+      return new Response(`<rss><channel>${items}</channel></rss>`,{status:200});
+    },
+  });
+  assert.equal(result.status,'ok');
+  assert.equal(result.references.length,12);
+  assert.ok(fetchedUrls.every(url=>!url.includes('ceramica')&&!url.includes('?')),'query em português nunca é enviada ao Pinterest');
+  const uniqueBoards=new Set(result.references.map(item=>item.board));
+  assert.ok(uniqueBoards.size>=4,`intercalação deve devolver diversidade de boards, não 12 pins de um único board (recebeu ${uniqueBoards.size})`);
+});
+
+test('rota de busca aceita postFormat opcional e recusa formato inválido',async()=>{
+  let received;
+  const route=createReferenceSearchRoute({
+    appOrigin:origin,
+    resolveActor:async()=>({userId:projectId,token:'token'}),
+    ownsProject:async()=>true,
+    store:()=>({list:async()=>[],insert:async()=>signal,history:async()=>[]}),
+    search:async input=>{received=input;return {status:'ok',references:[]};},
+  });
+  assert.equal((await route(request({projectId,query:'post de café',consentExternalSearch:true,postFormat:'invalido'}))).status,400);
+  assert.equal((await route(request({projectId,query:'post de café',consentExternalSearch:true,postFormat:'story'}))).status,200);
+  assert.equal(received.postFormat,'story');
+});

@@ -34,14 +34,14 @@ test('consentimento não atravessa conta nem pedido antigo após troca de projet
  const current=await page.evaluate(()=>window.readConsent().consentId);await page.evaluate(()=>window.pending[0].resolve());await page.waitForTimeout(100);
  assert.equal(await page.evaluate(()=>window.readConsent().consentId),current);assert.equal(await page.evaluate(()=>(JSON.stringify(localStorage)+JSON.stringify(sessionStorage)).includes('A'.repeat(43))),false);
  await page.getByRole('button',{name:'Sair'}).click();assert.equal(await page.evaluate(()=>window.readConsent()),null);
- await page.getByRole('button',{name:'Outra conta'}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('button',{name:'Permitir uso na geração'}).click();await page.waitForFunction(()=>window.pending.length===3);
+ await page.getByRole('button',{name:'Outra conta'}).click();await page.getByRole('button',{name:'Permitir uso na geração'}).click();await page.waitForFunction(()=>window.pending.length===3);
  await page.getByRole('button',{name:'Sair'}).click();await page.evaluate(()=>window.pending[2].resolve());await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>window.readOther()),null);
  await page.reload();await page.getByRole('button',{name:'Permitir uso na geração'}).evaluate(button=>{button.click();button.click();});await page.waitForFunction(()=>window.pending.length===1);
  await page.getByRole('button',{name:'Projeto B'}).click();await page.getByRole('button',{name:'Projeto A'}).click();await page.evaluate(()=>window.pending[0].resolve());await page.waitForTimeout(100);
  assert.equal(await page.evaluate(()=>window.readConsent()),null,'retornar ao escopo anterior não restaura grant obsoleto');assert.equal(await page.getByRole('button',{name:'Permitir uso na geração'}).isEnabled(),true);
  await page.getByRole('button',{name:'Permitir uso na geração'}).click();await page.waitForFunction(()=>window.pending.length===2);await page.getByRole('button',{name:'Alternar capacidade'}).click();await page.getByRole('button',{name:'Alternar capacidade'}).click();await page.evaluate(()=>window.pending[1].resolve());await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>window.readConsent()),null);
  await page.evaluate(()=>sessionStorage.removeItem('compor-reference-session-consent'));await page.goto(`http://127.0.0.1:${server.address().port}/?no-search`);
- assert.equal(await page.getByRole('button',{name:'Permitir uso na geração'}).count(),0);await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('button',{name:'Permitir uso na geração'}).waitFor();assert.equal(await page.evaluate(()=>window.pending.length),0,'permitir busca não autoriza geração');
+ await page.getByRole('button',{name:'Permitir uso na geração'}).waitFor();assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);assert.equal(await page.evaluate(()=>window.pending.length),0,'busca automática não autoriza geração');
 });
 
 test('Workspace invalida consentimento ao trocar conta e ao sair',{skip:!existsSync(browserPath),timeout:60000},async t=>{

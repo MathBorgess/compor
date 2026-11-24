@@ -27,7 +27,7 @@ function Screen(){const [selected,setSelected]=useState([]),[requests,setRequest
  onRequestProposals={()=>{setRequests(value=>value+1);if(simulateProposals)setProposalStage('planning');}} proposalsDisabled={!simulateProposals&&requests>0}
  proposalsLocked={proposalsLocked} proposalsRunning={proposalsLocked} onPauseProposals={()=>{setPauses(value=>value+1);setProposalStage('idle');}}
  proposalPhase={proposalStage==='generating'?'generating':'idle'} proposalStatus={proposalStage==='generating'?'Recebemos 1 de 3 imagens.':undefined}
- search={sourceControl=><section className="reference-exploration"><form>{sourceControl}<label>O que você quer explorar?<input type="search"/></label><button type="button">Buscar referências</button></form><p>Permita nesta sessão para carregar prévias.</p><button>Permitir nesta sessão</button></section>}
+ search={sourceControl=><section className="reference-exploration"><form>{sourceControl}<label>O que você quer explorar?<input type="search"/></label><button type="button">Buscar referências</button></form><p>Busca e prévias permitidas automaticamente nesta sessão.</p></section>}
  onUpload={files=>setUploaded(files[0].name)} uploadStatus={uploaded}
  proposals={<ExplorationGallery projectId="00000000-0000-4000-8000-000000000003" completed={0} selectedIds={selected} onUseReference={async imageId=>setSelected(items=>[...items,imageId])} onRemoveReference={async imageId=>setSelected(items=>items.filter(item=>item!==imageId))}/>}
  selection={<section className="reference-selection-tray"><h2>Sua seleção</h2><p>2 do projeto · 1 deste post</p></section>}

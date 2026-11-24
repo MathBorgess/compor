@@ -81,6 +81,8 @@ async function app(t,{defaultAvailable=false}={}){
     if(request.method()==='GET')return route.fulfill({json:{assetId:null}});
     return route.fulfill({json:{status:'bound',assetId:request.postDataJSON().assetId}});
   }
+  if(url.pathname==='/api/studio/references/history')return route.fulfill({json:{references:[]}});
+  if(url.pathname==='/api/studio/references/search')return route.fulfill({json:{status:'empty',references:[]}});
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
@@ -501,7 +503,6 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  assert.deepEqual(await stored(page),before);assert.deepEqual(versions,originalVersions);
  await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('');
  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
- await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
  await page.getByRole('checkbox',{name:'Escolher referência: Referência adicional'}).click();
  await openConversation(page);await page.getByText('Posso seguir com contraste?',{exact:true}).waitFor({timeout:15000});
  assert.equal(selected.length,1);assert.equal(selectionTurns.length,1);assert.equal(selected[0].action,'selected');await page.getByRole('button',{name:'Voltar às imagens',exact:true}).click();
