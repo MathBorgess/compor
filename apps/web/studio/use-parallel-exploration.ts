@@ -115,7 +115,7 @@ export function useParallelExploration(props:Props){
       if(!valid())throw Error('paused');
       setCountdown(null);
       setPhase('idle');
-      setStatus('Verificando as condições para gerar propostas…');
+      setStatus('Lote concluído. Peça mais propostas para gerar outro.');
       return nextEpoch;
     }
     try{
@@ -123,7 +123,7 @@ export function useParallelExploration(props:Props){
       await navigator.locks.request(`compor-exploration:${identity.userId}`,{ifAvailable:true},async lock=>{
         if(!lock||!valid())throw Error('busy');
         if(localStorage.getItem(`compor-exploration-pending:${identity.userId}`)!==null){setPhase('blocked');setLegacyPending(true);setStatus('Há uma exploração anterior a consultar no fluxo original.');return;}
-        let nextEpoch=capturedEpoch,allowResume=true;
+        const nextEpoch=capturedEpoch;let allowResume=true;
         for(;;){
           if(!valid())return;
           if(current.current.checkReferenceAuthority&&!await current.current.checkReferenceAuthority()){setStatus('Consulte a seleção de referências antes de gerar.');setPhase('blocked');return;}if(!valid())return;
@@ -133,7 +133,7 @@ export function useParallelExploration(props:Props){
             if(existing.projectId!==identity.projectId||existing.conversationId!==identity.conversationId){setStatus('Abra o projeto e a conversa da tentativa anterior para consultá-la.');setPhase('blocked');return;}
             if(existing.stage==='executing'){
               await watchCompleted(existing);if(!valid())return;
-              nextEpoch=await finishWait(existing);if(!valid())return;continue;
+              await finishWait(existing);return;
             }
             if(existing.stage!=='planned'){setStatus('Consulte a tentativa anterior antes de pedir novas propostas.');setPhase('blocked');return;}
           }
@@ -160,7 +160,7 @@ export function useParallelExploration(props:Props){
           dispatcher=null;snapshotFingerprint=null;
           if(!valid())return;
           if(!last||last.snapshot.state!=='completed'||!last.progress.children.every(item=>item.status==='completed')){setStatus(last?.snapshot.state==='partial'&&last.snapshot.images.some(item=>item.status==='quality_held')?'Uma proposta foi retida pela revisão de qualidade. Consulte o lote para pedir reposição.':'Algumas propostas precisam de consulta. Nenhuma será repetida automaticamente.');setPhase('blocked');return;}
-          nextEpoch=await finishWait(last.preparation);last=null;
+          await finishWait(last.preparation);return;
         }
       });
     }catch{if(active){stop();if(run.current?.stop===stop)run.current=null;setStatus('Não foi possível confirmar esta tentativa. Ela permanece preservada.');setPhase('blocked');}}

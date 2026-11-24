@@ -6,7 +6,7 @@ import {composeStudioPng} from '../lib/studio-compose.ts';
 
 import { uuid, markerSchema, storedImageSchema, type ImageSelection } from './studio-ui-types';
 type AssetScope={userId:string;projectId:string;pieceId:string;version:number};
-type AssetsProps=AssetScope & {canSave:boolean;preview:Blob|{blob:Blob}|null;onUseImage:(image:ImageSelection)=>Promise<boolean>};
+type AssetsProps=AssetScope & {canSave:boolean;canonicalStorageActive?:boolean;preview:Blob|{blob:Blob}|null;onUseImage:(image:ImageSelection)=>Promise<boolean>};
 type Upload={state:'loading'|'idle'|'unknown'|'unavailable'|'saved'|'saved_previous'|'error'|'too_large'|'invalid'|'validating'|'pending';assetId:string|null};
 type Review={state:'idle';assetId?:never}|{state:'loading'|'unverified'|'invalid';assetId:string}|{state:'found';assetId:string;blob:Blob;url:string;decoded:boolean};
 const MAX_UPLOAD=4*1024*1024;
@@ -21,7 +21,7 @@ export default function StudioAssets(props:AssetsProps){
  return <ScopedAssets key={`${props.userId}:${props.projectId}:${props.pieceId}:${props.version}`} {...props}/>;
 }
 
-function ScopedAssets({userId,projectId,pieceId,version,canSave,preview,onUseImage}:AssetsProps){
+function ScopedAssets({userId,projectId,pieceId,version,canSave,canonicalStorageActive=false,preview,onUseImage}:AssetsProps){
  const png=preview instanceof Blob?preview:preview?.blob instanceof Blob?preview.blob:null;
  const markerKey=`compor-studio-image-upload:${userId}:${projectId}:${pieceId}:${version}`;
  const permissionId=useId(),riskId=useId();
@@ -97,11 +97,10 @@ function ScopedAssets({userId,projectId,pieceId,version,canSave,preview,onUseIma
   catch{if(mounted.current&&serial===sequence.current)setUseStateMessage('Não foi possível usar a imagem. Confira a composição.');}
  }
  const blocked=['loading','validating','pending','unknown','unavailable'].includes(upload.state);
- return <section className="studio-assets" aria-label="Imagens da versão">
-  <h3>Imagem final no projeto</h3>
+ const manualControls=<>
   <p>O PNG final só é guardado quando você confirma o envio para esta versão.</p>
   <label htmlFor={permissionId}><input id={permissionId} type="checkbox" checked={authorized} disabled={!png||!canSave||blocked} onChange={event=>{current.current.authorized=event.target.checked;setAuthorizedImage(event.target.checked?png:null);}}/>Tenho autorização para guardar esta imagem no projeto</label>
-  <button type="button" disabled={!png||!canSave||!authorized||blocked} onClick={save}>Salvar PNG final no projeto</button>
+  <button type="button" className="studio-button-secondary" disabled={!png||!canSave||!authorized||blocked} onClick={save}>Salvar PNG final no projeto</button>
   {!canSave&&<p>Salve a versão da peça antes de guardar o PNG final.</p>}
   {['pending','validating'].includes(upload.state)&&<p role="status">Enviando imagem…</p>}
   {upload.state==='saved'&&<p role="status">PNG final salvo na versão {version}.</p>}
@@ -125,5 +124,12 @@ function ScopedAssets({userId,projectId,pieceId,version,canSave,preview,onUseIma
    <button type="button" disabled={!review.decoded||typeof onUseImage!=='function'} onClick={useImage}>Usar imagem na composição</button>
   </div>}
   {useStateMessage&&<p role="status">{useStateMessage}</p>}
+ </>;
+ return <section className="studio-assets" aria-label="Imagens da versão">
+  <h3>Imagem final no projeto</h3>
+  {canonicalStorageActive ? <>
+   <p role="status">Arte da versão {version} salva automaticamente com este post.</p>
+   <details className="studio-assets-recovery"><summary>Recuperação avançada de arquivos</summary>{manualControls}</details>
+  </> : manualControls}
  </section>;
 }

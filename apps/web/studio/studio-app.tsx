@@ -9,7 +9,7 @@ import StudioReview from "./studio-review";
 import VariantCards from "./studio-variant-cards";
 import { useStudioState } from "./use-studio-state";
 import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
-import {imageReviewDisclosure} from './image-review-disclosure.ts';
+import {ReviewDisclosureBadge} from './image-review-disclosure';
 import {updateWorkflow,conversationMessages,postIds,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
 import {createStudioJourneyController,type SaveDraftInput} from '../lib/studio-journey-controller';
 import StudioNavigation from './studio-navigation';
@@ -363,9 +363,9 @@ export default function StudioApp({
       accountLabel={accountLabel}
       localAccount={localAccount}
       onSignOut={onSignOut}
-      onNewProject={() =>
+      onNewProject={hasProjects ? () =>
         document.getElementById("studio-project-name")?.focus()
-      }
+      : undefined}
     >
       {recoveryBanner}
 
@@ -487,6 +487,7 @@ function ProjectStudio({
     [notice, setNotice] = useState(""),
     [saving, setSaving] = useState(false),
     [base, setBase] = useState<Blob|null>(null),
+    [previewVersions, setPreviewVersions] = useState<Record<string,boolean>>({}),
     [activeFrameId, setActiveFrameId] = useState<string|null>(null),
     [frameBlobs, setFrameBlobs] = useState<Record<string,Blob>>({}),
     [chatPromptRequest, setChatPromptRequest] = useState<{conversationId:string;text:string;nonce:number}|null>(null),
@@ -630,7 +631,7 @@ function ProjectStudio({
   const exploration=usingParallel?{...parallel,blocked:parallel.phase==='blocked',parallelBlocked:false,awaitingAnswer:explorationRequested?false:legacyExploration.awaitingAnswer,resuming:false,resumeError:null,progress:null,resume:parallel.start}:legacyExploration;
   const pendingTurn=s?.adjustments.find(item=>!['completed','failed'].includes(item.status));
   const checkingProposal=proposalCheck===proposalRequest.current.sequence;
-  const proposalsRunning=explorationRequested&&exploration.running&&!exploration.paused&&!exploration.blocked&&(usingParallel||!exploration.awaitingFeedback);
+  const proposalsRunning=explorationRequested&&exploration.running&&!exploration.paused&&!exploration.blocked&&(usingParallel||!exploration.awaitingFeedback&&!legacyExploration.awaitingNextBatch);
   const proposalsLocked=referencesOpen&&(checkingProposal||parallelGesture!==null||proposalsRunning&&exploration.phase!=='waiting');
   const parallelStart=useRef(parallel.start);parallelStart.current=parallel.start;
   useEffect(()=>{
@@ -812,7 +813,10 @@ function ProjectStudio({
     const scope={userId, projectId:project.id};
     if(baseVersion>=1){
       const preview=await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'preview'});
-      if(preview)return preview.file;
+      if(preview){
+        if(active.current)setPreviewVersions(current=>current[`${pieceId}:${baseVersion}`]?current:{...current,[`${pieceId}:${baseVersion}`]:true});
+        return preview.file;
+      }
     }
     return (await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'base'}))?.file??null;
   }
@@ -1025,6 +1029,7 @@ function ProjectStudio({
             } else await cacheSavedImage(pieceId, version, blob);
           } else {
             await storage.putDraftAsset({ ...scope, pieceId, baseVersion: version, kind: version >= 1 ? 'preview' : 'base', file: blob });
+            if(version>=1)setPreviewVersions(current=>({...current,[`${pieceId}:${version}`]:true}));
           }
         }
         if (targetDraft && targetFrame && assetId) {
@@ -1040,8 +1045,12 @@ function ProjectStudio({
         }else await cacheSavedImage(pieceId, version, blob);
       }else{
         await storage.putDraftAsset({...scope, pieceId, baseVersion:version, kind:version>=1?'preview':'base', file:blob});
+        if(version>=1)setPreviewVersions(current=>({...current,[`${pieceId}:${version}`]:true}));
       }
-      if(local.get().drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version)){local.change(value=>freezeCreationContext(value,pieceId,version,creationContext??{postContext:postContext(value,pieceId),references:[]}));await local.flush();}
+      if(local.get().drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version)){
+        local.change(value=>freezeCreationContext(value,pieceId,version,creationContext??{postContext:postContext(value,pieceId),references:[]}));
+        await local.flush();
+      }
       const current = getCurrentDraft(local.get());
       if (
         active.current &&
@@ -1646,6 +1655,7 @@ function ProjectStudio({
     setChatMinimized(false);
     setChatPromptRequest({ conversationId: draft.pieceId, text, nonce: Date.now() });
   };
+  const hasLocalPreview=Boolean(draft&&draft.baseVersion>=1&&previewVersions[`${draft.pieceId}:${draft.baseVersion}`]);
   const editor = (
     <StudioEditor guided
       panelRequest={panelRequest}
@@ -1654,6 +1664,7 @@ function ProjectStudio({
       activeFrameId={activeFrameId}
       frameBlobs={visibleFrameBlobs}
       canTriggerAI={canUseProjectAI}
+      hasLocalPreview={hasLocalPreview}
       onSelectFrame={setActiveFrameId}
       onUpdateFrame={(frameId, patch) => {
         if (!draft) return;
@@ -1736,65 +1747,71 @@ function ProjectStudio({
         )
       }
       onRemoveMark={(id) => local.change((value) => removeMark(value, id))}
-      onApprove={async () => {
-        const selected = getCurrentDraft(local.get());
-        const version = versionRef.current.find(
-          (v) =>
-            v.piece_id === selected?.pieceId &&
-            v.version === selected?.baseVersion,
-        );
-        if (!selected || selected.dirty || !version) {
-          setNotice("Salve a versão antes de aprovar.");
-          return;
-        }
-        try {
-          const response = await fetch("/api/pieces", {
-            method: "PATCH",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              operation: "approve",
-              projectId: project.id,
-              pieceId: selected.pieceId,
-              version: selected.baseVersion,
-              expectedRevision: version.metadata?.revision ?? 0,
-              references:(selected.creationContext?.references??[]).flatMap((reference):ApprovedReference[]=>{
-                const source=reference.source;
-                if(!source)return [];
-                return 'kind' in source ? source.kind==='generated'?[{kind:'generated',projectId:source.projectId,imageId:source.imageId}]:[] : [{kind:'pinterest',originUrl:source.originUrl,board:source.board}];
-              }),
-            }),
-          });
-          const data = approvedVersionSchema.parse(await response.json());
-          if (!response.ok) throw Error();
-          versionsReadSequence.current++;
-          await refreshVersions();
-          const current = getCurrentDraft(local.get());
-          if (
-            current?.pieceId === selected.pieceId &&
-            current.baseVersion === selected.baseVersion &&
-            !current.dirty
-          )
-            local.change((value) =>
-              approveDraft(value, {
-                at:
-                  (data.version.metadata?.approval.status === "approved" ? data.version.metadata.approval.at : undefined) ??
-                  new Date().toISOString(),
-                eventId: crypto.randomUUID(),
-              }),
-            );
-          setNotice("Aprovação salva nesta versão.");
-        } catch {
-          setNotice(
-            "Não foi possível confirmar a aprovação. Consulte as versões antes de repetir.",
-          );
-        }
-      }}
+      onApprove={() => { void approveCurrentDraft(); }}
     />
   );
+  async function approveCurrentDraft() {
+    const selected = getCurrentDraft(local.get());
+    const version = versionRef.current.find(
+      (v) =>
+        v.piece_id === selected?.pieceId &&
+        v.version === selected?.baseVersion,
+    );
+    const hasPreview = Boolean(
+      selected &&
+        selected.baseVersion >= 1 &&
+        previewVersions[`${selected.pieceId}:${selected.baseVersion}`],
+    );
+    if (!selected || selected.dirty || hasPreview || !version) {
+      setNotice("Salve a versão antes de aprovar.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/pieces", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          operation: "approve",
+          projectId: project.id,
+          pieceId: selected.pieceId,
+          version: selected.baseVersion,
+          expectedRevision: version.metadata?.revision ?? 0,
+          references:(selected.creationContext?.references??[]).flatMap((reference):ApprovedReference[]=>{
+            const source=reference.source;
+            if(!source)return [];
+            return 'kind' in source ? source.kind==='generated'?[{kind:'generated',projectId:source.projectId,imageId:source.imageId}]:[] : [{kind:'pinterest',originUrl:source.originUrl,board:source.board}];
+          }),
+        }),
+      });
+      const data = approvedVersionSchema.parse(await response.json());
+      if (!response.ok) throw Error();
+      versionsReadSequence.current++;
+      await refreshVersions();
+      const current = getCurrentDraft(local.get());
+      if (
+        current?.pieceId === selected.pieceId &&
+        current.baseVersion === selected.baseVersion &&
+        !current.dirty
+      )
+        local.change((value) =>
+          approveDraft(value, {
+            at:
+              (data.version.metadata?.approval.status === "approved" ? data.version.metadata.approval.at : undefined) ??
+              new Date().toISOString(),
+            eventId: crypto.randomUUID(),
+          }),
+        );
+      setNotice("Aprovação salva nesta versão.");
+    } catch {
+      setNotice(
+        "Não foi possível confirmar a aprovação. Consulte as versões antes de repetir.",
+      );
+    }
+  }
   const parallelRecovery=referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery {...(referenceAuthorityEnabled?{createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={!referenceUploading&&usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={async (...args)=>{await onExplorationCompleted(...args);if(active.current)setRecoveredCompletions(value=>value+1);}} onContinuePlan={!pendingTurn&&!referenceUploading&&canUseProjectAI&&usingParallel&&!parallel.running&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>;
-  const explorationRecovery=<>{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
+  const explorationRecovery=<>{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{canUseProjectAI && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{canUseProjectAI && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{canUseProjectAI && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
-    <StudioChat key={`${userId}:${project.id}:${conversationId??"legacy"}`} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} referenceAuthorityBlocked={referenceAuthorityEnabled&&authorityStatus!=='ready'} {...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&!proposalsLocked&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
+    <StudioChat key={`${userId}:${project.id}:${conversationId??"legacy"}`} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} referenceAuthorityBlocked={referenceAuthorityEnabled&&authorityStatus!=='ready'} {...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&(explorationRequested||Boolean(s?.references.length))&&!proposalsLocked&&conversationId===referenceScope} onReferenceWait={reportReferenceWait} onRevealArt={conversationId&&conversationId!=='references'?()=>setChatMinimized(true):undefined}
       state={s}
       projectRevision={projectDetails.revision}
       developerMode={developerMode}
@@ -1860,7 +1877,8 @@ function ProjectStudio({
               projectId={project.id}
               pieceId={draft.pieceId}
               version={draft.baseVersion}
-              canSave={draft.baseVersion > 0 && !draft.dirty}
+              canSave={draft.baseVersion > 0 && !draft.dirty && !hasLocalPreview}
+              canonicalStorageActive={draft.baseVersion > 0 && !draft.dirty && !hasLocalPreview}
               preview={base}
               onUseImage={useBase}
             />}
@@ -1912,15 +1930,18 @@ function ProjectStudio({
         <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} />
       </>);
   const postTitle=(draft&&(s.posts[draft.pieceId]?.name||postRecords.find(post=>post.pieceId===draft.pieceId)?.name))||draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
-  const postVersionLabel=draft?.approval.status==="approved"?"Aprovado":draft?.dirty?"Rascunho":draft?.baseVersion?`Versão ${draft.baseVersion}`:draft?.creationContext?.explorationSource?"v0 · Rascunho":"Rascunho";
+  const isCleanSaved=Boolean(draft&&!draft.dirty&&!hasLocalPreview&&draft.baseVersion>=1&&!compositionPending);
+  const postVersionLabel=isCleanSaved&&draft?.approval.status==="approved"?"★ Pronto para postar":isCleanSaved?`Salvo · v${draft?.baseVersion}`:draft?.creationContext?.explorationSource?"v0 · Em criação":"Em criação";
+  const hasReadyArt=Boolean(base||(activeFrames.length>0&&activeFrames.every(frame=>Boolean(visibleFrameBlobs[frame.id]))));
+  const hasReadyCaption=Boolean(draft?.content.caption?.trim());
   // ADR 0056: nome do post, versão e ações ficam no topo do próprio post; a barra superior é fixa.
   const artwork=(<div className="studio-post-workspace">
           <div className="studio-post-workspace-header">
-            <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge">{postVersionLabel}</span>{draft&&<span className="studio-badge studio-badge-format">{activeFormatOption.label} · {activeFormatOption.ratioLabel}</span>}</div>
+            <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge" data-status={isCleanSaved&&draft?.approval.status==="approved"?"approved":isCleanSaved?"saved":"draft"}>{postVersionLabel}</span>{draft&&<span className="studio-badge studio-badge-format">{activeFormatOption.label} · {activeFormatOption.ratioLabel}</span>}<span className="studio-readiness-pills" aria-label="Prontidão do post"><span data-done={hasReadyArt?'true':undefined}>{hasReadyArt?'✓':'○'} Arte</span><span data-done={hasReadyCaption?'true':undefined}>{hasReadyCaption?'✓':'○'} Legenda</span><span data-done={isCleanSaved?'true':undefined}>{isCleanSaved?'✓':'○'} Salvo</span></span></div>
             <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" aria-label="Escolher mais referências" title="Escolher mais referências" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}><PostActionIcon path="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5a1 1 0 1 0 0-.01"/>Referências</button>
             <button type="button" className="studio-button-secondary" aria-label="Configurações do Post" title="Configurações do Post" onClick={()=>setPostSettingsOpen(true)}><PostActionIcon path="M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"/>Configurações</button>
             <button type="button" className="studio-button-secondary" aria-label="Revisar post" title="Revisar post" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}><PostActionIcon path="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/>Revisar</button>
-            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} aria-describedby={compositionPending?'studio-carousel-save-hint':undefined} title="Salvar versão" disabled={versionBusy||compositionPending||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
+            <button type="button" className="studio-button" data-save-state={saving?'saving':isCleanSaved?'saved':'unsaved'} aria-label={saving?undefined:'Salvar versão'} aria-describedby={compositionPending?'studio-carousel-save-hint':undefined} title="Salvar versão" disabled={versionBusy||compositionPending||isCleanSaved||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':isCleanSaved?`Salvo · v${draft?.baseVersion} ✓`:'Salvar'}</button></div></div>
 
           {compositionPending&&<p id="studio-carousel-save-hint" className="studio-hint">{carouselSaveHint}</p>}
           <div className="guided-artwork-editor">
@@ -1957,7 +1978,7 @@ function ProjectStudio({
           setSettings('references');
           journey.updateWorkflow({phase:'ready'});
           if(value.workflow.pendingPost)journey.updateWorkflow({view:'prepare-post'});
-          else journey.preparePost(crypto.randomUUID(),{initialProjectTitle:projectDetails.title});
+          else journey.preparePost(crypto.randomUUID(),{initial:true});
         }
         await local.flush();
       } else {
@@ -2009,13 +2030,16 @@ function ProjectStudio({
   })();
   const confirmedProposals=parallel.progress?.children.filter(item=>item.status==='completed').length??0;
   const proposalDisclosure=usingParallel&&selectedVisualsAvailable&&scopedReferences.some(reference=>reference.source)
-    ? `As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento. Os uploads escolhidos são usados nas três imagens. ${referenceAuthorityEnabled?'O agente pode escolher quais referências externas autorizadas e imagens geradas selecionadas também usará. ':''}A sessão do agente mantém estado e não usa retenção zero. ${imageReviewDisclosure}`
-    : imageReviewDisclosure;
+    ? <>
+        <p>{`As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento. Os uploads escolhidos são usados nas três imagens. ${referenceAuthorityEnabled?'O agente pode escolher quais referências externas autorizadas e imagens geradas selecionadas também usará. ':''}A sessão do agente mantém estado e não usa retenção zero.`}</p>
+        <ReviewDisclosureBadge compact />
+      </>
+    : <ReviewDisclosureBadge compact />;
   const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition||referenceUploading}
     onUpload={files=>{void addFiles(files);}} uploadDisabled={referenceTransition||referenceUploading||selectionBlocked} uploadStatus={referenceUploading?'Adicionando imagens à seleção…':referenceUploadFeedback?.scope===referenceScope?referenceUploadFeedback.message:undefined} selectionStatus={authorityPanel} recovery={parallelRecovery}
     onRequestProposals={requestProposals} proposalsDisabled={referenceTransition||referenceUploading||selectionBlocked||Boolean(proposalBlock)||proposalsRunning} proposalBlock={proposalBlock} proposalDisclosure={proposalDisclosure} proposalsRunning={proposalsRunning} proposalsLocked={proposalsLocked} onPauseProposals={()=>{proposalRequest.current.sequence++;proposalRequest.current.pending=false;setProposalCheck(null);setParallelGesture(null);exploration.pause();}} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':serialInspection?.scope===referenceScope&&proposalBlock?serialInspection.message:checkingProposal||parallelGesture!==null?'Verificando as condições para gerar propostas…':proposalsLocked&&usingParallel&&confirmedProposals>0?`${confirmedProposals} de 3 imagens confirmadas.`:explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{if(referenceUploadLock.current)return;exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
     selection={<>{referenceAuthorityEnabled&&!selectionBlocked&&<p>Seleção de referências confirmada.</p>}<ReferenceSelectionTray items={scopedReferences.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url,scopeLabel:s.projectReferenceIds.includes(reference.id)?'Do projeto':'Deste post',removeLabel:referenceScope==='references'?'Remover do projeto':s.projectReferenceIds.includes(reference.id)?'Deixar de usar neste post':'Remover deste post',...(referenceScope!=='references'&&!s.projectReferenceIds.includes(reference.id)?{onShare:()=>{void selectExistingReference(reference,'references').catch(()=>setNotice('Não foi possível confirmar o compartilhamento.'));}}:{})}))} availableShared={referenceScope==='references'?[]:s.references.filter(reference=>s.projectReferenceIds.includes(reference.id)&&!scopedReferences.some(item=>item.id===reference.id)).map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} onUseShared={referenceScope==='references'?undefined:useSharedReference} limit={STUDIO_LIMITS.references} onRemove={async id=>{await removeFile(id);}}/></>}
-    search={sourceControl=><ReferenceExploration authorityConsentRequired={referenceAuthorityEnabled} sourceControl={sourceControl} key={referenceScope} userId={userId} projectId={project.id} idea={referenceDiscoverySubject(s,referenceScope==='references'?idea:postContext(s,referenceScope).message||idea)} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={async originUrl=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===originUrl);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/>}
+    search={sourceControl=><ReferenceExploration authorityConsentRequired={referenceAuthorityEnabled} sourceControl={sourceControl} key={referenceScope} userId={userId} projectId={project.id} idea={referenceDiscoverySubject(s,referenceScope==='references'?idea:postContext(s,referenceScope).message||idea)} postFormat={referenceScope==='references'?undefined:activeFormat} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={async originUrl=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===originUrl);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/>}
     proposals={<section className="reference-workbench-proposals">{usingParallel&&parallel.progress&&<ParallelExplorationProgress progress={parallel.progress}/>}<ExplorationGallery projectId={project.id} completed={exploration.completed+recoveredCompletions} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} onRemoveReference={async imageId=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'kind' in item.source&&item.source.kind==='generated'&&item.source.imageId===imageId);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/></section>}
     conversation={<>{explorationRecovery}<div className="guided-reference-chat"><div className="guided-reference-post-chat" ref={setReferenceChatTarget}/></div></>}
     onBack={preparing?()=>local.change(value=>updateWorkflow(value,{phase:'ai'})):undefined} onContinue={()=>{void finishReferences();}} continueLabel={preparing?(scopedReferences.length?'Preparar primeiro post':'Continuar sem referências'):s.workflow.view==='prepare-post'?'Voltar ao pedido':returnToWorkspaceLabel}/>;
@@ -2034,17 +2058,24 @@ function ProjectStudio({
   const validPostName=postNameSchema.safeParse(preparedName).success;
   const initialPost=Boolean(pendingPost?.initial);
   const canGenerateFirstPost=canUseProjectAI&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&!pendingTurn;
+  const POST_ANGLE_STARTERS:[string,string,string][]=[
+    ['+ Quebrar objeção','Quebrar objeção comum do público','Mostre por que a dúvida mais comum sobre '+(s.brief.offer.trim()||'o tema do projeto')+' não precisa travar quem está começando.'],
+    ['+ Bastidores','Mostrar bastidores e processo real','Compartilhe um detalhe real de bastidor sobre '+(s.brief.offer.trim()||'este projeto')+' para gerar proximidade.'],
+    ['+ Benefício prático','Destacar um benefício prático imediato','Explique um ganho prático que a pessoa percebe logo no início com '+(s.brief.offer.trim()||'a oferta')+'.'],
+    ['+ Últimas vagas','Chamada direta com urgência real','Convide quem acompanhou até aqui para garantir participação com condição clara.'],
+  ];
   const postPreparation=preparingPost&&(
     <section className="studio-panel guided-question" aria-labelledby="post-preparation-title">
       <p className="studio-eyebrow">PREPARAR POST</p>
       <h2 id="post-preparation-title">{initialPost?'Vamos preparar o primeiro post':'Vamos preparar este post'}</h2>
       <p>{initialPost?'Revise o nome e a mensagem sugeridos, escolha o formato e informe o objetivo deste post. O público do projeto já faz parte do contexto.':'Escolha um nome para organizar esta peça e defina o formato e o que ela deve comunicar.'}</p>
+      {!initialPost&&<div className="guided-context-examples" aria-label="Continue sua divulgação"><span>Continue sua divulgação:</span>{POST_ANGLE_STARTERS.map(([label,objective,message])=><button key={label} type="button" className="studio-button-secondary guided-chip" onClick={()=>changePreparation({objective,message})}>{label}</button>)}</div>}
       <form onSubmit={event=>{event.preventDefault();void confirmPostCreation();}}>
         <fieldset className="guided-post-preparation-fields" disabled={creatingPost}>
           <label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" onChange={event=>changePreparation({name:event.target.value})}/></label>
           <PostSettings preparing value={preparedValue} format={preparedFormat} targetFrameCount={preparedFrameCount} legacyAction={s.brief.action} onChange={changePreparation}/>
           <p className="studio-hint">A chamada para ação é opcional.</p>
-          {initialPost&&canGenerateFirstPost&&<p className="studio-hint">{imageReviewDisclosure}</p>}
+          {initialPost&&canGenerateFirstPost&&<ReviewDisclosureBadge compact />}
           <div className="guided-actions">
             <button type="button" className="studio-button-secondary" onClick={()=>{journey.cancelPreparation();showPosts();}}>Cancelar</button>
             <button type="submit" className={initialPost&&canGenerateFirstPost?'studio-button-secondary':'studio-button'} disabled={!validPostName}>{creatingPost?'Criando post…':'Continuar para criação'}</button>
@@ -2059,8 +2090,8 @@ function ProjectStudio({
     {referencesOpen&&!referencesModal&&referencePanel}
     <div className="studio-workspace-host" hidden={referencesOpen&&!referencesModal}>
       {pendingTurn&&!preparing&&!viewingPendingConversation&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(!pendingTurn.context.conversationId){setSettings('history');}else if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else{setChatMinimized(false);openPost(pendingTurn.context.pieceId);}}}>Abrir a conversa desse pedido</button></p>}
-      {preparing&&s.workflow.phase!=='references'&&<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:aiPanel}</>}
-      {!preparing&&s.workflow.view==='posts'&&<ProjectPosts state={s} versions={versions} posts={postRecords} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>}
+      {preparing&&s.workflow.phase!=='references'&&<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} defaultAvailable={defaultAvailable} canSkipToPost={defaultAvailable||canUseAI} aiBadgeLabel={credentialSource==='byok'&&canUseAI?'✦ Sua chave OpenAI conectada':defaultAvailable?'✦ IA do Compor incluída':undefined} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))} onSkipToPost={()=>{local.change(value=>updateWorkflow(value,{aiPreference:credentialSource,phase:'ready'}));journey.preparePost(crypto.randomUUID(),{initial:true,initialProjectTitle:projectDetails.title});}}/>:aiPanel}</>}
+      {!preparing&&s.workflow.view==='posts'&&<ProjectPosts state={s} versions={versions} posts={postRecords} loadThumbnail={async(pieceId,version)=>await workingImage(pieceId,version)??(version>=1?await canonicalImage(pieceId,version).catch(()=>null):null)} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>}
       <div className="guided-post-host" hidden={preparing||s.workflow.view==='posts'} style={{height:'100%',minHeight:0,overflowY:preparingPost?'auto':undefined}}>{postPreparation}<div className="studio-workspace-view" data-active={!preparing&&!referencesOpen&&s.workflow.view!=='posts'&&!preparingPost} hidden={preparingPost} style={{height:'100%',minHeight:0}}><GuidedWorkspace chat={chats} artwork={artwork} intro={intro} chatMinimized={chatMinimized} onChatMinimizedChange={setChatMinimized} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/></div></div>
     </div>
   </>;
@@ -2165,10 +2196,11 @@ function ProjectStudio({
           }
           description="Confira arte, fatos e legenda antes de usar."
         >
-          <p className="studio-hint">{postTitle}</p>
           <StudioReview
             title={projectDetails.title}
             downloadTitle={postTitle}
+            postUrl={typeof window !== 'undefined' && openPieceId ? `${window.location.origin}/projetos/${encodeURIComponent(project.id)}/posts/${encodeURIComponent(openPieceId)}` : undefined}
+            confirmedFacts={(s.offerFacts ?? []).filter(fact => fact.status === 'confirmed' && fact.value.trim().length > 0)}
             draft={draft}
             base={base}
             format={activeFormat}
@@ -2177,12 +2209,14 @@ function ProjectStudio({
             saving={saving}
             composing={composingCarousel}
             uploadingArt={uploadingCarouselArt}
+            hasLocalPreview={hasLocalPreview}
             onCompose={carouselRenderAvailable&&draft?.content.carouselPlan ? ()=>{void requestCarouselComposition(draft);} : undefined}
             onSave={() => {
               void saveCurrent().catch(() => setNotice('Não foi possível iniciar o salvamento desta versão.'));
             }}
+            onApprove={() => { void approveCurrentDraft(); }}
           />
-          <button onClick={() => nextStage("studio")}>
+          <button type="button" className="studio-button-secondary" onClick={() => nextStage("studio")}>
             Pedir ajuste no estúdio
           </button>
         </StudioPanel>

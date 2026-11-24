@@ -37,6 +37,7 @@ export function useExplorationLoop(props: LoopProps) {
   const [blocked, setBlocked] = useState(false);
   const [parallelBlocked,setParallelBlocked]=useState(false);
   const [awaitingFeedback, setAwaitingFeedback] = useState(false);
+  const [awaitingNextBatch, setAwaitingNextBatch] = useState(false);
   const [resuming, setResuming] = useState(false);
   const [resumeError, setResumeError] = useState<string|null>(null);
   const [completed, setCompleted] = useState(0);
@@ -46,6 +47,7 @@ export function useExplorationLoop(props: LoopProps) {
   const current = useRef(props);
   const stopCurrent = useRef<(() => void) | null>(null);
   const resumeRequested = useRef(false);
+  const nextBatchApproved = useRef(false);
   const resumeInFlight = useRef(false);
   const resumeSequence = useRef(0);
   const questionKey = `compor-exploration-answer:${props.userId}:${props.projectId}`;
@@ -61,9 +63,9 @@ export function useExplorationLoop(props: LoopProps) {
   const audienceConflict = props.state ? audienceResolution(props.state).status==='conflict' : false;
   const ready = !audienceConflict && Boolean(props.idea?.trim() || props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
 
-  useEffect(()=>()=>{resumeSequence.current++;},[props.userId,props.projectId,props.conversationId,props.credentialSource,props.credentialEpoch]);
+  useEffect(()=>()=>{resumeSequence.current++;nextBatchApproved.current=false;},[props.userId,props.projectId,props.conversationId,props.credentialSource,props.credentialEpoch]);
   const previousEnabled=useRef(props.enabled);
-  useEffect(()=>{if(previousEnabled.current&&!props.enabled)resumeSequence.current++;previousEnabled.current=props.enabled;},[props.enabled]);
+  useEffect(()=>{if(previousEnabled.current&&!props.enabled){resumeSequence.current++;nextBatchApproved.current=false;}previousEnabled.current=props.enabled;},[props.enabled]);
 
   useEffect(() => {
     try {
@@ -80,7 +82,7 @@ export function useExplorationLoop(props: LoopProps) {
   },[props.userId,props.projectId]);
 
   useEffect(() => {
-    if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback || awaitingAnswer || unresolvedChat) return;
+    if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback || awaitingNextBatch || awaitingAnswer || unresolvedChat) return;
     const source = props.credentialSource ?? "byok", epoch = props.credentialEpoch ?? 0;
     const scope=props.conversationId;
     const sameCredential = () => current.current.userId===props.userId && current.current.projectId===props.projectId && current.current.conversationId===scope && current.current.isAuthenticated() && (current.current.credentialSource ?? "byok") === source && (current.current.credentialEpoch ?? 0) === epoch;
@@ -192,6 +194,19 @@ export function useExplorationLoop(props: LoopProps) {
             const state = getState();
             const apiKey = getApiKey();
             if (!isAuthenticated() || !current.current.hasApiKey || !sameCredential() || (source === "byok" && !/^sk-[^\s]{20,300}$/.test(apiKey)) || !state || state.adjustments.some(item => !["completed", "failed"].includes(item.status))) return;
+            if(progress.nextAt!==null) {
+              while(active && !cancel.signal.aborted && progress.nextAt>Date.now()) {
+                const seconds=Math.ceil((progress.nextAt-Date.now())/1000);
+                setPhase('waiting');setCountdown(seconds);setStatus(`Próximo lote em ${seconds}s.`);
+                await waitForTurn(cancel.signal,Math.min(1000,progress.nextAt-Date.now()));
+              }
+              if(!active||cancel.signal.aborted)return;
+              if(!nextBatchApproved.current){setAwaitingNextBatch(true);setPhase('idle');setCountdown(null);setStatus('Lote concluído. Peça mais propostas para gerar outro.');return;}
+              nextBatchApproved.current=false;
+              progress=nextBatch(resumeAfterFeedback(progress),Date.now(),()=>crypto.randomUUID());
+              localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
+              continue;
+            }
             const gate=await readExplorationGate(props.projectId,cancel.signal);
             if(!active || cancel.signal.aborted)return;
             if(gate==='awaiting_feedback') {
@@ -208,17 +223,6 @@ export function useExplorationLoop(props: LoopProps) {
             progress=reviewBatchProgress(progress,engaged);
             localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             if(progress.awaitingFeedback) { setAwaitingFeedback(true);setPhase('idle');setCountdown(null);return; }
-            if(progress.nextAt!==null) {
-              while(active && !cancel.signal.aborted && progress.nextAt>Date.now()) {
-                const seconds=Math.ceil((progress.nextAt-Date.now())/1000);
-                setPhase('waiting');setCountdown(seconds);setStatus(`Próximo lote em ${seconds}s.`);
-                await waitForTurn(cancel.signal,Math.min(1000,progress.nextAt-Date.now()));
-              }
-              if(!active||cancel.signal.aborted)return;
-              progress=nextBatch(progress,Date.now(),()=>crypto.randomUUID());
-              localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
-              continue;
-            }
             const sequence=progress.sequence;
             const {accepted,rejected}=planningCriteria(state.direction);
             const feedback=planningFeedback(generatedSignals,referenceSignals);
@@ -316,11 +320,11 @@ export function useExplorationLoop(props: LoopProps) {
         if (active && !cancel.signal.aborted) stop("Não foi possível confirmar a exploração. A sequência foi interrompida.");
       }
     }
-    const onPageHide = cancelCurrent;
+    const onPageHide = () => { nextBatchApproved.current=false;cancelCurrent(); };
     window.addEventListener("pagehide", onPageHide);
     void run();
     return () => { cancelCurrent(); if (stopCurrent.current === cancelCurrent) stopCurrent.current = null; window.removeEventListener("pagehide", onPageHide); };
-  }, [props.userId, props.projectId, props.hasApiKey, props.credentialSource, props.credentialEpoch, props.enabled, ready, paused, blocked, awaitingFeedback, awaitingAnswer, unresolvedChat]);
+  }, [props.userId, props.projectId, props.hasApiKey, props.credentialSource, props.credentialEpoch, props.enabled, ready, paused, blocked, awaitingFeedback, awaitingNextBatch, awaitingAnswer, unresolvedChat]);
 
   async function resume() {
     if(resumeInFlight.current)return;
@@ -328,7 +332,7 @@ export function useExplorationLoop(props: LoopProps) {
     const stillCurrent=()=>resumeSequence.current===serial&&current.current.userId===props.userId&&current.current.projectId===props.projectId&&current.current.conversationId===scope&&(current.current.credentialSource??'byok')===source&&(current.current.credentialEpoch??0)===epoch&&current.current.isAuthenticated()&&(current.current.state?pendingSelectionQuestion(current.current.state,scope??'references'):null)===question;
     try { localStorage.removeItem(`compor-exploration-rejected:${props.userId}`); localStorage.removeItem(`compor-exploration-not-started:${props.userId}`); }
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.'); return; }
-    if(awaitingFeedback) {
+    if(awaitingFeedback||awaitingNextBatch) {
       resumeInFlight.current=true;setResuming(true);setResumeError(null);
       try {
         const response=await fetch('/api/studio/explorations/resume',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:props.projectId})});
@@ -343,8 +347,9 @@ export function useExplorationLoop(props: LoopProps) {
     if(!stillCurrent())return;
     try { if(question)localStorage.setItem(questionKey,question); localStorage.removeItem(qualityHeldKey(props.userId)); }
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.');setBlocked(true);return; }
+    if(awaitingNextBatch){nextBatchApproved.current=true;setAwaitingNextBatch(false);}
     resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }
   const running = props.enabled && !awaitingAnswer && !audienceConflict && !unresolvedChat;
-  return { running, status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : unresolvedChat ? "Há um pedido no chat ainda não confirmado. Consulte essa tentativa antes de explorar." : blocked ? status : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? props.canUseAI ? "Aguardando seu pedido para começar." : "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, parallelBlocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, progress:running&&!paused&&phase==='generating'?requestProgress:null, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { resumeSequence.current++;stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
+  return { running, status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : unresolvedChat ? "Há um pedido no chat ainda não confirmado. Consulte essa tentativa antes de explorar." : blocked ? status : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? props.canUseAI ? "Aguardando seu pedido para começar." : "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, parallelBlocked, awaitingFeedback, awaitingNextBatch, awaitingAnswer, resuming, resumeError, completed, progress:running&&!paused&&phase==='generating'?requestProgress:null, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { resumeSequence.current++;nextBatchApproved.current=false;stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
 }

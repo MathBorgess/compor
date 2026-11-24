@@ -16,7 +16,7 @@ import ReferenceExploration from './studio/reference-exploration.tsx';
 import {syncReferenceConsentAccount} from './lib/reference-session-consent.ts';
 import {useExplorationLoop} from './studio/use-exploration-loop.ts';
 import {createStudioState} from './lib/studio-state.ts';
-function FirstBatch(){const [connected,setConnected]=useState(false),[enabled,setEnabled]=useState(true),[state]=useState(()=>createStudioState({userId:'${user}',projectId:'${project}'}));const loop=useExplorationLoop({userId:'${user}',projectId:'${project}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled,idea:'Uma oficina nova, ainda sem briefing'});return <><button onClick={()=>setConnected(true)}>Conectar chave de teste</button><button onClick={()=>setEnabled(false)}>Sair das referências</button><output id="exploration-status">{loop.status}</output></>;}
+function FirstBatch(){const [connected,setConnected]=useState(false),[enabled,setEnabled]=useState(true),[state]=useState(()=>createStudioState({userId:'${user}',projectId:'${project}'}));const loop=useExplorationLoop({userId:'${user}',projectId:'${project}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled,idea:'Uma oficina nova, ainda sem briefing'});return <><button onClick={()=>setConnected(true)}>Conectar chave de teste</button><button onClick={()=>setEnabled(false)}>Sair das referências</button><button onClick={loop.resume}>Pedir mais propostas</button><output id="exploration-status">{loop.status}</output></>;}
 function Demo(){const [userId,setUser]=useState('${user}'),[projectId,setProject]=useState('${project}'),[epoch,setEpoch]=useState(0),[selected,setSelected]=useState([]),[used,setUsed]=useState([]);return <><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Outro projeto</button><button onClick={()=>setUser('00000000-0000-4000-8000-000000000002')}>Outra conta</button><button onClick={()=>setUser('${user}')}>Conta inicial</button><button onClick={()=>{syncReferenceConsentAccount(sessionStorage,null);setEpoch(x=>x+1);}}>Sair e entrar</button><FirstBatch/><output id="used">{JSON.stringify(used)}</output><ReferenceExploration key={userId+projectId+epoch} userId={userId} projectId={projectId} idea="Quero divulgar uma aula de cerâmica" selectedOrigins={selected} onContinue={()=>setEpoch(x=>x+1)} onUseReference={async(reference,file)=>{setSelected(items=>[...items,reference.originUrl]);setUsed(items=>[...items,{userId,projectId,id:reference.id,size:file.size}]);}}/></>};createRoot(document.getElementById('root')).render(<Demo/>);`;
 async function fixture(t,{holdFirst=false}={}) {
   const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
@@ -30,6 +30,7 @@ async function fixture(t,{holdFirst=false}={}) {
   await page.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
+    if(url.pathname==='/api/studio/explorations/resume')return route.fulfill({json:{status:'not_paused'}});
     if(url.pathname.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
     if(url.pathname==='/api/studio/explorations'){
       const body=request.postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});
@@ -46,12 +47,10 @@ async function fixture(t,{holdFirst=false}={}) {
   await page.goto(origin);return {page,searches,previews,external,release,generations};
 }
 const options={skip:!browserPath||!existsSync(browserPath),timeout:30000};
-test('sugestões aguardam permissão; histórico aprovado vem primeiro e só a escolha inclui a imagem',options,async t=>{
-  const {page,searches,previews,external}=await fixture(t);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();
-  assert.equal(searches.length,0);assert.equal(external.length,0);assert.equal(previews.length,0);assert.equal(await page.locator('img').count(),0);
-  assert.deepEqual(JSON.parse(await page.locator('#used').textContent()),[]);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
+test('busca automática avisa a pessoa, prioriza o histórico e só inclui imagens escolhidas',options,async t=>{
+  const {page,searches,previews}=await fixture(t);
+  await page.getByText(/busca no Pinterest e o carregamento de prévias são permitidos automaticamente/).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);
   await page.getByRole('heading',{name:'Usadas em posts que você aprovou'}).waitFor();
   await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
   assert.equal(searches.length,1);assert.equal(searches[0].query,'Quero divulgar uma aula de cerâmica');assert.equal(await page.getByLabel('O que você quer explorar?').inputValue(),'');
@@ -60,19 +59,21 @@ test('sugestões aguardam permissão; histórico aprovado vem primeiro e só a e
   await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência',checked:true}).waitFor();
   assert.equal(previews.length,1);assert.equal(JSON.parse(await page.locator('#used').textContent()).length,1);
 });
-test('permissão resiste à troca de projeto e é apagada na troca de conta ou saída',options,async t=>{
+test('busca reinicia no novo escopo após troca de projeto, conta e sessão',options,async t=>{
   const {page,searches}=await fixture(t);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
-  await page.getByRole('button',{name:'Outro projeto',exact:true}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
-  assert.equal(searches.length,2);assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);
-  await page.getByRole('button',{name:'Outra conta',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,2);assert.equal(await page.locator('img').count(),0);
-  await page.getByRole('button',{name:'Conta inicial',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,2);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
-  await page.getByRole('button',{name:'Sair e entrar',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,3);assert.equal(await page.locator('img').count(),0);
+  const result=page.getByRole('checkbox',{name:'Escolher referência: Nova referência'});
+  await result.waitFor();
+  for(const [name,count] of [['Outro projeto',2],['Outra conta',3],['Conta inicial',4],['Sair e entrar',5]]){
+    await page.getByRole('button',{name,exact:true}).click();
+    await result.waitFor();
+    await assertEventually(()=>searches.length===count);
+  }
+  assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);
 });
+async function assertEventually(predicate){const until=Date.now()+5000;while(!predicate()){if(Date.now()>until)throw Error('busca esperada não observada');await new Promise(resolve=>setTimeout(resolve,25));}}
 test('digitar durante sugestão pendente não prende a busca manual',options,async t=>{
   const {page,searches,release}=await fixture(t,{holdFirst:true});
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('status').filter({hasText:'Buscando referências'}).waitFor();
+  await page.getByRole('status').filter({hasText:'Buscando referências'}).waitFor();
   await page.getByLabel('O que você quer explorar?').fill('gravura');await page.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();assert.equal(searches.length,2);assert.equal(searches[1].query,'gravura');release();
 });
@@ -87,4 +88,18 @@ test('primeiro lote começa somente com ideia e chave e conserva três imagens e
   await page.getByRole('button',{name:'Sair das referências'}).click();
   await page.locator('#exploration-status').filter({hasText:'Exploração disponível na tela de referências.'}).waitFor();
   assert.equal(generations.length,3);
+});
+
+test('lote sequencial aguarda pedido explícito depois dos 15 segundos',options,async t=>{
+ const {page,generations}=await fixture(t);
+ await page.clock.install();await page.clock.pauseAt(new Date(Date.now()+1000));
+ await page.getByRole('button',{name:'Conectar chave de teste'}).click();
+ await page.locator('#exploration-status').filter({hasText:/Próximo lote em/}).waitFor();
+ assert.equal(generations.length,3);
+ await page.clock.fastForward(15000);
+ await page.locator('#exploration-status').filter({hasText:'Lote concluído. Peça mais propostas para gerar outro.'}).waitFor();
+ await page.clock.fastForward(30000);assert.equal(generations.length,3);
+ await page.getByRole('button',{name:'Pedir mais propostas'}).click();
+ await assertEventually(()=>generations.length===6);
+ assert.equal(generations.length,6);
 });

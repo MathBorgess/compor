@@ -38,9 +38,10 @@ function imageInputs(value = []) {
 }
 
 /** Internal HTTP adapter. Identity and operation-level authorization belong to the caller. */
-export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.fetch, reviewCandidate } = {}) {
+export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.fetch, reviewCandidate, profile = 'artwork' } = {}) {
   if (typeof authenticate !== 'function') throw new TypeError('authenticate is required');
   if (reviewCandidate !== undefined && typeof reviewCandidate !== 'function') throw new TypeError('invalid image candidate reviewer');
+  if (!['artwork', 'reference'].includes(profile)) throw new TypeError('invalid image profile');
   return async (request, { authorizeReview, requiredText } = {}) => {
     if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
     try {
@@ -60,7 +61,9 @@ export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.
     let images;
     try { images = imageInputs(body.images); } catch { return json({ error: 'invalid_request' }, 400); }
     try {
-      const options = {model: 'gpt-image-2.6-flare', prompt: body.prompt, size, quality: 'auto', output_format: 'png', n: 1};
+      const options = profile === 'reference'
+        ? {model: 'gpt-image-2.6-flare', prompt: body.prompt, size: size === '864x1536' ? '720x1280' : '768x960', quality: 'low', complexity: 'low', output_format: 'png', n: 1}
+        : {model: 'gpt-image-2.6-flare', prompt: body.prompt, size, quality: 'auto', output_format: 'png', n: 1};
       let payload, headers = {Authorization: `Bearer ${body.apiKey}`};
       if (images.length) {
         payload = new FormData();

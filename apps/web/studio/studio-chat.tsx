@@ -7,8 +7,8 @@ import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
 import {useObjectUrl} from './use-object-url.ts';
-import {imageReviewDisclosure} from './image-review-disclosure.ts';
-import {compiler as compileMarkdown} from "markdown-to-jsx";
+import {ReviewDisclosureBadge} from './image-review-disclosure';
+import MessageMarkdown from './message-markdown';
 import {sha256Hex} from "../lib/browser-bytes.ts";
 import {
   prepareAdjustment,
@@ -102,6 +102,7 @@ function ChatWaitTime({ deadline }: { deadline: number }) {
 }
 
 type CredentialSource='default'|'byok';
+type ChatImageAction = ImageAction & { carouselPlan?: boolean };
 type ImageReservation = {projectId:string;pieceId:string;version:number;attemptId:string;actionBinding:string};
 type UndispatchedImage = {action:ImageAction; reservation:ImageReservation; revision:number; ready:boolean};
 type StudioImageScreen = ImageAttemptScreen & {undispatched?:UndispatchedImage};
@@ -119,22 +120,6 @@ export type InitialPostRequest={
   isCurrent:()=>boolean;
 };
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
-/** Assistant text is Markdown without raw HTML; links open safely and images become their alt text. */
-function MessageMarkdown({text}:{text:string}) {
-  return compileMarkdown(text,{
-    disableParsingRawHTML: true,
-    sanitizer: (value) => {
-      try {
-        const url = new URL(value);
-        return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : null;
-      } catch { return null; }
-    },
-    overrides: {
-      a: ({href, children}: {href?: string; children?: ReactNode}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
-      img: ({alt}: {alt?: string}) => <span>{alt}</span>,
-    },
-  });
-}
 function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageReceipt|null{
  const parsed=receiptSchema.safeParse(input);if(!parsed.success)return null;const value=parsed.data;
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='assetId,pieceId,projectId,requestId,userId,version'||value.userId!==userId||value.projectId!==projectId||![value.assetId,value.pieceId,value.requestId,userId,projectId].every(uuid)||!Number.isSafeInteger(value.version)||value.version<1)return null;
@@ -145,6 +130,8 @@ function inspectionSummary(data:ChatResponse):Inspection{
  const items=Array.isArray(data?.itemTrace?.items)?data.itemTrace.items.slice(0,24):[];
  return {status,authenticationRejected:status==='unknown'&&data?.errorCode==='provider_http_401',usage:data?.usage?{input_tokens:diagnosticCount(data.usage.input_tokens),output_tokens:diagnosticCount(data.usage.output_tokens)}:null,technical:data?.itemTrace?{functionCalls:diagnosticCount(data.itemTrace.functionCalls),outputs:diagnosticCount(data.itemTrace.outputs),omittedItems:diagnosticCount(data.itemTrace.omittedItems),validSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===true).length,invalidSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===false).length,errorClasses:[...new Set(items.filter(item=>item?.type==='function_call_output').map(item=>['timeout','unavailable','other'].includes(item.errorClass ?? '')?item.errorClass:null).filter((value):value is string=>typeof value==='string'))]}:null};
 }
+
+const resolvedPostTitle=(state:StudioState,pieceId:string|undefined,headline:string|undefined)=>(pieceId?state.posts[pieceId]?.name?.trim():'')||headline?.trim()||'Novo post';
 
 export default function StudioChat({
   state:sourceState,
@@ -177,6 +164,7 @@ export default function StudioChat({
   readOnly = false,
   allowReferenceAnalysis = true,
   onReferenceWait,
+  onRevealArt,
   intro = false,
   referenceWorkbench = false,
   selectedVisualsAvailable = false,
@@ -186,7 +174,7 @@ export default function StudioChat({
   createVisualAuthoritySnapshot,
   visualAuthorityHeaders,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:SaveDraftInput)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext&{frameId?:string})=>Promise<StoredImage|null|undefined>;loadAnchor?:(context:ImageContext,anchorFrameId:string)=>Promise<StoredImage|null|undefined>;activeFrameId?:string|null;externalPrompt?:{text:string;nonce:number}|null;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:SaveDraftInput)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext&{frameId?:string})=>Promise<StoredImage|null|undefined>;loadAnchor?:(context:ImageContext,anchorFrameId:string)=>Promise<StoredImage|null|undefined>;activeFrameId?:string|null;externalPrompt?:{text:string;nonce:number}|null;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;onRevealArt?:()=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
@@ -199,7 +187,7 @@ export default function StudioChat({
   const [message, setMessageState] = useState(restoredDraft ?? initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
-    [imageAction, setImageAction] = useState<ImageAction|null>(null),
+    [imageAction, setImageAction] = useState<ChatImageAction|null>(null),
     [pending, setPending] = useState<string|null>(null),
     [usage, setUsage] = useState<Usage|null>(null),
     [lastCompleted,setLastCompleted]=useState<string|null>(null),
@@ -588,24 +576,29 @@ export default function StudioChat({
         throw Error("Não foi possível identificar o post desta proposta.");
       const proposal = parseImageProposal(data.proposal ?? {prompt: data.prompt});
       let artworkInput = null, inputError = '', canPrepareTransport = false, sourceFingerprint: string|null = null;
+      let isCarouselPlan = false;
       let visualSnapshot:Awaited<ReturnType<typeof requestVisualSnapshot>>=null;
       try {
         const snapshot = getState(), selected = getCurrentDraft(snapshot);
         const source = snapshot.drafts.find(item => item.pieceId === context.pieceId && item.baseVersion === context.baseVersion);
-        if (!source || ((preparedTarget||proposal.operation === 'edit') && (selected?.pieceId !== context.pieceId || selected?.baseVersion !== (preparedTarget?.version??context.baseVersion)))) throw Error('Abra a versão indicada para revisar as imagens desta proposta.');
-        if(source.content.carouselPlan)throw Error('Abra a revisão e componha as lâminas deste plano.');
-        if(data.visualInputRequired){
-          if(!conversationId)throw Error('Não foi possível recuperar as imagens desta conversa.');
-          visualSnapshot=await requestVisualSnapshot({userId:snapshot.userId,projectId:snapshot.projectId,conversationId,requestId});
-          if(!visualSnapshot)throw Error('As imagens desta solicitação não estão disponíveis neste navegador. Consulte a solicitação sem reenviar.');
+        if (!source) throw Error('Abra a versão indicada para revisar as imagens desta proposta.');
+        if (source.content.carouselPlan) {
+          isCarouselPlan = true;
+        } else {
+          if ((preparedTarget||proposal.operation === 'edit') && (selected?.pieceId !== context.pieceId || selected?.baseVersion !== (preparedTarget?.version??context.baseVersion))) throw Error('Abra a versão indicada para revisar as imagens desta proposta.');
+          if(data.visualInputRequired){
+            if(!conversationId)throw Error('Não foi possível recuperar as imagens desta conversa.');
+            visualSnapshot=await requestVisualSnapshot({userId:snapshot.userId,projectId:snapshot.projectId,conversationId,requestId});
+            if(!visualSnapshot)throw Error('As imagens desta solicitação não estão disponíveis neste navegador. Consulte a solicitação sem reenviar.');
+          }
+          const prepared = await prepareArtworkTransport(artworkOptions(snapshot,source,proposal,visualSnapshot??undefined));
+          artworkInput = prepared.artworkInput;
+          sourceFingerprint = prepared.sourceFingerprint;
+          if (getState().revision !== snapshot.revision) throw Error('O contexto mudou enquanto a proposta era preparada. Consulte a mesma proposta para revisar.');
         }
-        const prepared = await prepareArtworkTransport(artworkOptions(snapshot,source,proposal,visualSnapshot??undefined));
-        artworkInput = prepared.artworkInput;
-        sourceFingerprint = prepared.sourceFingerprint;
-        if (getState().revision !== snapshot.revision) throw Error('O contexto mudou enquanto a proposta era preparada. Consulte a mesma proposta para revisar.');
       } catch (error) { artworkInput = null; inputError = errorMessage(error); canPrepareTransport = error instanceof ArtworkTransportRequiredError; }
       if (!mounted.current || !credentialIsCurrent() || preparationSequence.current !== preparation) return;
-      const action = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [],...(preparedTarget?{preparedTarget}:{}),...(visualSnapshot?{visualSnapshot}:{}) };
+      const action: ChatImageAction = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [],...(preparedTarget?{preparedTarget}:{}),...(visualSnapshot?{visualSnapshot}:{}),...(isCarouselPlan?{carouselPlan:true}:{}) };
       setImageAction(action);
       try {
         if (localStorage.getItem(imageRejectedMarker) === requestId) {
@@ -621,6 +614,13 @@ export default function StudioChat({
           return;
         }
       } catch {setBusy(false);setNotice('Não foi possível preservar o estado da geração neste navegador.');return;}
+      if (isCarouselPlan) {
+        setImageNeedsReconciliation(false);
+        setImageNeedsDecision(false);
+        setBusy(false);
+        setNotice('');
+        return;
+      }
       if(prepareImageVersion&&!data.imageActionId){
         setImageAction({...action,artworkInput:null,canPrepareTransport:false});
         setImageNeedsReconciliation(false);setImageNeedsDecision(false);setBusy(false);
@@ -1604,6 +1604,7 @@ export default function StudioChat({
     }
   }
   const currentDraft=getCurrentDraft(state);
+  const carouselPlanAction=Boolean(imageAction?.carouselPlan||(imageAction&&currentDraft?.pieceId===imageAction.context.pieceId&&currentDraft?.content.carouselPlan));
   const undispatched=imageScreen?.undispatched;
   const visibleMessages=conversationMessages(state,conversationId);
   const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
@@ -1632,7 +1633,7 @@ export default function StudioChat({
         <details className="studio-chat-context">
           <summary>Contexto do pedido</summary>
           <strong className="studio-context-title">
-            {currentDraft?.content.headline || "Post sem título"}
+            {resolvedPostTitle(state, currentDraft?.pieceId, currentDraft?.content.headline)}
           </strong>
           <span>
             {" "}
@@ -1707,16 +1708,42 @@ export default function StudioChat({
           </p>
         )}
         {imageReceipt&&imageReceiptFor(imageReceipt,state.userId,state.projectId)&&state.selection?.pieceId===imageReceipt.pieceId&&state.selection?.baseVersion===imageReceipt.version&&(
-          <p role="status" className="studio-hint">Imagem gerada e adicionada a este post · versão {imageReceipt.version}.</p>
+          <div role="status" className="studio-hint studio-image-receipt">
+            <p>Imagem gerada e adicionada a este post · versão {imageReceipt.version}.</p>
+            {onRevealArt&&<button type="button" className="studio-button-secondary studio-reveal-art-button" onClick={onRevealArt}>Ver arte pronta →</button>}
+          </div>
         )}
-        {imageAction && (
+        {imageAction && (carouselPlanAction ? (
+          <div className="studio-hint" role="status">
+            <p>Abra a revisão e componha as lâminas deste plano.</p>
+            {imageAction.declineBinding ? (
+              <button
+                type="button"
+                className="studio-button-secondary"
+                disabled={busy || !canUseAI || sourceMismatch || imageNeedsReconciliation}
+                onClick={declineImage}
+              >
+                Recusar proposta
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="studio-button-secondary"
+                disabled={busy || !canUseAI || sourceMismatch}
+                onClick={() => poll(imageAction.requestId)}
+              >
+                Consultar esta tentativa
+              </button>
+            )}
+          </div>
+        ) : (
           <div className="studio-image-consent">
             <h3>{imageAction.proposal.operation === "edit" ? "Editar a arte em uma nova versão" : "Gerar a arte completa"}</h3>
             <p>
-              {imageAction.context.headline || "Post sem título"} · versão{" "}
+              {resolvedPostTitle(state, imageAction.context.pieceId, imageAction.context.headline)} · versão{" "}
               {(imageAction.preparedTarget?.version??imageAction.context.baseVersion) || "ainda não salva"}
             </p>
-            <p>{imageAction.prompt}</p>
+            <details><summary>Ver descrição da arte</summary><p>{imageAction.prompt}</p></details>
             {imageAction.canPrepareTransport && <div>
               <p>Prepare cópias em JPEG neste navegador, sem IA nem envio. A qualidade será ajustada e as dimensões só serão reduzidas se necessário. Transparências recebem fundo branco. Os arquivos originais permanecem intactos.</p>
               <button type="button" disabled={busy||imageNeedsReconciliation||imageNeedsDecision} onClick={prepareImageCopies}>{imageAction.proposal.operation === 'edit' ? 'Preparar cópia para edição' : 'Preparar cópias para envio'}</button>
@@ -1745,7 +1772,7 @@ export default function StudioChat({
               Recusar geração
             </button>
           </div>
-        )}
+        ))}
         {pending && !busy && !imageAction && (
           <button
             type="button"
@@ -1785,7 +1812,7 @@ export default function StudioChat({
       {activeReading&&<aside className="studio-reference-question" aria-label="Decisão atual sobre referências">{readingCard(activeReading)}</aside>}
       </div>
       {conversationId&&ownedDraft.error&&<p role="status" className="studio-hint">{ownedDraft.error}</p>}
-      {canUseAI&&!readOnly&&!referenceWorkbench&&<p className="studio-hint">{imageReviewDisclosure}</p>}
+      {canUseAI&&!readOnly&&!referenceWorkbench&&<ReviewDisclosureBadge compact />}
       <form className="studio-chat-composer" onSubmit={send}>
         <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
         {referenceWorkbench&&latestReference&&<span className="studio-reference-composer-context" title={`Última referência escolhida: ${lastReferenceTitle}. A conversa considera toda a seleção.`}>

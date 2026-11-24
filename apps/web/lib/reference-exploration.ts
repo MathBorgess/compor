@@ -2,6 +2,8 @@ import { createPhoenixHyperparams } from './phoenix/hyperparams.ts';
 import { deterministicRouteBoards } from './phoenix/deterministic.ts';
 import { exploredReferenceSchema, type ExploredReference, type ReferenceSignal, type ReferenceHistoryEntry } from './reference-exploration-contract.ts';
 import type { BoardAffinityEntry, UserTasteProfile } from './phoenix/models.ts';
+import type { PostFormat } from './studio-domain.ts';
+import { selectCuratedPinterestBoards } from './curated-pinterest-catalog.ts';
 
 const MAX_FEED_BYTES = 1024 * 1024;
 // Ranking stays on the server. Generic connective words are not evidence of a matching subject.
@@ -51,11 +53,19 @@ async function readBounded(response:Response):Promise<string> {
   finally { await reader.cancel().catch(()=>{}); }
   return new TextDecoder().decode(Buffer.concat(chunks));
 }
-export async function searchReferences({projectId,query,signals,history=[],discoveryOnly=false,fetchApi=fetch}:{projectId:string;query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];discoveryOnly?:boolean;fetchApi?:typeof fetch}) {
+const phoenixTargetFormat = (postFormat?: PostFormat) =>
+  postFormat === 'story' ? 'story_interactive_9:16'
+  : postFormat === 'carousel' ? 'carousel_editorial_4:5'
+  : postFormat === 'collection' ? 'ad_performance_4:5'
+  : 'single_feed';
+
+export async function searchReferences({projectId,query,postFormat,signals,history=[],discoveryOnly=false,fetchApi=fetch}:{projectId:string;query:string;postFormat?:PostFormat;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];discoveryOnly?:boolean;fetchApi?:typeof fetch}) {
   const projectSignals=signals.filter(signal=>signal.projectId===projectId);
   const taste:UserTasteProfile={user_id:'current',preferred_boards_by_goal:{},visual_dna_rules:[],negative_constraints:[],updated_at:new Date().toISOString()};
-  const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:'single_feed',user_taste:taste,board_affinities:boardAffinities(projectSignals)});
-  const boards=[...new Set(routed.board_allocations.map(item=>item.board).filter(board=>!board.endsWith('/feed')))];
+  const affinities=boardAffinities(projectSignals);
+  const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:phoenixTargetFormat(postFormat),user_taste:taste,board_affinities:affinities});
+  const phoenixBoards=[...new Set(routed.board_allocations.map(item=>item.board).filter(board=>!board.endsWith('/feed')))];
+  const boards=selectCuratedPinterestBoards({query,postFormat,phoenixBoards,affinities,limit:5});
   const responses=await Promise.all(boards.map(async board=>{
     try {
       const response=await fetchApi(`https://www.pinterest.com/${board}.rss`,{headers:{accept:'application/rss+xml, application/xml, text/xml'},redirect:'error',signal:AbortSignal.timeout(5000)});
@@ -66,16 +76,35 @@ export async function searchReferences({projectId,query,signals,history=[],disco
   const terms=[...contentTerms(query)];
   const seen=new Set(discoveryOnly ? history.map(item=>item.originUrl) : []);
   const ranked=discoveryOnly ? [] : [...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
-  const historyOrder=new Map(ranked.map((item,index)=>[item.originUrl,index]));
   const choices=new Map<string,ReferenceSignal['action']>();
   for(const signal of currentSignals(projectSignals).toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))){
     if(signal.action!=='comment'&&!choices.has(signal.originUrl))choices.set(signal.originUrl,signal.action);
   }
-  const references=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)].filter(item=>{if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
-    const historyRank=(historyOrder.get(a.originUrl)??Infinity)-(historyOrder.get(b.originUrl)??Infinity);
-    if(historyRank)return historyRank;
-    const score=(title:string)=>{const words=contentTerms(title);return terms.reduce((count,word)=>count+Number(words.has(word)),0);};
-    return score(b.title)-score(a.title);
-  }).slice(0,12);
+  const score=(title:string)=>{const words=contentTerms(title);return terms.reduce((count,word)=>count+Number(words.has(word)),0);};
+  const historyRefs=ranked
+    .map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl}))
+    .filter(item=>{if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;});
+  // Rank within each board and interleave across boards so Portuguese queries still get diverse formats/sources.
+  const perBoard=responses.map(response=>response.items.filter(item=>{
+    if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return false;
+    seen.add(item.originUrl);
+    return true;
+  }).sort((a,b)=>score(b.title)-score(a.title)));
+  const interleaved:ExploredReference[]=[];
+  let round=0;
+  while(historyRefs.length+interleaved.length<12){
+    let added=false;
+    for(const bucket of perBoard){
+      const next=bucket[round];
+      if(next){
+        interleaved.push(next);
+        added=true;
+        if(historyRefs.length+interleaved.length>=12)break;
+      }
+    }
+    if(!added)break;
+    round++;
+  }
+  const references=[...historyRefs,...interleaved].slice(0,12);
   return {status:references.length?'ok':responses.some(response=>response.ok)?'empty':'unavailable',references};
 }

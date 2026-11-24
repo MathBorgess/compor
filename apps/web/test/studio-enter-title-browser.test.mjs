@@ -64,6 +64,8 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
   if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
   if(url.pathname==='/api/image-assets')return route.fulfill({json:{assets:[],nextCursor:null}});
   if(url.pathname==='/api/piece-version-images')return route.fulfill({json:request.method()==='GET'?{assetId:null}:{status:'bound',assetId:request.postDataJSON()?.assetId??null}});
+  if(url.pathname==='/api/studio/references/history')return route.fulfill({json:{references:[]}});
+  if(url.pathname==='/api/studio/references/search')return route.fulfill({json:{status:'empty',references:[]}});
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
@@ -87,7 +89,7 @@ async function prepareFirstPost(page,idea){
  await button('Continuar').click();
  await page.getByRole('textbox',{name:'Quem você quer alcançar?',exact:true}).fill('Adultos iniciantes');
  await button('Continuar para a IA').click();
- await page.getByText(/o Compor envia o PNG gerado e o prompt à OpenAI com a chave de revisão do Compor/).waitFor();
+ await page.getByText(/o Compor envia a imagem gerada e o pedido à OpenAI com a chave de revisão do Compor/).waitFor();
  await connectOwnOpenAiKey(page,apiKey);await button('Continuar para referências').click();
  await finishPreparation(page,{preparePost:false});
  return button;
@@ -98,8 +100,10 @@ test('Gerar primeiro post usa o contexto revisado sem uma segunda mensagem',{ski
  const button=await prepareFirstPost(page,idea);
  const generate=button('Gerar primeiro post');
  await generate.waitFor();assert.equal(await generate.isDisabled(),true);
- await page.getByRole('region',{name:'Vamos preparar o primeiro post'}).getByText(/A imagem pode ser retida antes da entrega/).waitFor();
- assert.equal(await page.getByLabel('Nome do post',{exact:true}).inputValue(),'Oficina de cerâmica');
+ const firstPostRegion=page.getByRole('region',{name:'Vamos preparar o primeiro post'});
+ await firstPostRegion.getByText(/Revisão automática de qualidade ativa/).click();
+ await firstPostRegion.getByText(/Imagens com erro grave podem ser retidas antes da entrega/).waitFor();
+ assert.equal(await page.getByLabel('Nome do post',{exact:true}).inputValue(),'Post 1 · Abertura');
  const message=page.getByLabel('O que este post deve comunicar?',{exact:true});
  assert.equal(await message.inputValue(),'Oficina de cerâmica aos sábados');
  await message.fill('A oficina de cerâmica aceita pessoas iniciantes');
@@ -151,7 +155,7 @@ test('Gerar primeiro post interrompe o envio ao sair durante a gravação do ped
   return rows.some(row=>row.state.adjustments.some(turn=>turn.status==='failed'));
  });
  assert.equal(chats.length,0);
- await page.getByRole('button',{name:/^Oficina de cerâmica .*Abrir post e conversa$/}).click();
+ await page.getByRole('button',{name:/^Post 1 · Abertura .*Abrir post e conversa$/}).click();
  const composer=await openConversation(page);
  await composer.fill('Gere a arte e a legenda.');
  await composer.press('Enter');
@@ -646,7 +650,7 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
  const storedDraft=()=>page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)),draftKey);
  await field.fill('Rascunho privado do post dois');
  assert.equal(await storedDraft(),'Rascunho privado do post dois');
- await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Um projeto de cerâmica .*Abrir post e conversa$/}).click();
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post 1 · Abertura .*Abrir post e conversa$/}).click();
  field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${first}`);assert.equal(await field.inputValue(),'Rascunho privado do post um');
  await page.goto(new URL('/',page.url()).href);await page.getByRole('button',{name:projects[0].title+' Abrir projeto',exact:true}).click();await finishPreparation(page);
  field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${first}`);assert.equal(await field.inputValue(),'Rascunho privado do post um');

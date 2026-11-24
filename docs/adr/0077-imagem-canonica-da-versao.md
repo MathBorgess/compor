@@ -19,3 +19,22 @@ A listagem de outros arquivos da versão, a imutabilidade do Storage e a separa�
 ## Prova
 
 O teste de navegador salva num contexto, altera a imagem-base e abre o mesmo post noutro contexto com IndexedDB vazio. O segundo mostra a imagem salva, sem recuperação manual, e a imagem-base nova não substitui a versão. O contrato de publicação e a função SQL mostram que repetir não duplica nem troca o `asset_id`.
+
+## Adendo (23/11/2026) — Confirmação passiva e recuperação avançada recolhida em `StudioAssets`
+
+Por decisão de Matheus no plano aprovado em 23/11/2026 (Bloco 2, item 2), em conjunto com o adendo do [ADR 0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) e como decorrência direta do vínculo canônico automático de `piece_version_images` definido neste registro:
+
+### O que muda
+
+- Na interface de *Materiais e versões* (`StudioAssets`), quando o vínculo canônico `piece_version_images` está ativo, o fluxo manual redundante (`"Salvar PNG final no projeto"` e sua caixa de autorização) é aposentado como interface primária.
+- Em seu lugar, o estúdio exibe a confirmação passiva de que a arte está vinculada ao salvamento do post (`"Arte da versão {v} salva automaticamente com este post."`).
+- A listagem manual de arquivos da versão e a recuperação de envios sem vínculo ou versões legadas (`AssetRecovery`) passam a ficar recolhidas em `<details>Recuperação avançada de arquivos</details>`, preservando o comportamento autônomo anterior de `StudioAssets` quando o vínculo canônico não está ativo.
+
+### O que permanece inalterado
+
+- A imutabilidade do Storage (`{conta}/{projeto}/{peça}/{versão}/{asset}.png`, sem `update` nem `delete`), as políticas RLS e do bucket, a idempotência da RPC `bind_piece_version_image` (`409 asset_exists` / conflito sem substituição), a validação de dimensões (até `2048` px por lado) e tamanho (`4 MiB`), e a separação entre `base` e `preview` no IndexedDB para `baseVersion >= 1`.
+- O fallback local quando imagens privadas estão desativadas, a recuperação de versões legadas ou sem vínculo, a separação entre exportar e salvar e os contratos multi-lâmina dos [ADRs 0081](0081-imagens-do-carrossel-na-versao-salva.md) e [0083](0083-composicao-e-versoes-de-carrossel.md).
+
+### Verificação
+
+- Verificar em testes de navegador que `StudioAssets` com vínculo canônico ativo exibe o status passivo e recolhe `AssetRecovery` em `<details>Recuperação avançada de arquivos</details>`, mantendo compatibilidade do modo autônomo e recuperação de versões legadas (implementação da UI em curso na etapa correspondente).

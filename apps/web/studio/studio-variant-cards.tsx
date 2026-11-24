@@ -8,7 +8,7 @@ import type {ImageSelection,PieceVersion} from './studio-ui-types';
 import AssetRecovery from './asset-recovery';
 import {useObjectUrl} from './use-object-url.ts';
 
-type Props={userId:string;projectId:string;pieceId:string;versions:PieceVersion[];selectedVersion:number;assetRevision?:Blob|null;onOpenVersion:(version:PieceVersion)=>void|Promise<void>;loadLocal:(version:PieceVersion)=>Promise<StoredImage|null|undefined>;onUseImage:(image:ImageSelection)=>Promise<boolean>};
+type Props={userId:string;projectId:string;pieceId:string;versions:PieceVersion[];selectedVersion:number;assetRevision?:Blob|number|null;onOpenVersion:(version:PieceVersion)=>void|Promise<void>;loadLocal:(version:PieceVersion)=>Promise<StoredImage|null|undefined>;onUseImage:(image:ImageSelection)=>Promise<boolean>};
 const labels={style:'Estilo',composition:'Composição',hook:'Gancho'};
 const formatLabels={single:'Post único 4:5',carousel:'Carrossel 4:5',collection:'Coleção 4:5',story:'Story 9:16'};
 
@@ -33,7 +33,7 @@ function VariantCard({group,index,...props}:Props&{group:ReturnType<typeof group
         {group.latest.content.frames ? ` · ${group.latest.content.frames.length} lâminas` : ''}
       </p>
     )}
-    <p>{group.latest.metadata?(group.latest.metadata.approval.status==='approved'?'Aprovada':'Aguardando aprovação')+' · ':''}Versão {group.latest.version}</p>
+    <p>{group.latest.metadata?(group.latest.metadata.approval.status==='approved'?'★ Pronto para postar':'Em criação')+' · ':''}Versão {group.latest.version}</p>
     <button type="button" aria-pressed={selected} onClick={()=>void props.onOpenVersion(group.latest)}>Abrir variante {index+1}</button>
     <label htmlFor={versionId}>Versões da variante {index+1}</label>
     <select id={versionId} value={selected?props.selectedVersion:group.latest.version} onChange={event=>{
@@ -47,6 +47,7 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
   loader.current=loadLocal;
   const [visible,setVisible]=useState(false);
   const [asset,setAsset]=useState<{scope:string;blob:Blob}|null>(null);
+  const [loadedScope,setLoadedScope]=useState('');
   const [recovery,setRecovery]=useState(false);
   const [candidate,setCandidate]=useState<{scope:string;blob:Blob;decoded:boolean}|null>(null);
   const [notice,setNotice]=useState('');
@@ -55,16 +56,27 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
   const governed=version.content.carouselPlan!==undefined;
   const scope=`${userId}:${projectId}:${version.piece_id}:${version.version}`;
   const blob=asset?.scope===scope?asset.blob:null,url=useObjectUrl(blob),candidateUrl=useObjectUrl(candidate?.scope===scope?candidate.blob:null);
+  const isLoaded=loadedScope===scope;
   useEffect(()=>{
     if(!frame.current)return;
     if(!('IntersectionObserver' in window)){setVisible(true);return;}
-    const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){setVisible(true);observer.disconnect();}},{rootMargin:'240px'});
-    observer.observe(frame.current);return()=>observer.disconnect();
-  },[]);
+    let observer:IntersectionObserver|null=null;
+    const observe=()=>{
+      observer?.disconnect();
+      if(!frame.current)return;
+      if(frame.current.getBoundingClientRect().width>0){setVisible(true);return;}
+      observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){setVisible(true);observer?.disconnect();}},{rootMargin:'240px'});
+      observer.observe(frame.current);
+    };
+    observe();
+    const resize=typeof ResizeObserver!=='undefined'?new ResizeObserver(()=>{if(!visible&&frame.current&&frame.current.getBoundingClientRect().width>0){setVisible(true);resize?.disconnect();observer?.disconnect();}}):null;
+    if(resize&&frame.current)resize.observe(frame.current);
+    return()=>{observer?.disconnect();resize?.disconnect();};
+  },[visible]);
   useEffect(()=>{
     if(!visible)return;
     let live=true;const serial=++localSequence.current;
-    loader.current(version).then(value=>{if(live&&serial===localSequence.current)setAsset(value?{scope,blob:value.file}:null);}).catch(()=>{if(live)setNotice('Não foi possível recuperar a imagem neste navegador.');});
+    loader.current(version).then(value=>{if(live&&serial===localSequence.current){setAsset(value?{scope,blob:value.file}:null);setLoadedScope(scope);}}).catch(()=>{if(live&&serial===localSequence.current){setLoadedScope(scope);setNotice('Não foi possível recuperar a imagem neste navegador.');}});
     return()=>{live=false;};
   },[visible,scope,assetRevision]);
   useEffect(()=>{
@@ -95,8 +107,8 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
     finally{if(current===sequence.current)setRecovering(false);}
   }
   return <div ref={frame} className="studio-variant-image">
-    {url?<img src={url} alt={`Arte da versão ${version.version}`} loading="lazy" />:<p>Imagem da versão {version.version} ainda não disponível neste navegador.</p>}
-    {!governed&&!blob&&<button type="button" onClick={()=>setRecovery(value=>!value)}>Recuperar imagem da versão {version.version}</button>}
+    {url?<img src={url} alt={`Arte da versão ${version.version}`} />:!isLoaded?<p className="studio-hint">Carregando miniatura…</p>:<p>Imagem da versão {version.version} ainda não disponível neste navegador.</p>}
+    {!governed&&!blob&&isLoaded&&<button type="button" onClick={()=>setRecovery(value=>!value)}>Recuperar imagem da versão {version.version}</button>}
     {!governed&&recovery&&<AssetRecovery userId={userId} projectId={projectId} pieceId={version.piece_id} version={version.version} onSelect={assetId=>void select(assetId)} />}
     {!governed&&candidate&&candidate.scope===scope&&<div><p>Origem desconhecida. Confira a imagem antes de usá-la nesta versão.</p>{candidateUrl&&<img src={candidateUrl} alt={`Imagem recuperada para a versão ${version.version}`} onLoad={()=>setCandidate(value=>value===candidate?{...value,decoded:true}:value)} onError={()=>{setCandidate(null);setNotice('A imagem recuperada não pôde ser exibida.');}} />}<button type="button" disabled={!candidate.decoded||recovering} onClick={()=>void useCandidate()}>Usar imagem nesta versão</button></div>}
     {notice&&<p role="status">{notice}</p>}

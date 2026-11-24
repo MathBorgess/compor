@@ -35,3 +35,22 @@ Não muda schema persistido, RLS, credenciais, consentimento do Pinterest, gera�
 ## Verificação e limites
 
 A [revisão visual](../../design-qa.md) registra o estado final e as capturas. O [relatório de implementação](../quality/2026-11-16-referencias-e-perfil.md) registra comandos, resultados e limitações. Testes usam dados sintéticos e fornecedores simulados. A retenção é verificada sobre as migrations existentes em PGlite; isso não comprova isolamento entre contas reais, login externo, latência paga ou implantação. O gate Docker da issue 51 permanece independente e opcional.
+
+## Adendo (23/11/2026) — Referências opcionais no funil ultralinear de 2 telas
+
+Por decisão de Matheus no plano aprovado em 23/11/2026 (Bloco 2, item 1, em conjunto com os adendos dos [ADRs 0044](0044-preparacao-guiada-e-estudio-por-post.md) e [0073](0073-referencias-e-primeiro-pedido.md)):
+
+### O que muda ou é substituído
+
+- Na seção *Decisão* (2º parágrafo), ficam substituídas no caminho feliz **quando `defaultAvailable === true`** (`GET /api/ai/credential-status`, [ADR 0038](0038-chave-padrao-openai-no-vault.md)) as frases `"A preparação inicial segue Contexto, IA, Referências opcionais e Pedido. Continuar nas referências abre diretamente o pedido do primeiro post."`.
+- Sob o `<JourneyStepper>` de 3 macro-fases (`1. Projeto e contexto` → `2. Criar no estúdio` → `3. Salvar e postar`), a preparação inicial unifica contexto e barra inline de IA na **Tela 1 (`Projeto e contexto`)** (`<ProjectContextUnified>`, `"IA do Compor pronta · incluída"`, `"Usar minha chave OpenAI"`, `<ReviewDisclosureBadge compact />`). **Referências** deixam de ser etapa obrigatória entre uma tela dedicada de IA e uma tela intermediária de pedido (`prepare-post`), permanecendo opcionais e acessíveis sem bloquear a entrada direta na **Tela 2 (`Estúdio`)** via `"Ir para o primeiro post →"` (após confirmação do catálogo em `/api/posts`).
+
+### O que permanece inalterado
+
+- **Zero geração automática** ao criar projeto, editar contexto, receber `defaultAvailable === true`, escolher fonte ou abrir Referências, recarregar, selecionar `POST_ANGLE_STARTERS` ou entrar no Estúdio.
+- **Fallback e credenciais**: quando `defaultAvailable === false`, permanece a etapa explícita de escolha/conexão de IA; BYOK explícita mantém prioridade sem fallback para a chave padrão ([ADR 0038](0038-chave-padrao-openai-no-vault.md)); `workflow.aiPreference='default'` ([ADR 0052](0052-ia-inicial-e-jornada-unica-no-estudio.md)) e isolamento de conversas ([ADR 0045](0045-conversas-isoladas-por-post.md)) permanecem intactos.
+- Página dedicada de Referências, alternância galeria/conversa no mesmo controlador montado, ampliar ≠ selecionar, desmarcar ≠ rejeição, modal de configurações, alteração de `project_posts` somente após recibo de `/api/posts`, retorno do post preservando rascunho/versões/conversa, transferência condicional da candidata à v0 ([ADR 0054](0054-bancada-de-referencias-e-rascunho-v0.md)), layout responsivo (`1.200 px`, `767 px`), exclusão lógica, **Seu perfil** (`POST /api/profile` sob RLS), timer de 5 s, `role=timer` de 15 s, lotes de 3, consentimento do Pinterest, geração mediante pedido explícito, tratamento de resultado desconhecido e MCP ([ADR 0047](0047-exclusao-logica-de-projetos.md)).
+
+### Verificação
+
+- Validar em testes de navegador que Referências permanece acessível de forma opcional e preserva rascunho/seleção/conversa ao retornar ao post, e que `"Ir para o primeiro post →"` entra no Estúdio sem iniciar geração automática (implementação da UI em curso na etapa correspondente).

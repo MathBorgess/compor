@@ -57,7 +57,6 @@ async function fixture(t,viewport={width:1280,height:900}) {
     return route.abort();
   });
   await page.goto(origin);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await page.getByRole('checkbox',{name:'Escolher referência: Terracota e textura'}).waitFor();
   return {page};
 }

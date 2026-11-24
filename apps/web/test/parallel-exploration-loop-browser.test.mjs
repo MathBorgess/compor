@@ -59,10 +59,12 @@ test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',
  await page.clock.fastForward(20000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'callback lento não consome espera visível');
  await page.evaluate(()=>window.releaseCallback());await page.getByText(/Próximo lote em/).waitFor();
  await page.clock.fastForward(14999);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'14.999 ms não iniciam novo lote');
- await page.clock.fastForward(1);await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===2,'o segundo lote começa depois de 15 s');
+ await page.clock.fastForward(1);await page.getByText('Lote concluído. Peça mais propostas para gerar outro.',{exact:true}).waitFor();
+ await page.clock.fastForward(30000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'o segundo lote não começa sem confirmação');
+ await page.getByRole('button',{name:'Pedir propostas'}).click();await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===2,'o segundo lote começa após novo pedido');
  await page.getByText('1 de 3 imagens confirmadas.',{exact:true}).waitFor();
  await page.clock.fastForward(3000);await page.getByText(/Próximo lote em 15s/).waitFor();
- await page.clock.fastForward(15000);await page.getByText('Aguardando sua decisão sobre as propostas.',{exact:true}).waitFor();
+ await page.clock.fastForward(15000);await page.getByText('Lote concluído. Peça mais propostas para gerar outro.',{exact:true}).waitFor();
  await page.clock.fastForward(30000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,2,'duas rodadas aguardam decisão');
  await page.getByRole('button',{name:'Pedir propostas'}).click();await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===3,'o terceiro lote exige novo pedido');
  const intentions=(await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/intent'));
@@ -218,7 +220,7 @@ test('pausa imediata durante espera, antes do despacho e no limite de 15s libera
   await context.close();
  }
 
- // 3. Pausa no limite exato da espera (14.999 ms e transição para rodada 2 aos 15.000 ms) impede segundo despacho
+ // 3. Aos 15 segundos nada começa; uma pausa durante a verificação do novo pedido impede o despacho.
  {
   const context=await browser.newContext(),page=await context.newPage();
   await page.clock.install({time:new Date('2026-11-21T20:45:00Z')});
@@ -230,7 +232,10 @@ test('pausa imediata durante espera, antes do despacho e no limite de 15s libera
   await page.clock.fastForward(14999);
   assert.equal((await page.evaluate(()=>window.calls)).filter(c=>c.path.endsWith('/execute')).length,1);
   await page.clock.fastForward(1);
-  await waitForPage(page,()=>window.round2GateEntered===true,'transição aos 15.000 ms entra na verificação da rodada 2');
+  await page.getByText('Lote concluído. Peça mais propostas para gerar outro.').waitFor();
+  assert.equal(await page.evaluate(()=>window.round2GateEntered===true),false,'a espera não inicia outra rodada');
+  await page.getByRole('button',{name:'Pedir propostas'}).click();
+  await waitForPage(page,()=>window.round2GateEntered===true,'novo pedido entra na verificação da rodada 2');
   await page.getByRole('button',{name:'Pausar'}).click();
   await waitForPage(page,()=>window.round2GateAborted===true,'verificação da rodada 2 deve ser abortada imediatamente ao pausar');
   await waitForPage(page,()=>window.loopState.running===false&&window.loopState.status==='Exploração pausada.','pausa na fronteira de 15s deve encerrar imediatamente');

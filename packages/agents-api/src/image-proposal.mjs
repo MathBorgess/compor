@@ -1,4 +1,4 @@
-import { POST_FORMATS, isPostFormat } from './creative-skills/formats.mjs';
+import { POST_FORMATS, isPostFormat } from './creative-skills/format-limits.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const proposalFields = ['prompt', 'operation', 'baseImageId', 'referenceIds', 'changedDimension', 'format', 'frameId', 'frameIndex'];

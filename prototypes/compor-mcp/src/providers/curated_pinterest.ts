@@ -326,6 +326,228 @@ export const CURATED_PINTEREST_BOARDS: CuratedPinterestBoard[] = [
     category: 'general_design',
     intentKeywords: ['ilustracao', 'editorial', 'textura', 'cor', 'expressivo'],
   },
+
+  // --- F. BASE AMPLIADA DE POSTS BEM-SUCEDIDOS, CRIADORES E COLEÇÕES (verificados HTTP 200 RSS) ---
+  {
+    slug: 'canva/templates-spotlight',
+    category: 'instagram_carousel',
+    intentKeywords: ['post', 'instagram', 'template', 'carrossel', 'promocao', 'lancamento', 'educativo'],
+  },
+  {
+    slug: 'canva/design-trends-2026',
+    category: 'instagram_carousel',
+    intentKeywords: ['tendencia', 'moderno', 'editorial', 'bold', 'campanha', 'instagram'],
+  },
+  {
+    slug: 'planoly/templates',
+    category: 'instagram_carousel',
+    intentKeywords: ['instagram', 'post', 'template', 'feed', 'carrossel', 'grade', 'minimalista'],
+  },
+  {
+    slug: 'planoly/instagram-tips',
+    category: 'instagram_carousel',
+    intentKeywords: ['instagram', 'dicas', 'educativo', 'carrossel', 'passo a passo', 'guia'],
+  },
+  {
+    slug: 'planoly/social-media-tips',
+    category: 'instagram_carousel',
+    intentKeywords: ['social', 'dicas', 'conteudo', 'carrossel', 'marketing', 'autoridade'],
+  },
+  {
+    slug: 'planoly/design-inspiration',
+    category: 'instagram_carousel',
+    intentKeywords: ['instagram', 'feed', 'estetica', 'paleta', 'editorial', 'clean'],
+  },
+  {
+    slug: 'planoly/inspiring-quotes',
+    category: 'instagram_carousel',
+    intentKeywords: ['frase', 'quote', 'citacao', 'manifesto', 'tipografia'],
+  },
+  {
+    slug: 'latermedia/instagram-tips-for-small-businesses',
+    category: 'ads',
+    intentKeywords: ['negocio', 'pequeno', 'vendas', 'instagram', 'loja', 'servico', 'cliente'],
+  },
+  {
+    slug: 'latermedia/small-business-marketing-on-social-media',
+    category: 'ads',
+    intentKeywords: ['marketing', 'negocio', 'vendas', 'oferta', 'promocao', 'pme'],
+  },
+  {
+    slug: 'latermedia/creators-influencers',
+    category: 'instagram_stories',
+    intentKeywords: ['criador', 'bastidores', 'storytelling', 'comunidade', 'lifestyle'],
+  },
+  {
+    slug: 'sproutsocial/creative-inspiration',
+    category: 'instagram_carousel',
+    intentKeywords: ['social', 'marca', 'campanha', 'criativo', 'engajamento', 'post'],
+  },
+  {
+    slug: 'sproutsocial/brand-inspiration',
+    category: 'general_design',
+    intentKeywords: ['marca', 'branding', 'identidade', 'posicionamento', 'campanha'],
+  },
+  {
+    slug: 'hootsuite/socially-inspired',
+    category: 'instagram_carousel',
+    intentKeywords: ['social', 'tendencia', 'campanha', 'post', 'marca'],
+  },
+  {
+    slug: 'hubspot/how-to-use-instagram-for-marketing',
+    category: 'ads',
+    intentKeywords: ['instagram', 'marketing', 'funil', 'vendas', 'conversao'],
+  },
+  {
+    slug: 'hubspot/all-things-social-media',
+    category: 'linkedin',
+    intentKeywords: ['social', 'redes', 'conteudo', 'marketing', 'digital'],
+  },
+  {
+    slug: 'piktochart/social-media-infographics',
+    category: 'linkedin',
+    intentKeywords: ['infografico', 'dados', 'social', 'carrossel', 'educativo'],
+  },
+  {
+    slug: 'piktochart/advertising-infographics',
+    category: 'ads',
+    intentKeywords: ['anuncio', 'comparativo', 'beneficios', 'dados', 'vendas'],
+  },
+  {
+    slug: 'vismeapp/advertising-design-from-around-the-world-inspirati',
+    category: 'ads',
+    intentKeywords: ['anuncio', 'advertising', 'campanha', 'criativo', 'oferta'],
+  },
+  {
+    slug: 'vismeapp/artistic-infographics-design-inspiration',
+    category: 'linkedin',
+    intentKeywords: ['infografico', 'ilustrado', 'editorial', 'carrossel', 'educativo'],
+  },
+  {
+    slug: 'vistacreate/black-friday-designs',
+    category: 'ads',
+    intentKeywords: ['promocao', 'desconto', 'black friday', 'oferta', 'varejo'],
+  },
+  {
+    slug: 'vistacreate/beauty',
+    category: 'ads',
+    intentKeywords: ['beleza', 'estetica', 'skincare', 'cosmetico', 'autocuidado'],
+  },
+  {
+    slug: 'vistacreate/back-to-school-templates',
+    category: 'instagram_carousel',
+    intentKeywords: ['educacao', 'curso', 'aula', 'enem', 'mentoria', 'estudantes'],
+  },
+  {
+    slug: 'venngage/top-editable-flyer-templates',
+    category: 'ads',
+    intentKeywords: ['flyer', 'evento', 'oficina', 'curso', 'promocao', 'local'],
+  },
+  {
+    slug: 'venngage/poster-templates',
+    category: 'instagram_carousel',
+    intentKeywords: ['poster', 'evento', 'workshop', 'oficina', 'palestra', 'divulgacao'],
+  },
+  {
+    slug: 'kittldesign/card-design',
+    category: 'instagram_carousel',
+    intentKeywords: ['convite', 'cartao', 'evento', 'workshop', 'oficina'],
+  },
+  {
+    slug: 'kittldesign/retro-style-designs',
+    category: 'instagram_carousel',
+    intentKeywords: ['retro', 'vintage', 'artesanal', 'cafe', 'textura'],
+  },
+  {
+    slug: 'kittldesign/product-label-designs',
+    category: 'ads',
+    intentKeywords: ['rotulo', 'produto', 'embalagem', 'artesanal', 'loja'],
+  },
+  {
+    slug: 'creativemarket/trends',
+    category: 'general_design',
+    intentKeywords: ['tendencia', 'paleta', 'textura', 'estetica', 'campanha'],
+  },
+  {
+    slug: 'creativemarket/mockups',
+    category: 'general_design',
+    intentKeywords: ['mockup', 'produto', 'catalogo', 'vitrine', 'estudio'],
+  },
+  {
+    slug: 'thedieline/food-packaging',
+    category: 'ads',
+    intentKeywords: ['comida', 'gastronomia', 'food', 'confeitaria', 'restaurante', 'artesanal'],
+  },
+  {
+    slug: 'thedieline/beauty-health-packaging',
+    category: 'ads',
+    intentKeywords: ['beleza', 'cosmetico', 'skincare', 'saude', 'natural'],
+  },
+  {
+    slug: 'thedieline/beverage-packaging',
+    category: 'ads',
+    intentKeywords: ['bebida', 'cafe', 'cafeteria', 'cha', 'vinho', 'artesanal'],
+  },
+  {
+    slug: 'thedieline/sustainable-packaging',
+    category: 'general_design',
+    intentKeywords: ['sustentavel', 'natural', 'organico', 'ceramica', 'artesanal'],
+  },
+  {
+    slug: 'dribbble/branding-inspiration',
+    category: 'general_design',
+    intentKeywords: ['marca', 'branding', 'identidade', 'paleta', 'startup'],
+  },
+  {
+    slug: 'dribbble/poster-inspiration',
+    category: 'instagram_carousel',
+    intentKeywords: ['poster', 'evento', 'cartaz', 'bold', 'capa'],
+  },
+  {
+    slug: 'dribbble/illustration-inspiration',
+    category: 'general_design',
+    intentKeywords: ['ilustracao', 'desenho', 'personagem', 'editorial', 'criativo'],
+  },
+  {
+    slug: 'behance/fashion-design',
+    category: 'general_design',
+    intentKeywords: ['moda', 'fashion', 'colecao', 'lookbook', 'editorial'],
+  },
+  {
+    slug: 'behance/best-of-behance',
+    category: 'general_design',
+    intentKeywords: ['campanha', 'direcao de arte', 'editorial', 'design'],
+  },
+  {
+    slug: 'itsnicethat/photography',
+    category: 'general_design',
+    intentKeywords: ['fotografia', 'foto', 'editorial', 'ensaio', 'retrato', 'colecao'],
+  },
+  {
+    slug: 'itsnicethat/graphic-design',
+    category: 'general_design',
+    intentKeywords: ['design', 'grafico', 'editorial', 'cultura', 'identidade'],
+  },
+  {
+    slug: 'itsnicethat/fashion',
+    category: 'general_design',
+    intentKeywords: ['moda', 'fashion', 'roupa', 'lookbook', 'colecao'],
+  },
+  {
+    slug: 'abduzeedo/grid',
+    category: 'instagram_carousel',
+    intentKeywords: ['grid', 'swiss', 'modular', 'carrossel', 'colunas'],
+  },
+  {
+    slug: 'abduzeedo/minimalistical',
+    category: 'general_design',
+    intentKeywords: ['minimalista', 'clean', 'respiro', 'sofisticado'],
+  },
+  {
+    slug: 'envato/color-psychology',
+    category: 'general_design',
+    intentKeywords: ['cor', 'cores', 'paleta', 'psicologia', 'contraste'],
+  },
 ];
 
 export interface PinterestPinJsonItem {

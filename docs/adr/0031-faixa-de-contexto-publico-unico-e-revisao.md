@@ -50,3 +50,24 @@ Continuam valendo:
 ## Verificação e limites
 
 Testes de navegador com dados sintéticos cobrem a edição na faixa, a fusão e a escolha do público, e a revisão com download e cópia. Os fixtures que hoje anexam imagem pela tela de revisão passam a usar o envio no estúdio. O orçamento de JavaScript tem 4,7 KB de folga, então a implementação remove código antes de acrescentar. Qualquer aumento do limite é uma proposta separada. Nenhum desses testes mede a compreensão de pessoas reais.
+
+## Adendo (23/11/2026) — Aposentadoria do fluxo manual redundante em `StudioAssets`, aprovação e conferência de fatos no `<StudioReview>`
+
+Por decisão de Matheus no plano aprovado em 23/11/2026 (Bloco 2, itens 2 e 3, em alinhamento com os [ADRs 0080](0080-skills-criativas-copy-e-modos-de-post.md)–[0084](0084-arte-raster-por-lamina.md)):
+
+### O que muda ou é substituído
+
+1. **Aposentadoria do fluxo manual redundante em `StudioAssets` (item 2):** Quando o vínculo canônico de versão (`piece_version_images`, [ADR 0077](0077-imagem-canonica-da-versao.md)) está ativo, fica substituído o item `"o salvamento do PNG no projeto, com sua autorização, que passa para a lista de versões"` (seção *Decisão*) como interface primária em *Materiais e versões* (`StudioAssets`). O componente passa a exibir confirmação passiva (`Arte da versão {v} salva automaticamente com este post.`) e move a listagem e a recuperação manual de arquivos (`AssetRecovery` e recuperação de versões legadas ou sem vínculo) para a seção recolhida `<details>Recuperação avançada de arquivos</details>`.
+2. **Aprovação humana explícita no `<StudioReview>` (item 3a):** Fica ampliada a cláusula `"Aprovar continua no editor do estúdio."` (seção *Decisão*) para permitir também a aprovação explícita dentro do `<StudioReview>`, para versões já salvas e sem alterações pendentes, por meio de `★ Marcar como pronto para postar` (`PATCH /api/pieces` com `approval.status === 'approved'`, exibido como `★ Pronto para postar · v{N}`), mantendo o acionamento equivalente no editor.
+3. **Conferência humana de fatos no `<StudioReview>` (item 3b):** Como a faixa permanente de contexto foi substituída pela configuração sob demanda no [ADR 0044](0044-preparacao-guiada-e-estudio-por-post.md), fica substituída a restrição `"e não por uma lista na tela de revisão"` (seção *O que muda e o que continua*). O `<StudioReview>` renderiza uma lista interativa com controles `<input type="checkbox">` exclusivamente para `confirmedFacts` (`offerFacts` com `status === 'confirmed'`), iniciados sempre **desmarcados** (zero `✓` automático e sem sintetizar fatos novos).
+4. **Identificação do post e coexistência multi-formato:** Na revisão (*Kit Pronto para Postar*), o cabeçalho e o prefixo dos arquivos exportados priorizam `postTitle` (com fallback ao título do projeto quando ausente), coexistindo integralmente com os modos `single`, `carousel`, `collection` e `story` ([ADRs 0080](0080-skills-criativas-copy-e-modos-de-post.md)–[0084](0084-arte-raster-por-lamina.md)), incluindo `Compor lâminas`, `FrameReviewCard`, prévia da capa 3:4, `Salvar versão` na revisão e exportação ZIP com `legenda.txt` e `alt-text.json` (JPEGs validados em carrosséis compostos pelo renderizador; PNG limpo nos demais casos; PDF permanece fora).
+
+### O que permanece inalterado
+
+- A conferência humana de fatos, grafia e legibilidade olhando a arte ([ADR 0012](0012-arte-integral-e-deliberacao-adaptativa.md)).
+- A separação estrita entre contratos e intenções ([ADR 0015](0015-backend-dados-e-autorizacao.md)): **salvar** (`POST /api/pieces`), **aprovar** (`PATCH /api/pieces` com `approval.status === 'approved'`), **exportar** (PNG, ZIP ou compartilhamento via Web Share API quando suportado) e a marcação local opcional **`Postado ✓`** continuam ações distintas; exportar ou marcar checkboxes de conferência de fatos não salva, não aprova, não altera `offerFacts` nem publica.
+- A ausência do editor e do envio de imagem-base dentro da revisão, a ausência de textos sobrepostos pelo app na arte exportada, o público único do projeto, a persona simulada como hipótese, o funcionamento autônomo de `StudioAssets` quando o vínculo canônico está inativo e os contratos de Storage imutável/RLS/idempotência do [ADR 0077](0077-imagem-canonica-da-versao.md).
+
+### Verificação
+
+- Verificação documental do alinhamento com os ADRs `0044`, `0077` e `0080`–`0084` e validação em testes de navegador cobrindo aprovação na revisão, checkboxes de fatos iniciados desmarcados, status passivo/recuperação recolhida em `StudioAssets` e fluxos multi-formato (implementação da UI em curso na etapa correspondente).

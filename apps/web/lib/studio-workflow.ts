@@ -15,13 +15,15 @@ export function postIds(state:StudioState) {
   return [...new Set(state.drafts.map(draft=>draft.pieceId))].filter(id=>id!==state.workflow.referencePieceId&&!state.posts[id]?.deleted);
 }
 
-export function startPostPreparation(state:StudioState,pieceId:string,initialProjectTitle?:string) {
+export const INITIAL_POST_SUGGESTED_NAME='Post 1 · Abertura';
+
+export function startPostPreparation(state:StudioState,pieceId:string,initial?:boolean|string) {
   if(state.drafts.some(draft=>draft.pieceId===pieceId))throw new StudioStateError('studio_draft_unavailable');
-  const initial=initialProjectTitle!==undefined;
-  const name=initial?postNameSchema.safeParse(initialProjectTitle).data??'':'';
-  const message=initial?postContextSchema.shape.message.safeParse(state.brief.offer).data??'':'';
+  const isInitial=typeof initial==='boolean'?initial:initial!==undefined;
+  const name=isInitial?INITIAL_POST_SUGGESTED_NAME:'';
+  const message=isInitial?postContextSchema.shape.message.safeParse(state.brief.offer).data??'':'';
   return changeStudioState(state,next=>{
-    next.workflow.pendingPost={pieceId,name,objective:'',message,action:'',format:'single',targetFrameCount:1,...(initial?{initial:true as const}:{})};
+    next.workflow.pendingPost={pieceId,name,objective:'',message,action:'',format:'single',targetFrameCount:1,...(isInitial?{initial:true as const}:{})};
     next.workflow.view='prepare-post';
   });
 }

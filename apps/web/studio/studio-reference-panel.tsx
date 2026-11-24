@@ -8,7 +8,7 @@ type Props={
   onUpload:(files:File[])=>void;uploadDisabled?:boolean;uploadStatus?:string;
   onBack?:()=>void;onContinue?:()=>void;continueLabel?:string;continueDisabled?:boolean;
   onRequestProposals?:()=>void;proposalsDisabled?:boolean;proposalsRunning?:boolean;proposalsLocked?:boolean;
-  selectionStatus?:ReactNode;recovery?:ReactNode;proposalDisclosure?:string;proposalBlock?:{message:string;action?:{label:string;run:()=>void}};
+  selectionStatus?:ReactNode;recovery?:ReactNode;proposalDisclosure?:ReactNode;proposalBlock?:{message:string;action?:{label:string;run:()=>void}};
   onPauseProposals?:()=>void;proposalStatus?:string;proposalPhase?:'idle'|'generating'|'waiting'|'blocked';
   proposalProgress?:ExplorationProgress|null;
 };
@@ -25,7 +25,7 @@ function ProposalProgress({progress}:{progress:ExplorationProgress}) {
   </div>;
 }
 export default function ReferencePanel({projectWide,onScope,entry='post',projectTitle,selectionCount=0,selectionWaiting=false,needsResponse=false,selection,search,proposals,conversation,onUpload,uploadDisabled=false,uploadStatus,onBack,onContinue,continueLabel,continueDisabled=false,onRequestProposals,proposalsDisabled=false,proposalsRunning=false,proposalsLocked=false,selectionStatus,recovery,proposalDisclosure,proposalBlock,onPauseProposals,proposalStatus,proposalPhase='idle',proposalProgress}:Props) {
-  const [source,setSource]=useState<Source>('search'),[surface,setSurface]=useState<'gallery'|'conversation'>('gallery');
+  const [source,setSource]=useState<Source>('search'),[surface,setSurface]=useState<'gallery'|'conversation'>('gallery'),[selectionOpen,setSelectionOpen]=useState(false);
   const sourceId=useId(),conversationId=useId(),headingId=useId(),uploadHelpId=useId(),proposalHelpId=useId();
   const heading=useRef<HTMLHeadingElement>(null),conversationSection=useRef<HTMLElement>(null),conversationTrigger=useRef<HTMLButtonElement>(null),gallery=useRef<HTMLDivElement>(null);
   const filePicker=useRef<HTMLInputElement>(null);
@@ -63,12 +63,16 @@ export default function ReferencePanel({projectWide,onScope,entry='post',project
         <p id={uploadHelpId} className="reference-upload-help">PNG ou JPEG, até 8 MB por arquivo e 20 imagens por projeto.</p>
         {selectionStatus}
         {proposalBlock&&<div className="reference-workbench-block"><p id={proposalHelpId} role="status">{proposalBlock.message}</p>{proposalBlock.action&&<button type="button" className="studio-button-secondary" onClick={proposalBlock.action.run}>{proposalBlock.action.label}</button>}</div>}
-        {!proposalBlock&&proposalDisclosure&&<p id={proposalHelpId} className="reference-upload-help">{proposalDisclosure}</p>}
+        {!proposalBlock&&proposalDisclosure&&<div id={proposalHelpId} className="reference-upload-help">{proposalDisclosure}</div>}
         {uploadStatus&&<p role="status" className="reference-upload-feedback">{uploadStatus}</p>}
         {recovery}
         <div className="guided-reference-source reference-workbench-source" id={sourceId}>
           <div hidden={source!=='search'}>{typeof search==='function'?search(sourceControl):<>{sourceControl}{search}</>}</div>
-          <div hidden={source!=='upload'}>{sourceControl}<p>As imagens enviadas aparecem em “Revisar seleção e alcance”.</p></div>
+          <div hidden={source!=='upload'}>
+            {sourceControl}
+            <p>Suas imagens enviadas já estão na seleção abaixo. Você também pode ajustar o alcance em “Revisar seleção e alcance”.</p>
+            {source==='upload'&&!selectionOpen&&selection}
+          </div>
           <div hidden={source!=='compor'} aria-busy={proposalPhase==='generating'}>
             {sourceControl}
             {proposals}
@@ -80,7 +84,7 @@ export default function ReferencePanel({projectWide,onScope,entry='post',project
         <div className="reference-selection-summary"><div><p role="status" aria-atomic="true">{selectionCount} {selectionCount===1?'referência escolhida':'referências escolhidas'}</p><p className="reference-scope-summary">{projectWide?'Referências do projeto':'Referências deste post'}</p></div><button ref={conversationTrigger} type="button" className="studio-button-quiet" aria-controls={conversationId} onClick={openConversation}>Comentar seleção</button></div>
         <div className="reference-workbench-return">{onBack&&<button type="button" className="studio-button-secondary" disabled={continueDisabled} onClick={onBack}>Voltar</button>}{onContinue&&<div><button type="button" className="studio-button" disabled={continueDisabled} onClick={onContinue}>{continueLabel}</button>{entry==='preparation'&&<p>Você revisa o pedido antes de gerar.</p>}</div>}</div>
       </footer>
-      <details className="reference-workbench-selection"><summary>Revisar seleção e alcance</summary>{onScope&&<label className="guided-reference-scope">Aplicar referências a<select value={projectWide?'project':'post'} disabled={continueDisabled} onChange={event=>onScope(event.target.value==='project')}><option value="post">Só neste post</option><option value="project">Todo o projeto</option></select></label>}{selection}</details>
+      <details className="reference-workbench-selection" open={selectionOpen} onToggle={event=>setSelectionOpen(event.currentTarget.open)}><summary>Revisar seleção e alcance</summary>{onScope&&<label className="guided-reference-scope">Aplicar referências a<select value={projectWide?'project':'post'} disabled={continueDisabled} onChange={event=>onScope(event.target.value==='project')}><option value="post">Só neste post</option><option value="project">Todo o projeto</option></select></label>}{(source!=='upload'||selectionOpen)&&selection}</details>
     </div>
     <section ref={conversationSection} id={conversationId} tabIndex={-1} className="reference-workbench-conversation" aria-label="Conversa sobre estas referências" inert={proposalsLocked} hidden={surface!=='conversation'}>
       <button type="button" className="studio-button-secondary reference-back-to-images" onClick={closeConversation}>Voltar às imagens</button>

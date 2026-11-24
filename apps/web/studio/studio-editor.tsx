@@ -110,6 +110,7 @@ export default function StudioEditor({
   onRefineCopy,
   onGenerateRemainingFrames,
   canTriggerAI = false,
+  hasLocalPreview = false,
   onEdit,
   onSetField,
   onRemoveField,
@@ -137,6 +138,7 @@ export default function StudioEditor({
   onRefineCopy?: () => void;
   onGenerateRemainingFrames?: () => void;
   canTriggerAI?: boolean;
+  hasLocalPreview?: boolean;
   onEdit?: (field: "headline" | "price" | "date" | "caption", value: string) => void;
   onSetField?: (field: CreativeField) => void;
   onRemoveField?: (id: string) => void;
@@ -443,7 +445,7 @@ export default function StudioEditor({
       )}
       {wrapInspector(<>
         <div className="studio-copy-toolbar">
-          <p className="studio-hint">Estes textos orientam a próxima geração. Alterá-los não modifica os pixels da arte atual.</p>
+          <p className="studio-hint">Estes textos orientam a próxima geração. A arte atual só muda quando você pedir uma nova versão.</p>
           {onRefineCopy && (
             <button
               type="button"
@@ -558,12 +560,13 @@ export default function StudioEditor({
             }}>Adicionar campo</button>
           </div>
         </details>}
-        <label>
+        <label className="studio-caption-editor">
           Legenda
           <textarea
             value={draft.content.caption}
             maxLength={4000}
             rows={3}
+            placeholder="Escreva ou peça na conversa a legenda para copiar e colar na rede social…"
             onChange={(e) => onEdit?.("caption", e.target.value)}
           />
         </label>
@@ -658,15 +661,15 @@ export default function StudioEditor({
         <div className="studio-editor-actions">
           <button
             type="button"
-            disabled={draft.dirty || draft.baseVersion < 1}
-            aria-describedby={draft.dirty || draft.baseVersion < 1 ? approvalHint : undefined}
+            disabled={draft.dirty || hasLocalPreview || draft.baseVersion < 1}
+            aria-describedby={draft.dirty || hasLocalPreview || draft.baseVersion < 1 ? approvalHint : undefined}
             onClick={() => onApprove?.()}
           >
             Aprovar esta versão
           </button>
         </div>
         {draft.approval?.status === "approved" && draft.approval.kind === "inherited" && <p className="studio-hint">Aprovação herdada da versão {draft.approval.sourceVersion}. Esta herança não representa uma nova revisão humana.</p>}
-        {(draft.dirty || draft.baseVersion < 1) && (
+        {(draft.dirty || hasLocalPreview || draft.baseVersion < 1) && (
           <p id={approvalHint} className="studio-hint">Salve a versão para aprovar este post.</p>
         )}
         {error && <p role="alert">{error}</p>}

@@ -34,7 +34,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0028](0028-migracoes-atomicas-em-lote.md) | recorded | Migrations SQL e histórico nativo em uma transação |
 | [0029](0029-agente-opinativo-e-pergunta-unica.md) | accepted | Fatos como ordem, gosto como sugestão e uma pergunta por turno |
 | [0030](0030-variante-retoque-e-cards-no-canvas.md) | accepted | Variante e retoque no modelo de versões, com um card por variante |
-| [0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) | accepted | Faixa de contexto, público único e revisão simplificada |
+| [0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) | accepted; adendo aprovado em 23/11/2026 | Faixa de contexto, público único e revisão simplificada; adendo de 23/11/2026 autoriza aprovação e conferência humana de fatos no `<StudioReview>` e aposenta o fluxo manual redundante em `StudioAssets` quando há vínculo canônico |
 | [0032](0032-gates-por-area-e-falha-rapida.md) | accepted | Gates por área alterada, falha rápida e minutos cobrados |
 | [0033](0033-turbopack-e-analise-do-bundle.md) | accepted | Turbopack com análise do bundle antes e depois de mudanças no cliente |
 | [0034](0034-entrada-leve-sem-runtime.md) | accepted | Entrada sem sessão em HTML sem JavaScript e gate que aceita zero scripts |
@@ -47,7 +47,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0041](0041-referencias-com-conversa-lateral.md) | recorded | Referências como conteúdo principal e conversa lateral, com alternância compacta sem sobreposição |
 | [0042](0042-leitura-estruturada-e-respostas-rapidas.md) | recorded | Leitura estruturada com opções fechadas, resposta rápida sem ferramentas e seleção de referências visível |
 | [0043](0043-deploy-vercel-por-integracao-git.md) | accepted; atribuição automática verificada em 16/11 | Deploy pela integração Git da Vercel; check obrigatório e atribuição automática observados, com histórico de 15/11 preservado |
-| [0044](0044-preparacao-guiada-e-estudio-por-post.md) | decisão aprovada; implementação local em verificação | Preparação guiada, início explícito da geração, configurações reunidas e estúdio dividido |
+| [0044](0044-preparacao-guiada-e-estudio-por-post.md) | decisão aprovada; implementação local em verificação; adendo aprovado em 23/11/2026 | Preparação guiada, início explícito da geração, configurações reunidas e estúdio dividido; adendo de 23/11/2026 define funil ultralinear de 2 telas com barra inline de IA quando `defaultAvailable === true`, sem geração automática |
 | [0045](0045-conversas-isoladas-por-post.md) | decisão aprovada; implementação local em verificação | Escopo de conversa por post, provas de continuidade e migração local preservada |
 | [0046](0046-contexto-e-referencias-por-post.md) | decisão aprovada; implementação local em verificação | Objetivo e referências por post, snapshots, migração preservada e sinais com alcance explícito |
 
@@ -68,7 +68,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0056](0056-navegacao-por-url-e-organizacao-do-estudio.md) | implementado no PR 54; verificação em andamento | URLs de projeto/post, retomada na página inicial, trilho de projetos e ações junto ao post |
 | [0057](0057-verificacao-por-goals-em-tres-camadas.md) | direção e spike local aprovados | Goals para agentes de desenvolvimento/QA, evidência offline/web/integração real, AX explícita e preservação dos delays |
 
-| [0058](0058-referencias-focadas-e-aprendizados-do-perfil.md) | implementado localmente | Referências em página, conversa sob demanda e perfil consultável após exclusão lógica de projetos |
+| [0058](0058-referencias-focadas-e-aprendizados-do-perfil.md) | implementado localmente; adendo aprovado em 23/11/2026 | Referências em página, conversa sob demanda e perfil consultável após exclusão lógica de projetos; adendo de 23/11/2026 torna Referências opcional fora do caminho obrigatório inicial quando `defaultAvailable === true` |
 | [0059](0059-aba-referencias-dentro-do-modal.md) | implementado localmente | Referências das configurações e “Escolher mais referências” abrem a bancada em janela modal |
 | [0060](0060-inspecao-de-tentativa-sem-marcador.md) | implementado localmente | Inspeção restrita de tentativa sem marcador, com prova vinculada à credencial e sem efeitos |
 
@@ -85,11 +85,11 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0070](0070-encerramento-de-exploracao-serial-incerta.md) | implementado localmente | Encerramento administrativo de exploração serial com resultado incerto |
 | [0071](0071-reducao-de-minutos-de-ci.md) | implementação verificada localmente | Menos esperas em testes web, estático proporcional ao diff, cache npm compartilhado e agregador em `ubuntu-slim` |
 | [0072](0072-triagem-visual-no-post-e-lote.md) | aceito | Triagem das referências no turno do post e no lote paralelo de três imagens |
-| [0073](0073-referencias-e-primeiro-pedido.md) | aceito | Ações visíveis em Referências e primeiro pedido a partir dos dados do projeto |
+| [0073](0073-referencias-e-primeiro-pedido.md) | aceito; adendo aprovado em 23/11/2026 | Ações visíveis em Referências e primeiro pedido a partir dos dados do projeto; adendo de 23/11/2026 usa nome sugerido distinto para o 1º post (`"Post 1 · Abertura"`) e alinha a entrada direta no Estúdio com o funil de 2 telas |
 | [0074](0074-consulta-limitada-de-prontidao-da-imagem.md) | implementado localmente | Espera limitada, consulta da reserva sem chave ou anexos e BYOK em cabeçalho |
-| [0075](0075-revisao-de-candidatas-a-imagem.md) | candidata integrada e desligada por padrão | Parecer visual antes da entrega e retenção vinculada à tentativa |
+| [0075](0075-revisao-de-candidatas-a-imagem.md) | candidata integrada e desligada por padrão; adendo aprovado em 23/11/2026 | Parecer visual antes da entrega e retenção vinculada à tentativa; adendo de 23/11/2026 autoriza `<ReviewDisclosureBadge compact />` expansível no compositor do chat e em Referências |
 | [0076](0076-saida-de-falha-de-imagem.md) | implementado localmente; migration remota não aplicada | Recusa e falha do provedor deixam de travar a conta; incerteza tem prazo e encerramento explícito |
-| [0077](0077-imagem-canonica-da-versao.md) | implementado localmente; migration não aplicada | Vínculo imutável versão→imagem, salvamento idempotente e rascunho local separado |
+| [0077](0077-imagem-canonica-da-versao.md) | implementado localmente; migration não aplicada; adendo aprovado em 23/11/2026 | Vínculo imutável versão→imagem, salvamento idempotente e rascunho local separado; adendo de 23/11/2026 substitui o fluxo manual redundante em `StudioAssets` por status passivo e recuperação avançada recolhida quando o vínculo canônico está ativo |
 | [0078](0078-origem-de-preview-vercel.md) | implementação local | Origem e callback de Preview vinculados ao deployment do Compor |
 | [0079](0079-bancada-bloqueada-durante-o-lote.md) | accepted | Progresso da exploração, bloqueio da bancada por lote e retomada explícita de plano |
 | [0080](0080-skills-criativas-copy-e-modos-de-post.md) | implementado localmente; migration não aplicada | Skills criativas em duas camadas, copy na imagem (`on-image-copy.v1`), quatro modos nativos (4:5 e 9:16), fluxo Capa Âncora e Marco 5 estendido |
@@ -97,5 +97,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0082](0082-renderizador-deterministico-de-carrossel.md) | porta de integração local | Composição JPEG compartilhada entre o laboratório e a rota autenticada do estúdio |
 | [0083](0083-composicao-e-versoes-de-carrossel.md) | implementação em validação | Plano tipado, revisão, JPEG privado e vínculo com a versão do carrossel |
 | [0084](0084-arte-raster-por-lamina.md) | implementação em validação | Arte por lâmina, digest da fonte e composição privada |
+| [0085](0085-busca-externa-com-aviso.md) | implementação local em validação | Busca e prévias externas permitidas automaticamente com aviso; geração mantém controle separado |
+| [0086](0086-lotes-confirmados-e-rascunhos.md) | implementação local em validação | Confirmação após cada lote e perfil rápido para referências |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

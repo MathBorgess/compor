@@ -38,7 +38,7 @@ export async function decodeExplorationImage(response:Response):Promise<Buffer> 
 export function explorationRuntime(mcpActor?:Actor) {
   const config=authConfig();
   if(!config || process.env.COMPOR_PRIVATE_IMAGES_ENABLED!=='true')return null;
-  const imagePipeline=studioImagePipeline();
+  const imagePipeline=studioImagePipeline(process.env,'reference');
   return createExplorationImageRoute({
     generationAvailable:imagePipeline!==null,
     appOrigin:config.app,

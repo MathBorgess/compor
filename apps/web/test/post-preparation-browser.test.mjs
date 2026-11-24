@@ -63,7 +63,7 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   await button('Configurações do projeto').click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).waitFor();await closeSettings(page);if(await button('Recolher menu').isVisible())await button('Recolher menu').click();
   const name=page.getByLabel('Nome do post',{exact:true});
   await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'Mentoria de matemática para o ENEM');
-  assert.equal(await name.inputValue(),'Mentoria Veloz — Campanha 1');
+  assert.equal(await name.inputValue(),'Post 1 · Abertura');
   await name.fill('Post de autoridade');await objective.fill('Construir autoridade');await message.fill('Ensinar uma estratégia de porcentagem');assert.equal(await action.inputValue(),'');
   if(width===390){await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));const menu=await button('Expandir menu').boundingBox(),header=await page.locator('.studio-topbar').boundingBox();assert.ok(menu.y>=header.y+header.height-1,'menu permanece abaixo do cabeçalho durante a rolagem');await button('Expandir menu').click();await page.keyboard.press('Escape');}
   await page.waitForFunction(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const r=q.result.transaction('states').objectStore('states').getAll();r.onsuccess=()=>{q.result.close();resolve(r.result[0]?.state.workflow.pendingPost?.message==='Ensinar uma estratégia de porcentagem');};};}));

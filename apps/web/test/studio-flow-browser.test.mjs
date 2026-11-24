@@ -77,6 +77,8 @@ async function app(t){
     calls.push({path:url.pathname,method:'POST',query:Object.fromEntries(url.searchParams)});
     return route.fulfill({status:201,json:{status:'stored',assetId:url.searchParams.get('assetId')}});
   }
+  if(url.pathname==='/api/studio/references/history')return route.fulfill({json:{references:[]}});
+  if(url.pathname==='/api/studio/references/search')return route.fulfill({json:{status:'empty',references:[]}});
   if(url.pathname.startsWith('/api/')){calls.push({path:url.pathname});return route.fulfill({status:500,json:{error:'unexpected_test_operation'}});}
   return route.continue();
  });
