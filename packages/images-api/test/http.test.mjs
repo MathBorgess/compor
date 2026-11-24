@@ -58,6 +58,19 @@ test('uma pessoa autenticada solicita uma arte integral explicitamente e recebe 
   assert.equal(calls, 1);
 });
 
+test('rascunhos de referência usam modelo e dimensões menores sem mudar a arte final', async () => {
+  const calls=[];
+  const handler=createImageHandler({authenticate:async()=>({userId:'user-1'}),profile:'reference',fetch:async(_url,options)=>{
+    calls.push(JSON.parse(options.body));return Response.json({data:[{b64_json:png}]});
+  }});
+  for(const size of ['1024x1280','864x1536'])assert.equal((await handler(request({apiKey:key,prompt:'Rascunho',size,authorizeGeneration:true}))).status,200);
+  assert.deepEqual(calls.map(({model,size,quality,complexity})=>({model,size,quality,complexity})),[
+    {model:'gpt-image-2.6-flare',size:'768x960',quality:'low',complexity:'low'},
+    {model:'gpt-image-2.6-flare',size:'720x1280',quality:'low',complexity:'low'},
+  ]);
+  assert.throws(()=>createImageHandler({authenticate:async()=>null,profile:'invalid'}));
+});
+
 test('uso informado pelo provedor é retornado sem texto ou campos desconhecidos', async () => {
   const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => Response.json({ data: [{ b64_json: png }], usage: { total_tokens: 300, input_tokens: 100, output_tokens: 200, detail: `não expor ${key}` } }) });
   const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));

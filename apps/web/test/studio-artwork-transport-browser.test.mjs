@@ -118,6 +118,10 @@ test('cópia explícita permite editar PNG acima de 2 MiB e descarta preparaçõ
   assert.equal(await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).count(),0);
  }
  await openProposal();
+ const details=page.getByText('Ver descrição da arte',{exact:true});
+ await details.waitFor();
+ assert.equal(await page.getByText(proposal.prompt,{exact:true}).isVisible(),false,'o prompt começa recolhido');
+ await details.click();assert.equal(await page.getByText(proposal.prompt,{exact:true}).isVisible(),true);
  const before=await page.evaluate(()=>({hash:window.__transport.originalHash,size:window.__transport.originalSize}));
  assert.ok(before.size>2*1024*1024&&before.size<=8*1024*1024,'o PNG válido ocupa a faixa que impedia editar resultados gerados');
  await prepare().click();

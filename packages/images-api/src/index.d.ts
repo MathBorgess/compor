@@ -24,4 +24,5 @@ export function createImageHandler(options: {
   authenticate: (request: Request) => Promise<{ userId: string } | null>;
   fetch?: typeof fetch;
   reviewCandidate?: ImageCandidateReviewer;
+  profile?: 'artwork' | 'reference';
 }): (request: Request, options?: { authorizeReview?: () => Promise<boolean>; requiredText?: readonly string[] }) => Promise<Response>;

@@ -1743,7 +1743,7 @@ export default function StudioChat({
               {resolvedPostTitle(state, imageAction.context.pieceId, imageAction.context.headline)} · versão{" "}
               {(imageAction.preparedTarget?.version??imageAction.context.baseVersion) || "ainda não salva"}
             </p>
-            <p>{imageAction.prompt}</p>
+            <details><summary>Ver descrição da arte</summary><p>{imageAction.prompt}</p></details>
             {imageAction.canPrepareTransport && <div>
               <p>Prepare cópias em JPEG neste navegador, sem IA nem envio. A qualidade será ajustada e as dimensões só serão reduzidas se necessário. Transparências recebem fundo branco. Os arquivos originais permanecem intactos.</p>
               <button type="button" disabled={busy||imageNeedsReconciliation||imageNeedsDecision} onClick={prepareImageCopies}>{imageAction.proposal.operation === 'edit' ? 'Preparar cópia para edição' : 'Preparar cópias para envio'}</button>

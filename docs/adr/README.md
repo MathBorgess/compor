@@ -98,5 +98,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0083](0083-composicao-e-versoes-de-carrossel.md) | implementação em validação | Plano tipado, revisão, JPEG privado e vínculo com a versão do carrossel |
 | [0084](0084-arte-raster-por-lamina.md) | implementação em validação | Arte por lâmina, digest da fonte e composição privada |
 | [0085](0085-busca-externa-com-aviso.md) | implementação local em validação | Busca e prévias externas permitidas automaticamente com aviso; geração mantém controle separado |
+| [0086](0086-lotes-confirmados-e-rascunhos.md) | implementação local em validação | Confirmação após cada lote e perfil rápido para referências |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

@@ -59,10 +59,12 @@ test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',
  await page.clock.fastForward(20000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'callback lento não consome espera visível');
  await page.evaluate(()=>window.releaseCallback());await page.getByText(/Próximo lote em/).waitFor();
  await page.clock.fastForward(14999);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'14.999 ms não iniciam novo lote');
- await page.clock.fastForward(1);await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===2,'o segundo lote começa depois de 15 s');
+ await page.clock.fastForward(1);await page.getByText('Lote concluído. Peça mais propostas para gerar outro.',{exact:true}).waitFor();
+ await page.clock.fastForward(30000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'o segundo lote não começa sem confirmação');
+ await page.getByRole('button',{name:'Pedir propostas'}).click();await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===2,'o segundo lote começa após novo pedido');
  await page.getByText('1 de 3 imagens confirmadas.',{exact:true}).waitFor();
  await page.clock.fastForward(3000);await page.getByText(/Próximo lote em 15s/).waitFor();
- await page.clock.fastForward(15000);await page.getByText('Aguardando sua decisão sobre as propostas.',{exact:true}).waitFor();
+ await page.clock.fastForward(15000);await page.getByText('Lote concluído. Peça mais propostas para gerar outro.',{exact:true}).waitFor();
  await page.clock.fastForward(30000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,2,'duas rodadas aguardam decisão');
  await page.getByRole('button',{name:'Pedir propostas'}).click();await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===3,'o terceiro lote exige novo pedido');
  const intentions=(await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/intent'));

@@ -16,7 +16,7 @@ import ReferenceExploration from './studio/reference-exploration.tsx';
 import {syncReferenceConsentAccount} from './lib/reference-session-consent.ts';
 import {useExplorationLoop} from './studio/use-exploration-loop.ts';
 import {createStudioState} from './lib/studio-state.ts';
-function FirstBatch(){const [connected,setConnected]=useState(false),[enabled,setEnabled]=useState(true),[state]=useState(()=>createStudioState({userId:'${user}',projectId:'${project}'}));const loop=useExplorationLoop({userId:'${user}',projectId:'${project}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled,idea:'Uma oficina nova, ainda sem briefing'});return <><button onClick={()=>setConnected(true)}>Conectar chave de teste</button><button onClick={()=>setEnabled(false)}>Sair das referências</button><output id="exploration-status">{loop.status}</output></>;}
+function FirstBatch(){const [connected,setConnected]=useState(false),[enabled,setEnabled]=useState(true),[state]=useState(()=>createStudioState({userId:'${user}',projectId:'${project}'}));const loop=useExplorationLoop({userId:'${user}',projectId:'${project}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled,idea:'Uma oficina nova, ainda sem briefing'});return <><button onClick={()=>setConnected(true)}>Conectar chave de teste</button><button onClick={()=>setEnabled(false)}>Sair das referências</button><button onClick={loop.resume}>Pedir mais propostas</button><output id="exploration-status">{loop.status}</output></>;}
 function Demo(){const [userId,setUser]=useState('${user}'),[projectId,setProject]=useState('${project}'),[epoch,setEpoch]=useState(0),[selected,setSelected]=useState([]),[used,setUsed]=useState([]);return <><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Outro projeto</button><button onClick={()=>setUser('00000000-0000-4000-8000-000000000002')}>Outra conta</button><button onClick={()=>setUser('${user}')}>Conta inicial</button><button onClick={()=>{syncReferenceConsentAccount(sessionStorage,null);setEpoch(x=>x+1);}}>Sair e entrar</button><FirstBatch/><output id="used">{JSON.stringify(used)}</output><ReferenceExploration key={userId+projectId+epoch} userId={userId} projectId={projectId} idea="Quero divulgar uma aula de cerâmica" selectedOrigins={selected} onContinue={()=>setEpoch(x=>x+1)} onUseReference={async(reference,file)=>{setSelected(items=>[...items,reference.originUrl]);setUsed(items=>[...items,{userId,projectId,id:reference.id,size:file.size}]);}}/></>};createRoot(document.getElementById('root')).render(<Demo/>);`;
 async function fixture(t,{holdFirst=false}={}) {
   const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
@@ -30,6 +30,7 @@ async function fixture(t,{holdFirst=false}={}) {
   await page.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
+    if(url.pathname==='/api/studio/explorations/resume')return route.fulfill({json:{status:'not_paused'}});
     if(url.pathname.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
     if(url.pathname==='/api/studio/explorations'){
       const body=request.postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});
@@ -87,4 +88,18 @@ test('primeiro lote começa somente com ideia e chave e conserva três imagens e
   await page.getByRole('button',{name:'Sair das referências'}).click();
   await page.locator('#exploration-status').filter({hasText:'Exploração disponível na tela de referências.'}).waitFor();
   assert.equal(generations.length,3);
+});
+
+test('lote sequencial aguarda pedido explícito depois dos 15 segundos',options,async t=>{
+ const {page,generations}=await fixture(t);
+ await page.clock.install();await page.clock.pauseAt(new Date(Date.now()+1000));
+ await page.getByRole('button',{name:'Conectar chave de teste'}).click();
+ await page.locator('#exploration-status').filter({hasText:/Próximo lote em/}).waitFor();
+ assert.equal(generations.length,3);
+ await page.clock.fastForward(15000);
+ await page.locator('#exploration-status').filter({hasText:'Lote concluído. Peça mais propostas para gerar outro.'}).waitFor();
+ await page.clock.fastForward(30000);assert.equal(generations.length,3);
+ await page.getByRole('button',{name:'Pedir mais propostas'}).click();
+ await assertEventually(()=>generations.length===6);
+ assert.equal(generations.length,6);
 });

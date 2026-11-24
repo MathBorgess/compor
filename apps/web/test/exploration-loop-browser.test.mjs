@@ -122,6 +122,7 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   await g.route('**/api/studio/explorations**',async route=>{
     if(new URL(route.request().url()).pathname.endsWith('/status'))return route.fulfill({json:{status:'active'}});
     if(new URL(route.request().url()).pathname.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
+    if(new URL(route.request().url()).pathname.endsWith('/resume'))return route.fulfill({json:{status:'not_paused'}});
     if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
     const body=route.request().postDataJSON();batches.push(body);
     return route.fulfill({status:batches.length===4?502:200,json:{status:batches.length===4?'unknown':'completed',requestId:body.requestId}});
@@ -132,7 +133,7 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   await batchPage.getByRole('button',{name:'Pausar'}).click();await batchPage.evaluate(()=>window.advanceTestClock(30000));
   await batchPage.getByRole('button',{name:'Retomar'}).click();await batchPage.getByText(/próximo lote em/i).waitFor();
   assert.equal(batches.length,3,'pausa congela a espera e não dispara um novo lote');
-  await batchPage.evaluate(()=>window.advanceTestClock(16000));await batchPage.getByText(/resultado da exploração não foi confirmado/i).waitFor();
+  await batchPage.evaluate(()=>window.advanceTestClock(16000));await batchPage.getByText(/lote concluído/i).waitFor();assert.equal(batches.length,3);await batchPage.getByRole('button',{name:'Retomar'}).click();await batchPage.getByText(/resultado da exploração não foi confirmado/i).waitFor();
   assert.equal(batches.length,4);assert.equal(batches[3].batch.position,1);assert.notEqual(batches[3].batch.id,batches[0].batch.id);
   await g.close();
   const h=await browser.newContext();await referenceSignals(h);const departed=[];let finish,departedConfirmed=false;const inFlight=new Promise(resolve=>{finish=resolve;});
@@ -157,6 +158,7 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
     const path=new URL(route.request().url()).pathname;
     if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
     if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
+    if(new URL(route.request().url()).pathname.endsWith('/resume'))return route.fulfill({json:{status:'not_paused'}});
     if(route.request().method()==='GET')return route.fulfill({json:{images:thirdConfirmed?[{id:latePosts[2].requestId,project_id:projectId,state:'completed'}]:[]}});
     const body=route.request().postDataJSON();latePosts.push(body);
     if(latePosts.length===3)await thirdHeld;
@@ -174,7 +176,7 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   await returning.getByRole('button',{name:'Retomar'}).click();
   await returning.getByText(/próximo lote em/i).waitFor();assert.equal(latePosts.length,3,'tempo fora da tela não inicia o próximo lote');
   await returning.evaluate(()=>window.advanceTestClock(12000));await returning.waitForTimeout(1000);assert.equal(latePosts.length,3,'a espera continua visível até passar o intervalo');
-  await returning.evaluate(()=>window.advanceTestClock(4000));await returning.getByText(/resultado da exploração não foi confirmado/i).waitFor({timeout:10000});
+  await returning.evaluate(()=>window.advanceTestClock(4000));await returning.getByText(/lote concluído/i).waitFor();assert.equal(latePosts.length,3);await returning.getByRole('button',{name:'Retomar'}).click();await returning.getByText(/resultado da exploração não foi confirmado/i).waitFor({timeout:10000});
   assert.equal(latePosts.length,4);assert.equal(latePosts[3].batch.position,1);await late.close();
 
   const i=await browser.newContext();await referenceSignals(i);const unattended=[];
@@ -189,26 +191,27 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   });
   const quiet=await i.newPage();await quiet.goto(`${origin}/exploration-loop-test`);await quiet.getByText(/próximo lote em/i).waitFor();
   assert.equal(unattended.length,3);await quiet.evaluate(()=>window.advanceTestClock(16000));
-  await quiet.getByText('Aguardando decisão sobre duas rodadas').waitFor();assert.equal(unattended.length,6);
-  await quiet.reload();await quiet.getByText('Aguardando decisão sobre duas rodadas').waitFor();
-  await quiet.evaluate(({userId,projectId,imageId})=>localStorage.setItem(`compor-exploration-selected:${userId}:${projectId}:${imageId}`,'1'),{userId,projectId,imageId:unattended[0].requestId});
-  await quiet.waitForTimeout(300);assert.equal(unattended.length,6,'selecionar depois da pausa e recarregar não retomam a geração');
-  await quiet.getByRole('button',{name:'Retomar'}).click();await quiet.getByText(/resultado da exploração não foi confirmado/i).waitFor();
-  assert.equal(unattended.length,7,'somente o pedido explícito retoma');await i.close();
+  await quiet.getByText(/lote concluído/i).waitFor();assert.equal(unattended.length,3);
+  await quiet.reload();await quiet.getByText(/lote concluído/i).waitFor();
+  await quiet.getByRole('button',{name:'Retomar'}).click();await until(()=>unattended.length,n=>n===6);
+  await quiet.getByText(/próximo lote em/i).waitFor();await quiet.evaluate(()=>window.advanceTestClock(16000));await quiet.getByText(/lote concluído/i).waitFor();
+  assert.equal(unattended.length,6);await quiet.getByRole('button',{name:'Retomar'}).click();await quiet.getByText(/resultado da exploração não foi confirmado/i).waitFor();
+  assert.equal(unattended.length,7,'cada novo lote exige pedido explícito');await i.close();
 
   const j=await browser.newContext();await referenceSignals(j);const reviewed=[];let feedback=[];
   await j.addInitScript(()=>{const real=Date.now.bind(Date);let offset=0;Date.now=()=>real()+offset;window.advanceTestClock=amount=>{offset+=amount;};});
   await j.route('**/api/studio/explorations**',async route=>{
     if(new URL(route.request().url()).pathname.endsWith('/status'))return route.fulfill({json:{status:'active'}});
     if(new URL(route.request().url()).pathname.endsWith('/signals'))return route.fulfill({json:{signals:feedback}});
+    if(new URL(route.request().url()).pathname.endsWith('/resume'))return route.fulfill({json:{status:'not_paused'}});
     if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
     const body=route.request().postDataJSON();reviewed.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});
   });
   const engaged=await j.newPage();await engaged.goto(`${origin}/exploration-loop-test`);await engaged.getByText(/próximo lote em/i).waitFor();
   feedback=[{id:crypto.randomUUID(),projectId,imageId:reviewed[0].requestId,action:'comment',comment:'Gostei desta composição',supersedes:null,createdAt:new Date().toISOString(),plan:null}];
-  await engaged.evaluate(()=>window.advanceTestClock(16000));await until(()=>reviewed.length,n=>n===6,15000);
+  await engaged.evaluate(()=>window.advanceTestClock(16000));await engaged.getByText(/lote concluído/i).waitFor();await engaged.getByRole('button',{name:'Retomar'}).click();await until(()=>reviewed.length,n=>n===6,15000);
   await engaged.getByText(/próximo lote em/i).waitFor();assert.equal(await engaged.getByText('Aguardando decisão sobre duas rodadas').count(),0,'comentário sobre imagem daquele lote reinicia a contagem');
-  await engaged.evaluate(()=>window.advanceTestClock(16000));await engaged.getByText('Aguardando decisão sobre duas rodadas').waitFor();
+  await engaged.evaluate(()=>window.advanceTestClock(16000));await engaged.getByText(/lote concluído/i).waitFor();assert.equal(reviewed.length,6);await engaged.getByRole('button',{name:'Retomar'}).click();await until(()=>reviewed.length,n=>n===9,15000);
   assert.equal(reviewed.length,9);await j.close();
 
   const k=await browser.newContext();await referenceSignals(k);const selected=[];
@@ -216,14 +219,15 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   await k.route('**/api/studio/explorations**',async route=>{
     if(new URL(route.request().url()).pathname.endsWith('/status'))return route.fulfill({json:{status:'active'}});
     if(new URL(route.request().url()).pathname.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
+    if(new URL(route.request().url()).pathname.endsWith('/resume'))return route.fulfill({json:{status:'not_paused'}});
     if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
     const body=route.request().postDataJSON();selected.push(body);return route.fulfill({status:selected.length===7?502:200,json:{status:selected.length===7?'unknown':'completed',requestId:body.requestId}});
   });
   const chooser=await k.newPage();await chooser.goto(`${origin}/exploration-loop-test`);await chooser.getByText(/próximo lote em/i).waitFor();
   await chooser.evaluate(({userId,projectId,imageId})=>localStorage.setItem(`compor-exploration-selected:${userId}:${projectId}:${imageId}`,'1'),{userId,projectId,imageId:selected[0].requestId});
-  await chooser.evaluate(()=>window.advanceTestClock(16000));await until(()=>selected.length,n=>n===6,15000);
+  await chooser.evaluate(()=>window.advanceTestClock(16000));await chooser.getByText(/lote concluído/i).waitFor();await chooser.getByRole('button',{name:'Retomar'}).click();await until(()=>selected.length,n=>n===6,15000);
   await chooser.getByText(/próximo lote em/i).waitFor();assert.equal(await chooser.getByText('Aguardando decisão sobre duas rodadas').count(),0,'selecionar imagem do lote reinicia a contagem');
-  await chooser.evaluate(()=>window.advanceTestClock(16000));await chooser.getByText(/resultado da exploração não foi confirmado/i).waitFor();
+  await chooser.evaluate(()=>window.advanceTestClock(16000));await chooser.getByText(/lote concluído/i).waitFor();await chooser.getByRole('button',{name:'Retomar'}).click();await chooser.getByText(/resultado da exploração não foi confirmado/i).waitFor();
   assert.equal(selected.length,7);await k.close();
 
   const l=await browser.newContext();await referenceSignals(l);const remote=[];let resumeBlocked=true,resumes=0;
@@ -274,6 +278,7 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
     const path=new URL(route.request().url()).pathname;
     if(path.endsWith('/status')){gates++;return route.fulfill({json:{status:'active'}});}
     if(path.endsWith('/signals'))return route.fulfill({json:{signals:comments}});
+    if(new URL(route.request().url()).pathname.endsWith('/resume'))return route.fulfill({json:{status:'not_paused'}});
     if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
     const body=route.request().postDataJSON();answered.push(body);
     return route.fulfill({status:answered.length===7?502:200,json:{status:answered.length===7?'unknown':'completed',requestId:body.requestId}});
@@ -283,13 +288,13 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   await asking.getByRole('button',{name:'Pergunta da seleção'}).click();await asking.getByText('A exploração aguarda sua resposta no chat.').waitFor();
   await idle();assert.equal(answered.length,3,'a pergunta do turno de seleção segura o próximo lote');
   comments=[{id:crypto.randomUUID(),projectId,imageId:answered[0].requestId,action:'comment',comment:'Gostei desta composição',supersedes:null,createdAt:new Date().toISOString(),plan:null}];
-  let observed=gates;await asking.getByRole('button',{name:'Responder no chat'}).click();await until(()=>gates,n=>n>observed);
-  await asking.evaluate(()=>window.advanceTestClock(16000));await until(()=>answered.length,n=>n===6,15000);
-  await asking.getByText(/próximo lote em/i).waitFor();assert.equal(answered.length,6,'mensagem no chat retoma a exploração');
+  await asking.getByRole('button',{name:'Responder no chat'}).click();await asking.getByText(/próximo lote em|lote concluído/i).waitFor();
+  await asking.evaluate(()=>window.advanceTestClock(16000));await asking.getByText(/lote concluído/i).waitFor();await asking.getByRole('button',{name:'Retomar'}).click();await until(()=>answered.length,n=>n===6,15000);
+  await asking.getByText(/próximo lote em/i).waitFor();assert.equal(answered.length,6,'mensagem e pedido explícito permitem o lote seguinte');
   await asking.getByRole('button',{name:'Pergunta da seleção'}).click();await asking.getByText('A exploração aguarda sua resposta no chat.').waitFor();
   await idle();assert.equal(answered.length,6,'nova pergunta volta a segurar o lote');
-  observed=gates;await asking.getByRole('button',{name:'Retomar'}).click();await until(()=>gates,n=>n>observed);
-  await asking.evaluate(()=>window.advanceTestClock(16000));await asking.getByText(/resultado da exploração não foi confirmado/i).waitFor({timeout:10000});
+  await asking.getByRole('button',{name:'Retomar'}).click();await asking.getByText(/próximo lote em|lote concluído/i).waitFor();
+  await asking.evaluate(()=>window.advanceTestClock(16000));await asking.getByText(/lote concluído/i).waitFor();await asking.getByRole('button',{name:'Retomar'}).click();await asking.getByText(/resultado da exploração não foi confirmado/i).waitFor({timeout:10000});
   assert.equal(answered.length,7,'pedido explícito retoma a exploração');await o.close();
 });
 
@@ -325,6 +330,7 @@ test('pergunta da seleção resiste a turno automático e recarga, e a retomada 
  const context=await browser.newContext();await referenceSignals(context);const posts=[];
  await context.addInitScript(()=>{const real=Date.now.bind(Date);let offset=0;Date.now=()=>real()+offset;window.advanceTestClock=amount=>{offset+=amount;};});
  await context.route('**/api/studio/explorations**',async route=>{
+  if(new URL(route.request().url()).pathname.endsWith('/resume'))return route.fulfill({json:{status:'not_paused'}});
   const path=new URL(route.request().url()).pathname;
   if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
   if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
@@ -344,6 +350,6 @@ test('pergunta da seleção resiste a turno automático e recarga, e a retomada 
  await page.reload();await page.getByText(/próximo lote em/i).waitFor();assert.equal(posts.length,3,'recarga preserva a retomada explícita da pergunta');
  await page.getByRole('button',{name:'Perguntar novamente',exact:true}).click();await staysPaused(3);
  await page.getByRole('button',{name:'Retomar',exact:true}).click();await page.getByText(/próximo lote em/i).waitFor();await page.evaluate(()=>window.advanceTestClock(16000));
- await page.getByText(/resultado da exploração não foi confirmado/i).waitFor();assert.equal(posts.length,4,'nova pergunta exige uma nova resposta ou retomada explícita');
+ await page.getByText(/lote concluído/i).waitFor();assert.equal(posts.length,3);await page.getByRole('button',{name:'Retomar',exact:true}).click();await page.getByText(/resultado da exploração não foi confirmado/i).waitFor();assert.equal(posts.length,4,'nova pergunta exige uma nova resposta ou retomada explícita');
  await context.close();
 });

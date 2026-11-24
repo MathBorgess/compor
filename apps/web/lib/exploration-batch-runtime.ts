@@ -20,7 +20,7 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
  if(process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED!=='true'||process.env.COMPOR_PRIVATE_IMAGES_ENABLED!=='true'||!config||!secret||!prepared.apiKey)return null;
  const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey});
  const referenceAuthority=createReferenceAuthorityStore(config);
- const imagePipeline=studioImagePipeline();
+ const imagePipeline=studioImagePipeline(process.env,'reference');
  return createExplorationBatchRoute({
   generationAvailable:imagePipeline!==null,
   appOrigin:config.app,
