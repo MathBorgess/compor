@@ -124,6 +124,8 @@ for(const entry of ['button','chat','ready-chat','project-exit-x','project-exit-
   await postModal.getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Pode continuar com essa seleção');await postModal.getByRole('button',{name:'Enviar →',exact:true}).click();
   await postModal.getByRole('button',{name:'Voltar às imagens',exact:true}).click();
   await postModal.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await postModal.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  await postModal.getByText('Lote concluído. Peça mais propostas para gerar outro.').waitFor({timeout:20000});
+  await postModal.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
   await waitStored(page,value=>value.state?.workflow.latestExplorations?.[value.state.selection?.pieceId]?.ordinal===106);
   await postModal.getByRole('button',{name:'Fechar referências do post',exact:true}).click();await postModal.waitFor({state:'hidden'});
   const retained=await waitStored(page,value=>Boolean(value.bytes));assert.deepEqual(retained.bytes,Array.from(generatedPixels));
