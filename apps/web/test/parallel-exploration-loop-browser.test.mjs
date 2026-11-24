@@ -220,7 +220,7 @@ test('pausa imediata durante espera, antes do despacho e no limite de 15s libera
   await context.close();
  }
 
- // 3. Pausa no limite exato da espera (14.999 ms e transição para rodada 2 aos 15.000 ms) impede segundo despacho
+ // 3. Aos 15 segundos nada começa; uma pausa durante a verificação do novo pedido impede o despacho.
  {
   const context=await browser.newContext(),page=await context.newPage();
   await page.clock.install({time:new Date('2026-11-21T20:45:00Z')});
@@ -232,7 +232,10 @@ test('pausa imediata durante espera, antes do despacho e no limite de 15s libera
   await page.clock.fastForward(14999);
   assert.equal((await page.evaluate(()=>window.calls)).filter(c=>c.path.endsWith('/execute')).length,1);
   await page.clock.fastForward(1);
-  await waitForPage(page,()=>window.round2GateEntered===true,'transição aos 15.000 ms entra na verificação da rodada 2');
+  await page.getByText('Lote concluído. Peça mais propostas para gerar outro.').waitFor();
+  assert.equal(await page.evaluate(()=>window.round2GateEntered===true),false,'a espera não inicia outra rodada');
+  await page.getByRole('button',{name:'Pedir propostas'}).click();
+  await waitForPage(page,()=>window.round2GateEntered===true,'novo pedido entra na verificação da rodada 2');
   await page.getByRole('button',{name:'Pausar'}).click();
   await waitForPage(page,()=>window.round2GateAborted===true,'verificação da rodada 2 deve ser abortada imediatamente ao pausar');
   await waitForPage(page,()=>window.loopState.running===false&&window.loopState.status==='Exploração pausada.','pausa na fronteira de 15s deve encerrar imediatamente');
